@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>ScanPro AI • Smart Paper Detection</title>
+  <title>ScanPro Ultra • AI Scanner Suite</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://docs.opencv.org/4.8.0/opencv.js" async></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.4/dist/tesseract.min.js"></script>
   <style>
     * {
       margin: 0;
@@ -21,15 +23,12 @@
     :root {
       --primary: #6366f1;
       --primary-dark: #4f46e5;
-      --primary-light: #818cf8;
       --secondary: #8b5cf6;
       --accent: #06b6d4;
       --success: #10b981;
-      --success-dark: #059669;
       --danger: #f43f5e;
       --warning: #f59e0b;
       --dark: #0a0e1a;
-      --dark-2: #131828;
       --gray-1: #f8fafc;
       --gray-2: #f1f5f9;
       --gray-3: #e2e8f0;
@@ -40,9 +39,7 @@
       --radius-sm: 14px;
       --shadow-sm: 0 2px 8px -2px rgba(15, 23, 42, 0.08);
       --shadow-md: 0 8px 24px -8px rgba(15, 23, 42, 0.15);
-      --shadow-lg: 0 20px 40px -16px rgba(15, 23, 42, 0.22);
       --shadow-glow: 0 12px 32px -8px rgba(99, 102, 241, 0.4);
-      --shadow-glow-success: 0 12px 32px -8px rgba(16, 185, 129, 0.5);
     }
 
     html, body {
@@ -135,16 +132,12 @@
       position: relative;
     }
 
-    .status-bar .time { font-feature-settings: "tnum"; }
-
     .status-bar .icons {
       display: flex;
       align-items: center;
       gap: 5px;
       font-size: 12px;
     }
-
-    .status-bar .icons i { color: #0f172a; }
 
     /* ============ APP SCREEN ============ */
     .app-screen {
@@ -238,9 +231,55 @@
       box-shadow: var(--shadow-sm);
     }
 
-    .header-btn:active {
-      transform: scale(0.92);
-      background: var(--gray-2);
+    .header-btn:active { transform: scale(0.92); background: var(--gray-2); }
+
+    /* ============ TAB BAR ============ */
+    .tab-bar {
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      background: #f1f5f9;
+      border-radius: 16px;
+      margin-bottom: 14px;
+      animation: fadeUp 0.5s 0.05s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px 6px;
+      border: none;
+      background: transparent;
+      border-radius: 12px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      letter-spacing: -0.1px;
+    }
+
+    .tab-btn i { font-size: 14px; }
+
+    .tab-btn.active {
+      background: white;
+      color: #4338ca;
+      box-shadow: 0 4px 12px -4px rgba(15, 23, 42, 0.15);
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .tab-content.active { display: block; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     /* ============ CAPTURE CARD ============ */
@@ -249,17 +288,9 @@
       border-radius: var(--radius-lg);
       padding: 12px;
       margin-bottom: 16px;
-      box-shadow: 
-        0 20px 40px -16px rgba(15, 23, 42, 0.18),
-        0 0 0 1px rgba(226, 232, 240, 0.8) inset;
+      box-shadow: 0 20px 40px -16px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(226, 232, 240, 0.8) inset;
       border: 1px solid #e2e8f0;
       position: relative;
-      animation: fadeUp 0.5s 0.1s cubic-bezier(0.4, 0, 0.2, 1) backwards;
-    }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(16px); }
-      to { opacity: 1; transform: translateY(0); }
     }
 
     .camera-preview {
@@ -285,7 +316,6 @@
 
     #previewCanvas { display: none; }
 
-    /* ============ DETECTION OVERLAY ============ */
     #detectionCanvas {
       position: absolute;
       inset: 0;
@@ -343,22 +373,10 @@
       backdrop-filter: blur(8px);
     }
 
-    .camera-placeholder .main-text {
-      font-size: 15px;
-      font-weight: 700;
-      color: #e2e8f0;
-      letter-spacing: -0.2px;
-    }
+    .camera-placeholder .main-text { font-size: 15px; font-weight: 700; color: #e2e8f0; }
+    .camera-placeholder .hint { font-size: 11.5px; color: #94a3b8; font-weight: 500; max-width: 240px; line-height: 1.5; }
 
-    .camera-placeholder .hint {
-      font-size: 11.5px;
-      color: #94a3b8;
-      font-weight: 500;
-      max-width: 240px;
-      line-height: 1.5;
-    }
-
-    /* ============ SMART STATUS BADGES ============ */
+    /* ============ STATUS BADGES ============ */
     .status-badge {
       position: absolute;
       top: 14px;
@@ -382,10 +400,7 @@
     .status-badge.show { display: flex; }
 
     .status-badge .dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: currentColor;
+      width: 7px; height: 7px; border-radius: 50%; background: currentColor;
       animation: pulse 1.2s infinite;
     }
 
@@ -394,23 +409,9 @@
       50% { opacity: 0.4; transform: scale(0.6); }
     }
 
-    .status-badge.searching {
-      background: linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(217, 119, 6, 0.95));
-      color: white;
-    }
-
-    .status-badge.detected {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.95), rgba(139, 92, 246, 0.95));
-      color: white;
-      animation: bounceIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .status-badge.locked {
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(5, 150, 105, 0.95));
-      color: white;
-      box-shadow: 0 8px 24px -6px rgba(16, 185, 129, 0.6);
-      animation: bounceIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+    .status-badge.searching { background: linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(217, 119, 6, 0.95)); color: white; }
+    .status-badge.detected { background: linear-gradient(135deg, rgba(99, 102, 241, 0.95), rgba(139, 92, 246, 0.95)); color: white; animation: bounceIn 0.4s; }
+    .status-badge.locked { background: linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(5, 150, 105, 0.95)); color: white; box-shadow: 0 8px 24px -6px rgba(16, 185, 129, 0.6); animation: bounceIn 0.4s; }
 
     @keyframes bounceIn {
       0% { transform: scale(0.85); opacity: 0; }
@@ -446,7 +447,7 @@
       box-shadow: 0 0 12px rgba(16, 185, 129, 0.8);
     }
 
-    /* ============ CORNER DETECTION MARKERS ============ */
+    /* ============ CORNER MARKERS ============ */
     .corner-marker {
       position: absolute;
       width: 24px;
@@ -460,7 +461,6 @@
     }
 
     .corner-marker.show { display: block; }
-
     .corner-marker.tl { border-right: none; border-bottom: none; border-radius: 8px 0 0 0; }
     .corner-marker.tr { border-left: none; border-bottom: none; border-radius: 0 8px 0 0; }
     .corner-marker.bl { border-right: none; border-top: none; border-radius: 0 0 0 8px; }
@@ -501,11 +501,7 @@
 
     .processing-overlay.show { display: flex; }
 
-    .spinner-wrap {
-      position: relative;
-      width: 60px;
-      height: 60px;
-    }
+    .spinner-wrap { position: relative; width: 60px; height: 60px; }
 
     .spinner {
       width: 60px;
@@ -533,6 +529,8 @@
       font-weight: 700;
       letter-spacing: 0.3px;
       color: #e2e8f0;
+      text-align: center;
+      padding: 0 20px;
     }
 
     /* ============ CAPTURE CONTROLS ============ */
@@ -561,24 +559,10 @@
       position: relative;
     }
 
-    .ctrl-btn:active {
-      transform: scale(0.9);
-      background: var(--gray-2);
-    }
+    .ctrl-btn:active { transform: scale(0.9); background: var(--gray-2); }
+    .ctrl-btn.active { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; border-color: transparent; box-shadow: var(--shadow-glow); }
 
-    .ctrl-btn.active {
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      color: white;
-      border-color: transparent;
-      box-shadow: var(--shadow-glow);
-    }
-
-    .shutter-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    .shutter-wrap { position: relative; display: flex; align-items: center; justify-content: center; }
 
     .shutter-ring {
       position: absolute;
@@ -594,14 +578,9 @@
       opacity: 0.6;
     }
 
-    .shutter-ring.auto-active {
-      animation: rotateRing 1.5s linear infinite;
-      opacity: 1;
-    }
+    .shutter-ring.auto-active { animation: rotateRing 1.5s linear infinite; opacity: 1; }
 
-    @keyframes rotateRing {
-      to { transform: rotate(360deg); }
-    }
+    @keyframes rotateRing { to { transform: rotate(360deg); } }
 
     .shutter-btn {
       width: 68px;
@@ -624,33 +603,14 @@
       position: relative;
     }
 
-    .shutter-btn:active {
-      transform: scale(0.9);
-      box-shadow: 
-        0 6px 16px -4px rgba(15, 23, 42, 0.3),
-        0 0 0 4px #ffffff,
-        0 0 0 5px #818cf8;
-    }
-
-    .shutter-btn::after {
-      content: '';
-      position: absolute;
-      inset: 6px;
-      border-radius: 50%;
-      border: 2px solid #e2e8f0;
-      opacity: 0.6;
-    }
-
+    .shutter-btn:active { transform: scale(0.9); }
+    .shutter-btn::after { content: ''; position: absolute; inset: 6px; border-radius: 50%; border: 2px solid #e2e8f0; opacity: 0.6; }
     .shutter-btn.locked {
       color: #10b981;
-      box-shadow: 
-        0 10px 24px -6px rgba(16, 185, 129, 0.4),
-        0 0 0 4px #ffffff,
-        0 0 0 5px #34d399,
-        inset 0 1px 2px rgba(255,255,255,1);
+      box-shadow: 0 10px 24px -6px rgba(16, 185, 129, 0.4), 0 0 0 4px #ffffff, 0 0 0 5px #34d399, inset 0 1px 2px rgba(255,255,255,1);
     }
 
-    /* ============ AUTO SCAN TOGGLE ============ */
+    /* ============ AUTO TOGGLE ============ */
     .auto-toggle-row {
       display: flex;
       align-items: center;
@@ -658,16 +618,11 @@
       padding: 10px 14px;
       background: linear-gradient(160deg, #eef2ff, #e0e7ff);
       border-radius: 14px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       border: 1px solid #c7d2fe;
-      animation: fadeUp 0.5s 0.15s cubic-bezier(0.4, 0, 0.2, 1) backwards;
     }
 
-    .auto-toggle-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+    .auto-toggle-info { display: flex; align-items: center; gap: 10px; }
 
     .auto-toggle-icon {
       width: 34px;
@@ -682,19 +637,8 @@
       box-shadow: 0 6px 14px -4px rgba(99, 102, 241, 0.5);
     }
 
-    .auto-toggle-text .title {
-      font-size: 12px;
-      font-weight: 800;
-      color: #3730a3;
-      letter-spacing: -0.1px;
-    }
-
-    .auto-toggle-text .sub {
-      font-size: 10px;
-      font-weight: 500;
-      color: #6366f1;
-      margin-top: 1px;
-    }
+    .auto-toggle-text .title { font-size: 12px; font-weight: 800; color: #3730a3; letter-spacing: -0.1px; }
+    .auto-toggle-text .sub { font-size: 10px; font-weight: 500; color: #6366f1; margin-top: 1px; }
 
     .toggle-switch {
       width: 46px;
@@ -720,16 +664,10 @@
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     }
 
-    .toggle-switch.on {
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      box-shadow: 0 4px 12px -2px rgba(99, 102, 241, 0.6);
-    }
+    .toggle-switch.on { background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 4px 12px -2px rgba(99, 102, 241, 0.6); }
+    .toggle-switch.on::after { left: 23px; }
 
-    .toggle-switch.on::after {
-      left: 23px;
-    }
-
-    /* ============ SENSITIVITY ROW ============ */
+    /* ============ SENSITIVITY ============ */
     .sensitivity-row {
       display: flex;
       align-items: center;
@@ -739,7 +677,6 @@
       border-radius: 12px;
       margin-bottom: 14px;
       border: 1px solid #e2e8f0;
-      animation: fadeUp 0.5s 0.2s cubic-bezier(0.4, 0, 0.2, 1) backwards;
     }
 
     .sensitivity-row label {
@@ -753,10 +690,7 @@
       white-space: nowrap;
     }
 
-    .sensitivity-row label i {
-      color: #6366f1;
-      font-size: 10px;
-    }
+    .sensitivity-row label i { color: #6366f1; font-size: 10px; }
 
     .sensitivity-row input[type=range] {
       flex: 1;
@@ -781,15 +715,6 @@
       cursor: pointer;
     }
 
-    .sensitivity-row input[type=range]::-moz-range-thumb {
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: white;
-      border: 2.5px solid #6366f1;
-      cursor: pointer;
-    }
-
     .sensitivity-value {
       font-size: 10.5px;
       font-weight: 800;
@@ -801,7 +726,7 @@
       text-align: center;
     }
 
-    /* ============ SECTION LABELS ============ */
+    /* ============ SECTION LABEL ============ */
     .section-label {
       display: flex;
       align-items: center;
@@ -823,12 +748,12 @@
 
     .section-label h3 i { font-size: 11px; color: #6366f1; }
 
+    /* ============ FILTER GRID (6 modes) ============ */
     .modes-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 8px;
-      margin-bottom: 20px;
-      animation: fadeUp 0.5s 0.25s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+      margin-bottom: 16px;
     }
 
     .mode-card {
@@ -858,9 +783,7 @@
     .mode-card.active::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
+      top: 0; left: 0; right: 0;
       height: 3px;
       background: linear-gradient(90deg, #6366f1, #8b5cf6, #06b6d4);
     }
@@ -894,6 +817,59 @@
     }
 
     .mode-card.active .mode-name { color: #4338ca; }
+
+    /* ============ TOOLS GRID ============ */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tool-btn {
+      background: white;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 12px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .tool-btn:active { transform: scale(0.94); background: #f8fafc; }
+
+    .tool-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      color: #d97706;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+    }
+
+    .tool-btn:nth-child(2) .tool-icon { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #2563eb; }
+    .tool-btn:nth-child(3) .tool-icon { background: linear-gradient(135deg, #fce7f3, #fbcfe8); color: #db2777; }
+    .tool-btn:nth-child(4) .tool-icon { background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #059669; }
+    .tool-btn:nth-child(5) .tool-icon { background: linear-gradient(135deg, #ede9fe, #ddd6fe); color: #7c3aed; }
+    .tool-btn:nth-child(6) .tool-icon { background: linear-gradient(135deg, #ffedd5, #fed7aa); color: #ea580c; }
+    .tool-btn:nth-child(7) .tool-icon { background: linear-gradient(135deg, #cffafe, #a5f3fc); color: #0891b2; }
+    .tool-btn:nth-child(8) .tool-icon { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #dc2626; }
+
+    .tool-name {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: #475569;
+      text-align: center;
+      letter-spacing: -0.1px;
+      line-height: 1.15;
+    }
 
     /* ============ GALLERY ============ */
     .gallery-header {
@@ -962,12 +938,7 @@
 
     .page-thumb:active { transform: scale(0.94); }
 
-    .page-thumb img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
+    .page-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
     .page-thumb .thumb-overlay {
       position: absolute;
@@ -978,12 +949,10 @@
 
     .page-thumb .remove-badge {
       position: absolute;
-      top: 6px;
-      right: 6px;
+      top: 6px; right: 6px;
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(8px);
-      width: 24px;
-      height: 24px;
+      width: 24px; height: 24px;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -996,8 +965,7 @@
 
     .page-thumb .thumb-index {
       position: absolute;
-      bottom: 6px;
-      left: 6px;
+      bottom: 6px; left: 6px;
       background: rgba(255,255,255,0.95);
       backdrop-filter: blur(8px);
       color: #0f172a;
@@ -1010,10 +978,8 @@
 
     .page-thumb .thumb-edit {
       position: absolute;
-      bottom: 6px;
-      right: 6px;
-      width: 22px;
-      height: 22px;
+      bottom: 6px; right: 6px;
+      width: 22px; height: 22px;
       background: rgba(99, 102, 241, 0.95);
       backdrop-filter: blur(8px);
       border-radius: 7px;
@@ -1041,17 +1007,13 @@
       gap: 10px;
     }
 
-    .empty-gallery i {
-      font-size: 28px;
-      color: #cbd5e1;
-    }
+    .empty-gallery i { font-size: 28px; color: #cbd5e1; }
 
     /* ============ ACTION BAR ============ */
     .action-bar {
       display: flex;
       gap: 10px;
       margin-top: 4px;
-      animation: fadeUp 0.5s 0.3s cubic-bezier(0.4, 0, 0.2, 1) backwards;
     }
 
     .btn-primary {
@@ -1062,7 +1024,7 @@
       padding: 17px 12px;
       color: white;
       font-weight: 800;
-      font-size: 14.5px;
+      font-size: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1082,13 +1044,8 @@
       background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.15) 100%);
     }
 
-    .btn-primary:active {
-      transform: scale(0.96);
-      box-shadow: 0 8px 20px -8px rgba(99, 102, 241, 0.7);
-    }
-
-    .btn-primary i { font-size: 16px; position: relative; }
-    .btn-primary span { position: relative; }
+    .btn-primary:active { transform: scale(0.96); box-shadow: 0 8px 20px -8px rgba(99, 102, 241, 0.7); }
+    .btn-primary i, .btn-primary span { position: relative; }
 
     .btn-outline {
       flex: 1;
@@ -1098,7 +1055,7 @@
       padding: 17px 12px;
       color: #1e293b;
       font-weight: 800;
-      font-size: 14.5px;
+      font-size: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1109,15 +1066,58 @@
       letter-spacing: 0.2px;
     }
 
-    .btn-outline:active {
-      background: #f1f5f9;
-      transform: scale(0.96);
+    .btn-outline:active { background: #f1f5f9; transform: scale(0.96); }
+
+    /* ============ BOTTOM NAV (Floating) ============ */
+    .bottom-nav {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 8px 12px;
+      display: flex;
+      gap: 4px;
+      box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255,255,255,0.1) inset;
+      z-index: 50;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .nav-btn {
+      width: 52px;
+      height: 44px;
+      border: none;
+      background: transparent;
+      border-radius: 16px;
+      color: #94a3b8;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.25s;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .nav-btn.active {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      box-shadow: 0 8px 16px -6px rgba(99, 102, 241, 0.6);
+    }
+
+    .nav-btn span {
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
     }
 
     /* ============ TOAST ============ */
     .toast-message {
       position: fixed;
-      bottom: 40px;
+      bottom: 100px;
       left: 50%;
       transform: translateX(-50%) translateY(20px) scale(0.9);
       background: rgba(15, 23, 42, 0.95);
@@ -1141,10 +1141,7 @@
       max-width: 90vw;
     }
 
-    .toast-message.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0) scale(1);
-    }
+    .toast-message.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 
     .toast-icon {
       width: 22px;
@@ -1160,7 +1157,7 @@
 
     #fileInput { display: none; }
 
-    /* ============ MODAL ============ */
+    /* ============ MODAL BASE ============ */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -1170,7 +1167,7 @@
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 16px;
       animation: fadeIn 0.25s;
     }
 
@@ -1180,8 +1177,8 @@
 
     .modal-content {
       background: linear-gradient(180deg, #ffffff, #f8fafc);
-      border-radius: 32px;
-      max-width: 370px;
+      border-radius: 28px;
+      max-width: 380px;
       width: 100%;
       max-height: 92vh;
       overflow: hidden;
@@ -1201,12 +1198,12 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 20px 22px 16px;
+      padding: 18px 20px 14px;
       border-bottom: 1px solid #f1f5f9;
     }
 
     .modal-header h4 {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 800;
       color: #0f172a;
       letter-spacing: -0.2px;
@@ -1220,131 +1217,256 @@
     .modal-header .close-btn {
       background: #f1f5f9;
       border: none;
-      width: 34px;
-      height: 34px;
-      border-radius: 12px;
+      width: 32px;
+      height: 32px;
+      border-radius: 11px;
       color: #334155;
-      font-size: 14px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-    }
-
-    .modal-header .close-btn:active {
-      background: #e2e8f0;
-      transform: scale(0.92);
-    }
-
-    .modal-body {
-      padding: 18px 22px 22px;
-      overflow-y: auto;
-      flex: 1;
-    }
-
-    .modal-body img {
-      width: 100%;
-      border-radius: 18px;
-      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.2);
-      margin-bottom: 20px;
-      border: 1px solid #e2e8f0;
-    }
-
-    .slider-group { margin-bottom: 16px; }
-
-    .slider-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .slider-header label {
-      font-size: 12px;
-      font-weight: 700;
-      color: #475569;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      letter-spacing: 0.2px;
-    }
-
-    .slider-header label i { color: #6366f1; font-size: 11px; }
-
-    .slider-value {
-      font-size: 11px;
-      font-weight: 800;
-      color: #4338ca;
-      background: #eef2ff;
-      padding: 3px 9px;
-      border-radius: 8px;
-      min-width: 36px;
-      text-align: center;
-    }
-
-    input[type=range].modal-range {
-      width: 100%;
-      height: 6px;
-      border-radius: 10px;
-      background: linear-gradient(90deg, #6366f1, #8b5cf6);
-      outline: none;
-      -webkit-appearance: none;
-      appearance: none;
-      cursor: pointer;
-    }
-
-    input[type=range].modal-range::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: white;
-      border: 3px solid #6366f1;
-      box-shadow: 0 4px 10px -2px rgba(99, 102, 241, 0.5);
-      cursor: pointer;
-    }
-
-    .modal-actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 8px;
-    }
-
-    .modal-actions button {
-      flex: 1;
-      padding: 14px;
-      border-radius: 16px;
-      border: none;
-      font-weight: 800;
       font-size: 13px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 7px;
       transition: all 0.2s;
-      letter-spacing: 0.2px;
     }
 
-    .modal-actions .reapply {
+    .modal-header .close-btn:active { background: #e2e8f0; transform: scale(0.92); }
+
+    .modal-body {
+      padding: 16px 20px 20px;
+      overflow-y: auto;
+      flex: 1;
+      scrollbar-width: none;
+    }
+
+    .modal-body::-webkit-scrollbar { display: none; }
+
+    .modal-body img {
+      width: 100%;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.2);
+      margin-bottom: 16px;
+      border: 1px solid #e2e8f0;
+    }
+
+    /* ============ SIGNATURE CANVAS ============ */
+    .sig-canvas-wrap {
+      position: relative;
+      background: #f8fafc;
+      border: 2px dashed #cbd5e1;
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    #signatureCanvas {
+      width: 100%;
+      height: 180px;
+      display: block;
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    .sig-hint {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #cbd5e1;
+      font-size: 13px;
+      font-weight: 600;
+      pointer-events: none;
+      text-align: center;
+      transition: opacity 0.2s;
+    }
+
+    .sig-hint.hidden { opacity: 0; }
+
+    .sig-actions {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .sig-btn {
+      flex: 1;
+      padding: 11px;
+      border-radius: 14px;
+      border: none;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .sig-btn.clear { background: #fee2e2; color: #dc2626; }
+    .sig-btn.save { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; }
+    .sig-btn:active { transform: scale(0.96); }
+
+    /* ============ OCR RESULT ============ */
+    .ocr-textarea {
+      width: 100%;
+      min-height: 160px;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1.5px solid #e2e8f0;
+      background: #f8fafc;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #1e293b;
+      resize: vertical;
+      margin-bottom: 14px;
+    }
+
+    .ocr-textarea:focus { outline: none; border-color: #6366f1; background: white; }
+
+    /* ============ TRANSLATE ============ */
+    .lang-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .lang-select {
+      flex: 1;
+      padding: 11px 14px;
+      border-radius: 12px;
+      border: 1.5px solid #e2e8f0;
+      background: white;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: #1e293b;
+      cursor: pointer;
+    }
+
+    .lang-select:focus { outline: none; border-color: #6366f1; }
+
+    .translated-box {
+      background: linear-gradient(160deg, #eef2ff, #faf5ff);
+      border: 1.5px solid #c7d2fe;
+      border-radius: 14px;
+      padding: 14px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #1e293b;
+      min-height: 100px;
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    /* ============ WATERMARK ============ */
+    .wm-input {
+      width: 100%;
+      padding: 13px 16px;
+      border-radius: 12px;
+      border: 1.5px solid #e2e8f0;
+      background: #f8fafc;
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      margin-bottom: 12px;
+    }
+
+    .wm-input:focus { outline: none; border-color: #6366f1; background: white; }
+
+    .wm-options {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .wm-option {
+      padding: 7px 14px;
+      background: #f1f5f9;
+      border: 1.5px solid transparent;
+      border-radius: 30px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .wm-option.active {
       background: linear-gradient(135deg, #6366f1, #8b5cf6);
       color: white;
-      box-shadow: 0 12px 24px -8px rgba(99, 102, 241, 0.5);
+      box-shadow: 0 6px 14px -4px rgba(99, 102, 241, 0.5);
     }
 
-    .modal-actions .reapply:active { transform: scale(0.96); }
+    /* ============ PIXEL ERASER ============ */
+    .eraser-canvas-wrap {
+      position: relative;
+      background: #f8fafc;
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 14px;
+      border: 1.5px solid #e2e8f0;
+    }
 
-    .modal-actions .cancel {
+    #eraserCanvas {
+      width: 100%;
+      display: block;
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    .eraser-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding: 8px 12px;
       background: #f1f5f9;
-      color: #334155;
+      border-radius: 12px;
     }
 
-    .modal-actions .cancel:active {
-      background: #e2e8f0;
-      transform: scale(0.96);
+    .eraser-toolbar label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
+
+    .eraser-toolbar input[type=range] {
+      flex: 1;
+      height: 4px;
+      accent-color: #6366f1;
+    }
+
+    .size-value {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #4338ca;
+      background: #eef2ff;
+      padding: 3px 8px;
+      border-radius: 7px;
+      min-width: 32px;
+      text-align: center;
+    }
+
+    /* ============ CONFIRM/INFO MODAL ============ */
+    .info-box {
+      background: linear-gradient(160deg, #eef2ff, #faf5ff);
+      border: 1.5px solid #c7d2fe;
+      border-radius: 14px;
+      padding: 14px;
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: #3730a3;
+      margin-bottom: 14px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .info-box i { color: #6366f1; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
 
     /* ============ RESPONSIVE ============ */
     @media (max-width: 430px) {
@@ -1356,12 +1478,26 @@
       body { padding: 0; }
       .dynamic-island { display: none; }
       .status-bar { padding: 14px 22px 4px; }
-      .app-screen { padding: 0 14px 20px; }
+      .app-screen { padding: 0 14px 100px; }
+      .bottom-nav { bottom: 8px; }
     }
 
     @media (max-height: 800px) {
       .phone-frame { height: 96vh; }
       .camera-preview { aspect-ratio: 4 / 4.5; }
+    }
+
+    /* ============ SCROLL FIX ============ */
+    .app-screen { padding-bottom: 100px !important; }
+
+    .spinner-large {
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(99, 102, 241, 0.15);
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+      margin: 20px auto;
     }
   </style>
 </head>
@@ -1386,8 +1522,8 @@
             <i class="fas fa-bolt"></i>
           </div>
           <div class="brand-text">
-            <h1>ScanPro</h1>
-            <p>AI Smart Detection</p>
+            <h1>ScanPro Ultra</h1>
+            <p>AI Scanner Suite</p>
           </div>
         </div>
         <button class="header-btn" id="settingsBtn">
@@ -1395,139 +1531,254 @@
         </button>
       </div>
 
-      <!-- Camera Card -->
-      <div class="capture-card">
-        <div class="camera-preview" id="cameraPreview">
-          <video id="videoPreview" autoplay playsinline muted></video>
-          <canvas id="previewCanvas"></canvas>
-          <canvas id="detectionCanvas"></canvas>
-          <div class="grid-overlay" id="gridOverlay"></div>
-          
-          <!-- Real-time detection corner markers -->
-          <div class="corner-marker tl" id="markerTL"></div>
-          <div class="corner-marker tr" id="markerTR"></div>
-          <div class="corner-marker bl" id="markerBL"></div>
-          <div class="corner-marker br" id="markerBR"></div>
+      <!-- Tab bar -->
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="scan">
+          <i class="fas fa-camera"></i>
+          <span>Quét</span>
+        </button>
+        <button class="tab-btn" data-tab="tools">
+          <i class="fas fa-toolbox"></i>
+          <span>Công cụ</span>
+        </button>
+        <button class="tab-btn" data-tab="files">
+          <i class="fas fa-folder"></i>
+          <span>Tệp</span>
+        </button>
+      </div>
 
-          <!-- Status badge -->
-          <div class="status-badge" id="statusBadge">
-            <span class="dot"></span>
-            <span id="statusText">SEARCHING</span>
-          </div>
+      <!-- ============ TAB: SCAN ============ -->
+      <div class="tab-content active" id="tab-scan">
+        <!-- Camera Card -->
+        <div class="capture-card">
+          <div class="camera-preview" id="cameraPreview">
+            <video id="videoPreview" autoplay playsinline muted></video>
+            <canvas id="previewCanvas"></canvas>
+            <canvas id="detectionCanvas"></canvas>
+            <div class="grid-overlay" id="gridOverlay"></div>
+            
+            <div class="corner-marker tl" id="markerTL"></div>
+            <div class="corner-marker tr" id="markerTR"></div>
+            <div class="corner-marker bl" id="markerBL"></div>
+            <div class="corner-marker br" id="markerBR"></div>
 
-          <!-- Page counter -->
-          <div class="page-counter-badge" id="pageCounterBadge" style="display:none;">
-            <i class="fas fa-file-alt" style="font-size:9px;margin-right:3px;"></i><span id="counterText">0</span>
-          </div>
-
-          <!-- Stability meter -->
-          <div class="stability-meter" id="stabilityMeter">
-            <div class="stability-fill" id="stabilityFill"></div>
-          </div>
-
-          <div class="camera-placeholder" id="cameraPlaceholder">
-            <div class="icon-wrap">
-              <i class="fas fa-camera"></i>
+            <div class="status-badge" id="statusBadge">
+              <span class="dot"></span>
+              <span id="statusText">SEARCHING</span>
             </div>
-            <span class="main-text">Nhấn để bật camera</span>
-            <span class="hint">AI tự động nhận diện giấy tờ và chụp khi ổn định</span>
-          </div>
 
-          <div class="processing-overlay" id="processingOverlay">
-            <div class="spinner-wrap">
-              <div class="spinner"></div>
-              <div class="spinner-inner"></div>
+            <div class="page-counter-badge" id="pageCounterBadge" style="display:none;">
+              <i class="fas fa-file-alt" style="font-size:9px;margin-right:3px;"></i><span id="counterText">0</span>
             </div>
-            <span id="processingText">Đang xử lý...</span>
-          </div>
-        </div>
 
-        <div class="capture-controls">
-          <button class="ctrl-btn" id="switchCameraBtn" title="Chuyển camera">
-            <i class="fas fa-camera-rotate"></i>
-          </button>
-          <div class="shutter-wrap">
-            <div class="shutter-ring" id="shutterRing"></div>
-            <button class="shutter-btn" id="captureBtn">
-              <i class="fas fa-circle"></i>
+            <div class="stability-meter" id="stabilityMeter">
+              <div class="stability-fill" id="stabilityFill"></div>
+            </div>
+
+            <div class="camera-placeholder" id="cameraPlaceholder">
+              <div class="icon-wrap">
+                <i class="fas fa-camera"></i>
+              </div>
+              <span class="main-text">Nhấn để bật camera</span>
+              <span class="hint">AI tự động nhận diện giấy tờ và chụp khi ổn định</span>
+            </div>
+
+            <div class="processing-overlay" id="processingOverlay">
+              <div class="spinner-wrap">
+                <div class="spinner"></div>
+                <div class="spinner-inner"></div>
+              </div>
+              <span id="processingText">Đang xử lý...</span>
+            </div>
+          </div>
+
+          <div class="capture-controls">
+            <button class="ctrl-btn" id="switchCameraBtn">
+              <i class="fas fa-camera-rotate"></i>
+            </button>
+            <div class="shutter-wrap">
+              <div class="shutter-ring" id="shutterRing"></div>
+              <button class="shutter-btn" id="captureBtn">
+                <i class="fas fa-circle"></i>
+              </button>
+            </div>
+            <button class="ctrl-btn" id="uploadBtn">
+              <i class="fas fa-image"></i>
             </button>
           </div>
-          <button class="ctrl-btn" id="uploadBtn" title="Tải ảnh lên">
-            <i class="fas fa-image"></i>
+          <input type="file" id="fileInput" accept="image/*" multiple>
+        </div>
+
+        <!-- Auto scan toggle -->
+        <div class="auto-toggle-row">
+          <div class="auto-toggle-info">
+            <div class="auto-toggle-icon">
+              <i class="fas fa-wand-magic-sparkles"></i>
+            </div>
+            <div class="auto-toggle-text">
+              <div class="title">Tự động chụp</div>
+              <div class="sub">Chụp khi tài liệu ổn định</div>
+            </div>
+          </div>
+          <div class="toggle-switch on" id="autoToggle"></div>
+        </div>
+
+        <div class="sensitivity-row" id="sensitivityRow">
+          <label><i class="fas fa-crosshairs"></i> Độ nhạy</label>
+          <input type="range" id="sensitivitySlider" min="1" max="100" value="65">
+          <span class="sensitivity-value" id="sensitivityValue">65</span>
+        </div>
+
+        <!-- Smart Filters -->
+        <div class="section-label">
+          <h3><i class="fas fa-wand-magic-sparkles"></i> Bộ lọc thông minh</h3>
+        </div>
+
+        <div class="modes-grid">
+          <div class="mode-card active" data-filter="auto">
+            <div class="mode-icon"><i class="fas fa-crop-simple"></i></div>
+            <div class="mode-name">Tự cắt viền</div>
+          </div>
+          <div class="mode-card active" data-filter="enhance">
+            <div class="mode-icon"><i class="fas fa-sparkles"></i></div>
+            <div class="mode-name">Làm nét</div>
+          </div>
+          <div class="mode-card" data-filter="magic">
+            <div class="mode-icon"><i class="fas fa-wand-sparkles"></i></div>
+            <div class="mode-name">Magic Color</div>
+          </div>
+          <div class="mode-card" data-filter="bw">
+            <div class="mode-icon"><i class="fas fa-font"></i></div>
+            <div class="mode-name">B&W</div>
+          </div>
+          <div class="mode-card" data-filter="bw2">
+            <div class="mode-icon"><i class="fas fa-circle-half-stroke"></i></div>
+            <div class="mode-name">B&W 2</div>
+          </div>
+          <div class="mode-card" data-filter="gray">
+            <div class="mode-icon"><i class="fas fa-adjust"></i></div>
+            <div class="mode-name">Grayscale</div>
+          </div>
+        </div>
+
+        <!-- Gallery -->
+        <div class="gallery-header">
+          <h3><i class="fas fa-images"></i> Trang đã quét</h3>
+          <span class="page-count-badge" id="pageCount">0 trang</span>
+        </div>
+
+        <div class="pages-grid" id="pagesGrid">
+          <div class="empty-gallery" id="emptyGallery">
+            <i class="fas fa-file-circle-plus"></i>
+            <span>Chưa có trang nào</span>
+          </div>
+        </div>
+
+        <div class="action-bar">
+          <button class="btn-primary" id="exportPdfBtn">
+            <i class="fas fa-file-pdf"></i>
+            <span>Xuất PDF</span>
+          </button>
+          <button class="btn-outline" id="sharePdfBtn">
+            <i class="fas fa-share-nodes"></i>
+            <span>Chia sẻ</span>
           </button>
         </div>
-        <input type="file" id="fileInput" accept="image/*" multiple>
       </div>
 
-      <!-- Auto-scan toggle -->
-      <div class="auto-toggle-row">
-        <div class="auto-toggle-info">
-          <div class="auto-toggle-icon">
-            <i class="fas fa-wand-magic-sparkles"></i>
+      <!-- ============ TAB: TOOLS ============ -->
+      <div class="tab-content" id="tab-tools">
+        <div class="section-label">
+          <h3><i class="fas fa-toolbox"></i> Công cụ xử lý</h3>
+        </div>
+
+        <div class="tools-grid">
+          <button class="tool-btn" id="toolOCR">
+            <div class="tool-icon"><i class="fas fa-text-height"></i></div>
+            <div class="tool-name">OCR Text</div>
+          </button>
+          <button class="tool-btn" id="toolTranslate">
+            <div class="tool-icon"><i class="fas fa-language"></i></div>
+            <div class="tool-name">Dịch thuật</div>
+          </button>
+          <button class="tool-btn" id="toolSearch">
+            <div class="tool-icon"><i class="fas fa-magnifying-glass"></i></div>
+            <div class="tool-name">Tìm kiếm</div>
+          </button>
+          <button class="tool-btn" id="toolSignature">
+            <div class="tool-icon"><i class="fas fa-signature"></i></div>
+            <div class="tool-name">Chữ ký</div>
+          </button>
+          <button class="tool-btn" id="toolWatermark">
+            <div class="tool-icon"><i class="fas fa-droplet"></i></div>
+            <div class="tool-name">Watermark</div>
+          </button>
+          <button class="tool-btn" id="toolEraser">
+            <div class="tool-icon"><i class="fas fa-eraser"></i></div>
+            <div class="tool-name">Tẩy pixel</div>
+          </button>
+          <button class="tool-btn" id="toolMerge">
+            <div class="tool-icon"><i class="fas fa-object-group"></i></div>
+            <div class="tool-name">Ghép file</div>
+          </button>
+          <button class="tool-btn" id="toolExport">
+            <div class="tool-icon"><i class="fas fa-file-export"></i></div>
+            <div class="tool-name">Đa định dạng</div>
+          </button>
+        </div>
+
+        <div class="info-box">
+          <i class="fas fa-lightbulb"></i>
+          <div>
+            <strong>Mẹo:</strong> Quét tài liệu trước ở tab <b>Quét</b>, sau đó quay lại đây để sử dụng các công cụ OCR, dịch thuật, chữ ký số, watermark, hoặc tẩy pixel trên từng trang.
           </div>
-          <div class="auto-toggle-text">
-            <div class="title">Tự động chụp</div>
-            <div class="sub">Chụp khi tài liệu ổn định</div>
+        </div>
+      </div>
+
+      <!-- ============ TAB: FILES ============ -->
+      <div class="tab-content" id="tab-files">
+        <div class="section-label">
+          <h3><i class="fas fa-folder-open"></i> Tệp đã tạo</h3>
+        </div>
+
+        <div class="info-box">
+          <i class="fas fa-info-circle"></i>
+          <div>
+            Tất cả tài liệu được lưu tạm trong phiên làm việc. Nhấn <b>Xuất PDF</b> để tải về máy hoặc <b>Chia sẻ</b> để gửi đi.
           </div>
         </div>
-        <div class="toggle-switch on" id="autoToggle"></div>
-      </div>
 
-      <!-- Sensitivity slider -->
-      <div class="sensitivity-row" id="sensitivityRow">
-        <label><i class="fas fa-crosshairs"></i> Độ nhạy</label>
-        <input type="range" id="sensitivitySlider" min="1" max="100" value="65">
-        <span class="sensitivity-value" id="sensitivityValue">65</span>
-      </div>
-
-      <!-- Smart Filters -->
-      <div class="section-label">
-        <h3><i class="fas fa-wand-magic-sparkles"></i> Smart Filters</h3>
-      </div>
-
-      <div class="modes-grid">
-        <div class="mode-card active" id="autoCropChip">
-          <div class="mode-icon"><i class="fas fa-crop-simple"></i></div>
-          <div class="mode-name">Cắt viền</div>
-        </div>
-        <div class="mode-card active" id="autoEnhanceChip">
-          <div class="mode-icon"><i class="fas fa-sparkles"></i></div>
-          <div class="mode-name">Làm nét</div>
-        </div>
-        <div class="mode-card" id="grayChip">
-          <div class="mode-icon"><i class="fas fa-circle-half-stroke"></i></div>
-          <div class="mode-name">Xám</div>
-        </div>
-        <div class="mode-card" id="bwChip">
-          <div class="mode-icon"><i class="fas fa-font"></i></div>
-          <div class="mode-name">B&W</div>
+        <div class="tools-grid" style="grid-template-columns: repeat(3, 1fr);">
+          <button class="tool-btn" id="exportPDF2">
+            <div class="tool-icon"><i class="fas fa-file-pdf"></i></div>
+            <div class="tool-name">PDF</div>
+          </button>
+          <button class="tool-btn" id="exportJPG">
+            <div class="tool-icon" style="background: linear-gradient(135deg, #fef3c7, #fde68a); color: #d97706;"><i class="fas fa-image"></i></div>
+            <div class="tool-name">JPG</div>
+          </button>
+          <button class="tool-btn" id="exportTXT">
+            <div class="tool-icon" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #2563eb;"><i class="fas fa-file-lines"></i></div>
+            <div class="tool-name">TXT</div>
+          </button>
         </div>
       </div>
+    </div>
 
-      <!-- Gallery -->
-      <div class="gallery-header">
-        <h3><i class="fas fa-images"></i> Trang đã quét</h3>
-        <span class="page-count-badge" id="pageCount">0 trang</span>
-      </div>
-
-      <div class="pages-grid" id="pagesGrid">
-        <div class="empty-gallery" id="emptyGallery">
-          <i class="fas fa-file-circle-plus"></i>
-          <span>Chưa có trang nào</span>
-        </div>
-      </div>
-
-      <!-- Actions -->
-      <div class="action-bar">
-        <button class="btn-primary" id="exportPdfBtn">
-          <i class="fas fa-file-pdf"></i>
-          <span>Xuất PDF</span>
-        </button>
-        <button class="btn-outline" id="sharePdfBtn">
-          <i class="fas fa-share-nodes"></i>
-          <span>Chia sẻ</span>
-        </button>
-      </div>
+    <!-- Bottom Nav -->
+    <div class="bottom-nav">
+      <button class="nav-btn active" data-tab="scan">
+        <i class="fas fa-camera"></i>
+        <span>Quét</span>
+      </button>
+      <button class="nav-btn" data-tab="tools">
+        <i class="fas fa-toolbox"></i>
+        <span>Công cụ</span>
+      </button>
+      <button class="nav-btn" data-tab="files">
+        <i class="fas fa-folder"></i>
+        <span>Tệp</span>
+      </button>
     </div>
   </div>
 
@@ -1537,14 +1788,12 @@
     <span id="toastText">Thông báo</span>
   </div>
 
-  <!-- Modal Preview -->
+  <!-- ============ MODAL: PREVIEW ============ -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal-content">
       <div class="modal-header">
         <h4><i class="fas fa-wand-magic-sparkles"></i> Tinh chỉnh</h4>
-        <button class="close-btn" id="modalCloseBtn">
-          <i class="fas fa-times"></i>
-        </button>
+        <button class="close-btn" id="modalCloseBtn"><i class="fas fa-times"></i></button>
       </div>
       <div class="modal-body">
         <img id="modalImage" src="" alt="Preview">
@@ -1566,11 +1815,213 @@
         </div>
 
         <div class="modal-actions">
-          <button class="reapply" id="reapplyBtn">
-            <i class="fas fa-check"></i> Áp dụng
+          <button class="reapply" id="reapplyBtn"><i class="fas fa-check"></i> Áp dụng</button>
+          <button class="cancel" id="modalCancelBtn"><i class="fas fa-xmark"></i> Đóng</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: OCR ============ -->
+  <div class="modal-overlay" id="ocrModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4><i class="fas fa-text-height"></i> Trích xuất văn bản OCR</h4>
+        <button class="close-btn" id="ocrCloseBtn"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="info-box">
+          <i class="fas fa-language"></i>
+          <div>Hỗ trợ tiếng Việt có dấu, Anh, Trung, Nhật và hơn 100 ngôn ngữ khác.</div>
+        </div>
+        <div class="lang-row">
+          <select class="lang-select" id="ocrLang">
+            <option value="vie+eng">Tiếng Việt + Anh</option>
+            <option value="vie">Tiếng Việt</option>
+            <option value="eng">English</option>
+            <option value="chi_sim">中文 (简体)</option>
+            <option value="jpn">日本語</option>
+            <option value="kor">한국어</option>
+            <option value="fra">Français</option>
+          </select>
+        </div>
+        <textarea class="ocr-textarea" id="ocrResult" placeholder="Văn bản sẽ hiển thị ở đây..."></textarea>
+        <div class="modal-actions">
+          <button class="reapply" id="ocrRunBtn"><i class="fas fa-play"></i> Chạy OCR</button>
+          <button class="cancel" id="ocrCopyBtn"><i class="fas fa-copy"></i> Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: TRANSLATE ============ -->
+  <div class="modal-overlay" id="translateModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4><i class="fas fa-language"></i> Dịch thuật</h4>
+        <button class="close-btn" id="transCloseBtn"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="lang-row">
+          <select class="lang-select" id="transFrom">
+            <option value="auto">Tự động</option>
+            <option value="vi">Tiếng Việt</option>
+            <option value="en">English</option>
+            <option value="zh">中文</option>
+            <option value="ja">日本語</option>
+          </select>
+          <select class="lang-select" id="transTo">
+            <option value="en">English</option>
+            <option value="vi">Tiếng Việt</option>
+            <option value="zh">中文</option>
+            <option value="ja">日本語</option>
+            <option value="ko">한국어</option>
+            <option value="fr">Français</option>
+            <option value="es">Español</option>
+            <option value="de">Deutsch</option>
+            <option value="ru">Русский</option>
+            <option value="th">ไทย</option>
+          </select>
+        </div>
+        <textarea class="ocr-textarea" id="transInput" placeholder="Nhập văn bản cần dịch..."></textarea>
+        <div class="translated-box" id="transOutput">Bản dịch sẽ hiển thị ở đây...</div>
+        <div class="modal-actions" style="margin-top:14px;">
+          <button class="reapply" id="transRunBtn"><i class="fas fa-play"></i> Dịch</button>
+          <button class="cancel" id="transCopyBtn"><i class="fas fa-copy"></i> Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: SIGNATURE ============ -->
+  <div class="modal-overlay" id="sigModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4><i class="fas fa-signature"></i> Chữ ký số</h4>
+        <button class="close-btn" id="sigCloseBtn"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="info-box">
+          <i class="fas fa-info-circle"></i>
+          <div>Ký tên bằng ngón tay hoặc bút cảm ứng. Chữ ký sẽ được chèn vào trang đang chọn.</div>
+        </div>
+        <div class="sig-canvas-wrap">
+          <canvas id="signatureCanvas"></canvas>
+          <div class="sig-hint" id="sigHint">Ký tên tại đây</div>
+        </div>
+        <div class="sig-actions">
+          <button class="sig-btn clear" id="sigClearBtn"><i class="fas fa-eraser"></i> Xóa</button>
+          <button class="sig-btn save" id="sigSaveBtn"><i class="fas fa-check"></i> Chèn vào trang</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: WATERMARK ============ -->
+  <div class="modal-overlay" id="wmModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4><i class="fas fa-droplet"></i> Watermark bảo vệ</h4>
+        <button class="close-btn" id="wmCloseBtn"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="info-box">
+          <i class="fas fa-shield-halved"></i>
+          <div>Thêm chữ chìm bảo vệ bản quyền cho tất cả các trang đã quét.</div>
+        </div>
+        <input type="text" class="wm-input" id="wmText" placeholder="Nhập nội dung watermark..." value="BẢN SAO">
+        <div class="wm-options">
+          <div class="wm-option" data-wm="CONFIDENTIAL">CONFIDENTIAL</div>
+          <div class="wm-option active" data-wm="BẢN SAO">BẢN SAO</div>
+          <div class="wm-option" data-wm="MẬT">MẬT</div>
+          <div class="wm-option" data-wm="DO NOT COPY">DO NOT COPY</div>
+        </div>
+        <div class="modal-actions">
+          <button class="reapply" id="wmApplyBtn"><i class="fas fa-check"></i> Áp dụng tất cả</button>
+          <button class="cancel" id="wmCancelBtn"><i class="fas fa-xmark"></i> Đóng</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: ERASER ============ -->
+  <div class="modal-overlay" id="eraserModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4><i class="fas fa-eraser"></i> Tẩy vật thể</h4>
+        <button class="close-btn" id="eraserCloseBtn"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="info-box">
+          <i class="fas fa-hand-pointer"></i>
+          <div>Chạm và kéo để tẩy vết mực lem, chữ viết tay không mong muốn.</div>
+        </div>
+        <div class="eraser-toolbar">
+          <label><i class="fas fa-circle"></i> Size</label>
+          <input type="range" id="eraserSize" min="5" max="60" value="22">
+          <span class="size-value" id="eraserSizeValue">22</span>
+        </div>
+        <div class="eraser-canvas-wrap">
+          <canvas id="eraserCanvas"></canvas>
+        </div>
+        <div class="sig-actions">
+          <button class="sig-btn clear" id="eraserResetBtn"><i class="fas fa-rotate-left"></i> Reset</button>
+          <button class="sig-btn save" id="eraserSaveBtn"><i class="fas fa-check"></i> Lưu thay đổi</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: SEARCH ============ -->
+  <div class="modal-overlay" id="searchModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4><i class="fas fa-magnifying-glass"></i> Tìm kiếm thông minh</h4>
+        <button class="close-btn" id="searchCloseBtn"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="text" class="wm-input" id="searchInput" placeholder="Nhập từ khóa cần tìm...">
+        <div id="searchResults">
+          <div class="info-box">
+            <i class="fas fa-info-circle"></i>
+            <div>Nhập từ khóa để tìm trong tất cả các trang đã quét (sử dụng OCR).</div>
+          </div>
+        </div>
+        <div class="modal-actions" style="margin-top:14px;">
+          <button class="reapply" id="searchRunBtn"><i class="fas fa-magnifying-glass"></i> Tìm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODAL: EXPORT ============ -->
+  <div class="modal-overlay" id="exportModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4><i class="fas fa-file-export"></i> Xuất đa định dạng</h4>
+        <button class="close-btn" id="exportCloseBtn"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="info-box">
+          <i class="fas fa-file-circle-check"></i>
+          <div>Chọn định dạng để xuất <b id="exportPageCount">0</b> trang đã quét.</div>
+        </div>
+        <div class="tools-grid" style="grid-template-columns: repeat(2, 1fr); gap: 10px;">
+          <button class="tool-btn" id="expPdf" style="padding: 18px 8px;">
+            <div class="tool-icon" style="width:38px;height:38px;font-size:16px;background: linear-gradient(135deg, #fee2e2, #fecaca); color: #dc2626;"><i class="fas fa-file-pdf"></i></div>
+            <div class="tool-name" style="font-size:11px;">PDF Document</div>
           </button>
-          <button class="cancel" id="modalCancelBtn">
-            <i class="fas fa-xmark"></i> Đóng
+          <button class="tool-btn" id="expJpg" style="padding: 18px 8px;">
+            <div class="tool-icon" style="width:38px;height:38px;font-size:16px;background: linear-gradient(135deg, #fef3c7, #fde68a); color: #d97706;"><i class="fas fa-image"></i></div>
+            <div class="tool-name" style="font-size:11px;">JPG Images</div>
+          </button>
+          <button class="tool-btn" id="expTxt" style="padding: 18px 8px;">
+            <div class="tool-icon" style="width:38px;height:38px;font-size:16px;background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #2563eb;"><i class="fas fa-file-lines"></i></div>
+            <div class="tool-name" style="font-size:11px;">TXT Text</div>
+          </button>
+          <button class="tool-btn" id="expDocx" style="padding: 18px 8px;">
+            <div class="tool-icon" style="width:38px;height:38px;font-size:16px;background: linear-gradient(135deg, #d1fae5, #a7f3d0); color: #059669;"><i class="fas fa-file-word"></i></div>
+            <div class="tool-name" style="font-size:11px;">Word Doc</div>
           </button>
         </div>
       </div>
@@ -1579,85 +2030,87 @@
 
   <script>
     (function() {
+      'use strict';
+
       // ============ DOM ============
-      const video = document.getElementById('videoPreview');
-      const previewCanvas = document.getElementById('previewCanvas');
-      const detectionCanvas = document.getElementById('detectionCanvas');
-      const cameraPlaceholder = document.getElementById('cameraPlaceholder');
-      const captureBtn = document.getElementById('captureBtn');
-      const switchCameraBtn = document.getElementById('switchCameraBtn');
-      const uploadBtn = document.getElementById('uploadBtn');
-      const fileInput = document.getElementById('fileInput');
-      const pagesGrid = document.getElementById('pagesGrid');
-      const emptyGallery = document.getElementById('emptyGallery');
-      const pageCountSpan = document.getElementById('pageCount');
-      const exportPdfBtn = document.getElementById('exportPdfBtn');
-      const sharePdfBtn = document.getElementById('sharePdfBtn');
-      const toastEl = document.getElementById('toast');
-      const toastText = document.getElementById('toastText');
+      const $ = id => document.getElementById(id);
+      const video = $('videoPreview');
+      const previewCanvas = $('previewCanvas');
+      const detectionCanvas = $('detectionCanvas');
+      const cameraPlaceholder = $('cameraPlaceholder');
+      const captureBtn = $('captureBtn');
+      const switchCameraBtn = $('switchCameraBtn');
+      const uploadBtn = $('uploadBtn');
+      const fileInput = $('fileInput');
+      const pagesGrid = $('pagesGrid');
+      const emptyGallery = $('emptyGallery');
+      const pageCountSpan = $('pageCount');
+      const exportPdfBtn = $('exportPdfBtn');
+      const sharePdfBtn = $('sharePdfBtn');
+      const toastEl = $('toast');
+      const toastText = $('toastText');
       const toastIcon = toastEl.querySelector('.toast-icon i');
-      const gridOverlay = document.getElementById('gridOverlay');
-      const processingOverlay = document.getElementById('processingOverlay');
-      const processingText = document.getElementById('processingText');
-      const pageCounterBadge = document.getElementById('pageCounterBadge');
-      const counterText = document.getElementById('counterText');
-      const settingsBtn = document.getElementById('settingsBtn');
+      const gridOverlay = $('gridOverlay');
+      const processingOverlay = $('processingOverlay');
+      const processingText = $('processingText');
+      const pageCounterBadge = $('pageCounterBadge');
+      const counterText = $('counterText');
 
-      const statusBadge = document.getElementById('statusBadge');
-      const statusText = document.getElementById('statusText');
-      const stabilityMeter = document.getElementById('stabilityMeter');
-      const stabilityFill = document.getElementById('stabilityFill');
-      const shutterRing = document.getElementById('shutterRing');
+      const statusBadge = $('statusBadge');
+      const statusText = $('statusText');
+      const stabilityMeter = $('stabilityMeter');
+      const stabilityFill = $('stabilityFill');
+      const shutterRing = $('shutterRing');
 
-      const markerTL = document.getElementById('markerTL');
-      const markerTR = document.getElementById('markerTR');
-      const markerBL = document.getElementById('markerBL');
-      const markerBR = document.getElementById('markerBR');
+      const markerTL = $('markerTL');
+      const markerTR = $('markerTR');
+      const markerBL = $('markerBL');
+      const markerBR = $('markerBR');
 
-      const autoToggle = document.getElementById('autoToggle');
-      const sensitivitySlider = document.getElementById('sensitivitySlider');
-      const sensitivityValue = document.getElementById('sensitivityValue');
-      const sensitivityRow = document.getElementById('sensitivityRow');
+      const autoToggle = $('autoToggle');
+      const sensitivitySlider = $('sensitivitySlider');
+      const sensitivityValue = $('sensitivityValue');
+      const sensitivityRow = $('sensitivityRow');
 
-      const autoCropChip = document.getElementById('autoCropChip');
-      const autoEnhanceChip = document.getElementById('autoEnhanceChip');
-      const grayChip = document.getElementById('grayChip');
-      const bwChip = document.getElementById('bwChip');
-
-      const modalOverlay = document.getElementById('modalOverlay');
-      const modalImage = document.getElementById('modalImage');
-      const modalCloseBtn = document.getElementById('modalCloseBtn');
-      const modalCancelBtn = document.getElementById('modalCancelBtn');
-      const reapplyBtn = document.getElementById('reapplyBtn');
-      const sharpnessSlider = document.getElementById('sharpnessSlider');
-      const contrastSlider = document.getElementById('contrastSlider');
-      const sharpnessValue = document.getElementById('sharpnessValue');
-      const contrastValue = document.getElementById('contrastValue');
-
-      // ============ State ============
+      // ============ STATE ============
       let stream = null;
       let currentFacingMode = 'environment';
       let scannedPages = [];
       let cameraActive = false;
       let opencvReady = false;
-      let autoCropEnabled = true;
-      let autoEnhanceEnabled = true;
-      let grayEnabled = false;
-      let bwEnabled = false;
       let currentPreviewPageId = null;
+      let activeTab = 'scan';
 
-      // === Smart detection state ===
+      // Filters
+      let filters = {
+        autoCrop: true,
+        enhance: true,
+        magic: false,
+        bw: false,
+        bw2: false,
+        gray: false
+      };
+
+      // Smart detection
       let autoScanEnabled = true;
       let sensitivity = 65;
       let detectionLoopId = null;
-      let lastDetectedCorners = null;
       let stabilityFrames = 0;
       let lastCornerKey = '';
       let lastCaptureTime = 0;
-      const MIN_CAPTURE_INTERVAL = 3500; // ms giữa các lần auto-chụp
-      const STABILITY_THRESHOLD = 15; // số frame ổn định để chụp
+      const MIN_CAPTURE_INTERVAL = 3500;
+      const STABILITY_THRESHOLD = 15;
 
-      // ============ Toast ============
+      // Modal-specific
+      let sigDrawing = false;
+      let sigCtx = null;
+      let sigHasContent = false;
+      let eraserDrawing = false;
+      let eraserCtx = null;
+      let eraserOriginalImage = null;
+      let eraserPageId = null;
+
+      // ============ UTILS ============
       function showToast(msg, duration = 1800, iconClass = 'fa-check') {
         toastText.textContent = msg;
         toastIcon.className = `fas ${iconClass}`;
@@ -1666,7 +2119,6 @@
         window.toastTimeout = setTimeout(() => toastEl.classList.remove('show'), duration);
       }
 
-      // ============ OpenCV ============
       function waitForOpenCV() {
         return new Promise((resolve) => {
           if (window.cv && window.cv.Mat) { opencvReady = true; resolve(); return; }
@@ -1681,69 +2133,22 @@
         });
       }
 
-      // ============ REAL-TIME DETECTION ============
-      // Phát hiện 4 góc giấy trong frame hiện tại (dùng video frame nhỏ để nhanh)
-      function detectDocumentLive() {
-        if (!opencvReady || !cameraActive) return null;
-        if (!video.videoWidth || !video.videoHeight) return null;
+      function dataURLToCanvas(dataURL) {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            const c = document.createElement('canvas');
+            c.width = img.width;
+            c.height = img.height;
+            c.getContext('2d').drawImage(img, 0, 0);
+            resolve(c);
+          };
+          img.src = dataURL;
+        });
+      }
 
-        try {
-          // Downscale xuống 320px để detect nhanh
-          const scale = 320 / video.videoWidth;
-          const w = 320;
-          const h = Math.round(video.videoHeight * scale);
-
-          const tmpCanvas = document.createElement('canvas');
-          tmpCanvas.width = w;
-          tmpCanvas.height = h;
-          tmpCanvas.getContext('2d').drawImage(video, 0, 0, w, h);
-
-          const src = cv.imread(tmpCanvas);
-          const gray = new cv.Mat();
-          const blurred = new cv.Mat();
-          const edges = new cv.Mat();
-          const contours = new cv.MatVector();
-          const hierarchy = new cv.Mat();
-
-          cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-          cv.GaussianBlur(gray, blurred, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
-          cv.Canny(blurred, edges, 50, 150);
-          cv.dilate(edges, edges, cv.Mat.ones(3, 3, cv.CV_8U), new cv.Point(-1, -1), 1);
-          cv.findContours(edges, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-
-          let maxArea = 0;
-          let bestCorners = null;
-          const imgArea = w * h;
-
-          for (let i = 0; i < contours.size(); i++) {
-            const cnt = contours.get(i);
-            const area = cv.contourArea(cnt);
-            if (area > maxArea && area > imgArea * 0.12) {
-              const peri = cv.arcLength(cnt, true);
-              const approx = new cv.Mat();
-              cv.approxPolyDP(cnt, approx, 0.02 * peri, true);
-              if (approx.rows === 4 && cv.isContourConvex(approx)) {
-                maxArea = area;
-                const pts = [];
-                for (let j = 0; j < 4; j++) {
-                  pts.push({
-                    x: approx.data32S[j * 2] / scale,
-                    y: approx.data32S[j * 2 + 1] / scale
-                  });
-                }
-                bestCorners = sortCorners(pts);
-              }
-              approx.delete();
-            }
-            cnt.delete();
-          }
-
-          src.delete(); gray.delete(); blurred.delete(); edges.delete();
-          contours.delete(); hierarchy.delete();
-          return bestCorners;
-        } catch (e) {
-          return null;
-        }
+      function canvasToDataURL(canvas, quality = 0.95) {
+        return canvas.toDataURL('image/jpeg', quality);
       }
 
       function sortCorners(pts) {
@@ -1757,136 +2162,45 @@
         return [tl, tr, br, bl];
       }
 
-      // ============ STABILITY CHECK ============
-      function cornersKey(corners) {
-        if (!corners) return '';
-        return corners.map(c => `${Math.round(c.x / 8)},${Math.round(c.y / 8)}`).join('|');
+      // ============ TABS ============
+      function switchTab(tab) {
+        activeTab = tab;
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
+        document.querySelectorAll('.nav-btn').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
+        const content = $('tab-' + tab);
+        if (content) content.classList.add('active');
       }
 
-      // ============ DETECTION LOOP ============
-      function startDetectionLoop() {
-        stopDetectionLoop();
-        detectionLoopId = setInterval(() => {
-          if (!cameraActive) return;
+      document.querySelectorAll('.tab-btn, .nav-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+      });
 
-          const corners = detectDocumentLive();
-          lastDetectedCorners = corners;
-
-          if (corners) {
-            // Cập nhật vị trí markers
-            updateCornerMarkers(corners);
-
-            // Kiểm tra ổn định
-            const key = cornersKey(corners);
-            if (key === lastCornerKey) {
-              stabilityFrames++;
-            } else {
-              stabilityFrames = 0;
-              lastCornerKey = key;
-            }
-
-            // Cập nhật thanh stability
-            const stabilityPercent = Math.min(100, (stabilityFrames / STABILITY_THRESHOLD) * 100);
-            stabilityFill.style.width = stabilityPercent + '%';
-
-            // Cập nhật status badge
-            if (stabilityFrames >= STABILITY_THRESHOLD) {
-              setStatusBadge('locked', 'LOCKED');
-              shutterRing.classList.add('auto-active');
-              captureBtn.classList.add('locked');
-
-              // Auto capture!
-              if (autoScanEnabled && Date.now() - lastCaptureTime > MIN_CAPTURE_INTERVAL) {
-                lastCaptureTime = Date.now();
-                autoCapture();
-              }
-            } else {
-              setStatusBadge('detected', 'DETECTED');
-              shutterRing.classList.remove('auto-active');
-              captureBtn.classList.remove('locked');
-            }
+      // ============ FILTER CARDS ============
+      document.querySelectorAll('.mode-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const filter = card.dataset.filter;
+          // "auto" và "enhance" có thể bật/tắt độc lập
+          if (filter === 'auto' || filter === 'enhance') {
+            filters[filter === 'auto' ? 'autoCrop' : 'enhance'] = !filters[filter === 'auto' ? 'autoCrop' : 'enhance'];
+            card.classList.toggle('active', filters[filter === 'auto' ? 'autoCrop' : 'enhance']);
           } else {
-            // Không phát hiện - reset
-            stabilityFrames = 0;
-            lastCornerKey = '';
-            hideCornerMarkers();
-            setStatusBadge('searching', 'SEARCHING');
-            stabilityFill.style.width = '0%';
-            shutterRing.classList.remove('auto-active');
-            captureBtn.classList.remove('locked');
+            // Các filter khác loại trừ lẫn nhau
+            const wasActive = card.classList.contains('active');
+            // Tắt tất cả các filter màu
+            ['magic', 'bw', 'bw2', 'gray'].forEach(f => {
+              filters[f] = false;
+              document.querySelector(`.mode-card[data-filter="${f}"]`).classList.remove('active');
+            });
+            if (!wasActive) {
+              filters[filter] = true;
+              card.classList.add('active');
+            }
           }
-        }, 120); // ~8fps detection
-      }
-
-      function stopDetectionLoop() {
-        if (detectionLoopId) {
-          clearInterval(detectionLoopId);
-          detectionLoopId = null;
-        }
-        stabilityFrames = 0;
-        lastCornerKey = '';
-        stabilityFill.style.width = '0%';
-        hideCornerMarkers();
-      }
-
-      function setStatusBadge(type, text) {
-        statusBadge.className = 'status-badge show ' + type;
-        statusText.textContent = text;
-      }
-
-      function updateCornerMarkers(corners) {
-        // Convert video coords -> preview element coords
-        const rect = video.getBoundingClientRect();
-        const parentRect = video.parentElement.getBoundingClientRect();
-        const offsetX = rect.left - parentRect.left;
-        const offsetY = rect.top - parentRect.top;
-
-        const vw = video.videoWidth;
-        const vh = video.videoHeight;
-        const displayW = rect.width;
-        const displayH = rect.height;
-
-        // Vì video object-fit: cover, cần tính tỉ lệ
-        const videoAspect = vw / vh;
-        const displayAspect = displayW / displayH;
-        let scaleX, scaleY, cropX = 0, cropY = 0;
-
-        if (videoAspect > displayAspect) {
-          // video rộng hơn -> crop 2 bên
-          scaleY = displayH / vh;
-          scaleX = scaleY;
-          cropX = (vw * scaleX - displayW) / 2;
-        } else {
-          scaleX = displayW / vw;
-          scaleY = scaleX;
-          cropY = (vh * scaleY - displayH) / 2;
-        }
-
-        const transform = (pt) => ({
-          x: offsetX + pt.x * scaleX - cropX,
-          y: offsetY + pt.y * scaleY - cropY
+          const names = { auto: 'Tự cắt viền', enhance: 'Làm nét', magic: 'Magic Color', bw: 'B&W', bw2: 'B&W 2', gray: 'Grayscale' };
+          showToast(`${names[filter]}: ${card.classList.contains('active') ? 'BẬT' : 'TẮT'}`, 1000);
         });
-
-        const [tl, tr, br, bl] = corners.map(transform);
-
-        setMarker(markerTL, tl.x - 4, tl.y - 4);
-        setMarker(markerTR, tr.x - 20, tr.y - 4);
-        setMarker(markerBL, bl.x - 4, bl.y - 20);
-        setMarker(markerBR, br.x - 20, br.y - 20);
-      }
-
-      function setMarker(el, x, y) {
-        el.style.left = x + 'px';
-        el.style.top = y + 'px';
-        el.classList.add('show');
-      }
-
-      function hideCornerMarkers() {
-        markerTL.classList.remove('show');
-        markerTR.classList.remove('show');
-        markerBL.classList.remove('show');
-        markerBR.classList.remove('show');
-      }
+      });
 
       // ============ IMAGE PROCESSING ============
       function detectDocumentCorners(srcCanvas) {
@@ -1963,19 +2277,21 @@
         } catch (e) { return null; }
       }
 
-      function enhanceImage(srcCanvas, sharpness = 45, contrast = 30) {
+      function enhanceImage(srcCanvas, sharpness = 45, contrast = 30, magic = false) {
         if (!opencvReady) return srcCanvas;
         try {
           const src = cv.imread(srcCanvas);
           let enhanced = new cv.Mat();
 
-          if (contrast > 0) {
+          // CLAHE tăng tương phản
+          if (contrast > 0 || magic) {
             const lab = new cv.Mat();
             cv.cvtColor(src, lab, cv.COLOR_RGBA2RGB);
             cv.cvtColor(lab, lab, cv.COLOR_RGB2Lab);
             const channels = new cv.MatVector();
             cv.split(lab, channels);
-            const clahe = new cv.CLAHE(2.0 + contrast / 40, new cv.Size(8, 8));
+            const clip = magic ? 3.5 : (2.0 + contrast / 40);
+            const clahe = new cv.CLAHE(clip, new cv.Size(8, 8));
             const l = channels.get(0);
             clahe.apply(l, l);
             channels.set(0, l);
@@ -1987,6 +2303,7 @@
             src.copyTo(enhanced);
           }
 
+          // Unsharp mask
           if (sharpness > 0) {
             const blurred = new cv.Mat();
             const sharp = new cv.Mat();
@@ -2007,15 +2324,18 @@
         } catch (e) { return srcCanvas; }
       }
 
-      function applyColorMode(srcCanvas, gray, bw) {
-        if (!opencvReady || (!gray && !bw)) return srcCanvas;
+      function applyColorMode(srcCanvas, mode) {
+        if (!opencvReady || mode === 'color') return srcCanvas;
         try {
           const src = cv.imread(srcCanvas);
           const grayMat = new cv.Mat();
           cv.cvtColor(src, grayMat, cv.COLOR_RGBA2GRAY);
           let result = new cv.Mat();
-          if (bw) {
+
+          if (mode === 'bw') {
             cv.adaptiveThreshold(grayMat, result, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 15, 8);
+          } else if (mode === 'bw2') {
+            cv.threshold(grayMat, result, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
           } else {
             grayMat.copyTo(result);
           }
@@ -2029,17 +2349,17 @@
         } catch (e) { return srcCanvas; }
       }
 
-      async function processImage(srcCanvas, options = {}) {
-        const {
-          doCrop = autoCropEnabled,
-          doEnhance = autoEnhanceEnabled,
-          doGray = grayEnabled,
-          doBW = bwEnabled,
-          sharpness = 45,
-          contrast = 30
-        } = options;
-
+      async function processImage(srcCanvas, customOpts = {}) {
         let currentCanvas = srcCanvas;
+        const doCrop = customOpts.doCrop !== undefined ? customOpts.doCrop : filters.autoCrop;
+        const doEnhance = customOpts.doEnhance !== undefined ? customOpts.doEnhance : filters.enhance;
+        const doMagic = customOpts.doMagic !== undefined ? customOpts.doMagic : filters.magic;
+        const doBw = customOpts.doBw !== undefined ? customOpts.doBw : filters.bw;
+        const doBw2 = customOpts.doBw2 !== undefined ? customOpts.doBw2 : filters.bw2;
+        const doGray = customOpts.doGray !== undefined ? customOpts.doGray : filters.gray;
+        const sharpness = customOpts.sharpness || 45;
+        const contrast = customOpts.contrast || 30;
+
         if (doCrop && opencvReady) {
           const corners = detectDocumentCorners(currentCanvas);
           if (corners) {
@@ -2047,39 +2367,170 @@
             if (warped) currentCanvas = warped;
           }
         }
-        if (doEnhance && opencvReady) {
-          currentCanvas = enhanceImage(currentCanvas, sharpness, contrast);
+
+        if ((doEnhance || doMagic) && opencvReady) {
+          currentCanvas = enhanceImage(currentCanvas, sharpness, contrast, doMagic);
         }
-        if ((doGray || doBW) && opencvReady) {
-          currentCanvas = applyColorMode(currentCanvas, doGray, doBW);
+
+        if (opencvReady) {
+          if (doBw) currentCanvas = applyColorMode(currentCanvas, 'bw');
+          else if (doBw2) currentCanvas = applyColorMode(currentCanvas, 'bw2');
+          else if (doGray) currentCanvas = applyColorMode(currentCanvas, 'gray');
         }
+
         return currentCanvas;
       }
 
-      function canvasToDataURL(canvas, quality = 0.95) {
-        return canvas.toDataURL('image/jpeg', quality);
+      // ============ REAL-TIME DETECTION ============
+      function detectDocumentLive() {
+        if (!opencvReady || !cameraActive || !video.videoWidth) return null;
+        try {
+          const scale = 320 / video.videoWidth;
+          const w = 320;
+          const h = Math.round(video.videoHeight * scale);
+          const tmpCanvas = document.createElement('canvas');
+          tmpCanvas.width = w;
+          tmpCanvas.height = h;
+          tmpCanvas.getContext('2d').drawImage(video, 0, 0, w, h);
+
+          const src = cv.imread(tmpCanvas);
+          const gray = new cv.Mat();
+          const blurred = new cv.Mat();
+          const edges = new cv.Mat();
+          const contours = new cv.MatVector();
+          const hierarchy = new cv.Mat();
+
+          cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+          cv.GaussianBlur(gray, blurred, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
+          cv.Canny(blurred, edges, 50, 150);
+          cv.dilate(edges, edges, cv.Mat.ones(3, 3, cv.CV_8U), new cv.Point(-1, -1), 1);
+          cv.findContours(edges, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+          let maxArea = 0, bestCorners = null;
+          const imgArea = w * h;
+
+          for (let i = 0; i < contours.size(); i++) {
+            const cnt = contours.get(i);
+            const area = cv.contourArea(cnt);
+            if (area > maxArea && area > imgArea * 0.12) {
+              const peri = cv.arcLength(cnt, true);
+              const approx = new cv.Mat();
+              cv.approxPolyDP(cnt, approx, 0.02 * peri, true);
+              if (approx.rows === 4 && cv.isContourConvex(approx)) {
+                maxArea = area;
+                const pts = [];
+                for (let j = 0; j < 4; j++) {
+                  pts.push({ x: approx.data32S[j * 2] / scale, y: approx.data32S[j * 2 + 1] / scale });
+                }
+                bestCorners = sortCorners(pts);
+              }
+              approx.delete();
+            }
+            cnt.delete();
+          }
+
+          src.delete(); gray.delete(); blurred.delete(); edges.delete();
+          contours.delete(); hierarchy.delete();
+          return bestCorners;
+        } catch (e) { return null; }
       }
 
-      function dataURLToCanvas(dataURL) {
-        return new Promise((resolve) => {
-          const img = new Image();
-          img.onload = () => {
-            const c = document.createElement('canvas');
-            c.width = img.width;
-            c.height = img.height;
-            c.getContext('2d').drawImage(img, 0, 0);
-            resolve(c);
-          };
-          img.src = dataURL;
-        });
+      function cornersKey(corners) {
+        if (!corners) return '';
+        return corners.map(c => `${Math.round(c.x / 8)},${Math.round(c.y / 8)}`).join('|');
       }
 
-      // ============ Camera ============
-      async function startCamera(facingMode = 'environment') {
-        if (stream) {
-          stream.getTracks().forEach(t => t.stop());
-          stream = null;
+      function startDetectionLoop() {
+        stopDetectionLoop();
+        detectionLoopId = setInterval(() => {
+          if (!cameraActive || activeTab !== 'scan') return;
+          const corners = detectDocumentLive();
+
+          if (corners) {
+            updateCornerMarkers(corners);
+            const key = cornersKey(corners);
+            if (key === lastCornerKey) stabilityFrames++;
+            else { stabilityFrames = 0; lastCornerKey = key; }
+
+            const stabilityPercent = Math.min(100, (stabilityFrames / STABILITY_THRESHOLD) * 100);
+            stabilityFill.style.width = stabilityPercent + '%';
+
+            if (stabilityFrames >= STABILITY_THRESHOLD) {
+              setStatusBadge('locked', 'LOCKED');
+              shutterRing.classList.add('auto-active');
+              captureBtn.classList.add('locked');
+              if (autoScanEnabled && Date.now() - lastCaptureTime > MIN_CAPTURE_INTERVAL) {
+                lastCaptureTime = Date.now();
+                autoCapture();
+              }
+            } else {
+              setStatusBadge('detected', 'DETECTED');
+              shutterRing.classList.remove('auto-active');
+              captureBtn.classList.remove('locked');
+            }
+          } else {
+            stabilityFrames = 0;
+            lastCornerKey = '';
+            hideCornerMarkers();
+            setStatusBadge('searching', 'SEARCHING');
+            stabilityFill.style.width = '0%';
+            shutterRing.classList.remove('auto-active');
+            captureBtn.classList.remove('locked');
+          }
+        }, 120);
+      }
+
+      function stopDetectionLoop() {
+        if (detectionLoopId) { clearInterval(detectionLoopId); detectionLoopId = null; }
+        stabilityFrames = 0;
+        lastCornerKey = '';
+        stabilityFill.style.width = '0%';
+        hideCornerMarkers();
+      }
+
+      function setStatusBadge(type, text) {
+        statusBadge.className = 'status-badge show ' + type;
+        statusText.textContent = text;
+      }
+
+      function updateCornerMarkers(corners) {
+        const rect = video.getBoundingClientRect();
+        const parentRect = video.parentElement.getBoundingClientRect();
+        const offsetX = rect.left - parentRect.left;
+        const offsetY = rect.top - parentRect.top;
+        const vw = video.videoWidth, vh = video.videoHeight;
+        const displayW = rect.width, displayH = rect.height;
+        const videoAspect = vw / vh, displayAspect = displayW / displayH;
+        let scaleX, scaleY, cropX = 0, cropY = 0;
+
+        if (videoAspect > displayAspect) {
+          scaleY = displayH / vh; scaleX = scaleY;
+          cropX = (vw * scaleX - displayW) / 2;
+        } else {
+          scaleX = displayW / vw; scaleY = scaleX;
+          cropY = (vh * scaleY - displayH) / 2;
         }
+
+        const transform = (pt) => ({
+          x: offsetX + pt.x * scaleX - cropX,
+          y: offsetY + pt.y * scaleY - cropY
+        });
+
+        const [tl, tr, br, bl] = corners.map(transform);
+        setMarker(markerTL, tl.x - 4, tl.y - 4);
+        setMarker(markerTR, tr.x - 20, tr.y - 4);
+        setMarker(markerBL, bl.x - 4, bl.y - 20);
+        setMarker(markerBR, br.x - 20, br.y - 20);
+      }
+
+      function setMarker(el, x, y) { el.style.left = x + 'px'; el.style.top = y + 'px'; el.classList.add('show'); }
+      function hideCornerMarkers() {
+        [markerTL, markerTR, markerBL, markerBR].forEach(m => m.classList.remove('show'));
+      }
+
+      // ============ CAMERA ============
+      async function startCamera(facingMode = 'environment') {
+        if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
         try {
           stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
@@ -2094,13 +2545,14 @@
           gridOverlay.classList.add('show');
           currentFacingMode = facingMode;
 
-          // Đợi OpenCV rồi bật detection
           if (opencvReady) {
             setStatusBadge('searching', 'SEARCHING');
+            stabilityMeter.classList.add('show');
             startDetectionLoop();
           } else {
             waitForOpenCV().then(() => {
               setStatusBadge('searching', 'SEARCHING');
+              stabilityMeter.classList.add('show');
               startDetectionLoop();
             });
           }
@@ -2111,10 +2563,7 @@
       }
 
       function stopCamera() {
-        if (stream) {
-          stream.getTracks().forEach(t => t.stop());
-          stream = null;
-        }
+        if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
         cameraActive = false;
         gridOverlay.classList.remove('show');
         stopDetectionLoop();
@@ -2124,16 +2573,12 @@
 
       // ============ CAPTURE ============
       captureBtn.addEventListener('click', async () => {
-        if (!cameraActive) {
-          await startCamera(currentFacingMode);
-          return;
-        }
+        if (!cameraActive) { await startCamera(currentFacingMode); return; }
         await captureAndProcess();
       });
 
       async function autoCapture() {
         if (processingOverlay.classList.contains('show')) return;
-        // Flash effect
         previewCanvas.style.display = 'block';
         previewCanvas.width = video.videoWidth;
         previewCanvas.height = video.videoHeight;
@@ -2143,13 +2588,11 @@
           previewCanvas.style.display = 'none';
           if (cameraActive) video.style.display = 'block';
         }, 180);
-
         await captureAndProcess(true);
       }
 
       async function captureAndProcess(isAuto = false) {
         if (!video.videoWidth) return;
-
         processingOverlay.classList.add('show');
         processingText.textContent = 'Đang xử lý tài liệu...';
 
@@ -2161,36 +2604,36 @@
 
         try {
           await new Promise(r => setTimeout(r, 50));
-          processingText.textContent = autoCropEnabled ? 'Đang cắt viền & làm phẳng...' : 'Đang xử lý...';
+          processingText.textContent = filters.autoCrop ? 'Đang cắt viền & làm phẳng...' : 'Đang xử lý...';
           const processedCanvas = await processImage(srcCanvas);
           const processedDataURL = canvasToDataURL(processedCanvas, 0.95);
 
           scannedPages.push({
             id: Date.now() + Math.random(),
             original: originalDataURL,
-            processed: processedDataURL
+            processed: processedDataURL,
+            ocrText: null
           });
-
           updateGallery();
           showToast(isAuto ? '⚡ Auto chụp thành công' : 'Đã thêm trang mới', 1400, 'fa-check');
         } catch (e) {
           scannedPages.push({
             id: Date.now() + Math.random(),
             original: originalDataURL,
-            processed: originalDataURL
+            processed: originalDataURL,
+            ocrText: null
           });
           updateGallery();
           showToast('Đã thêm (cơ bản)', 1500);
         } finally {
           processingOverlay.classList.remove('show');
-          // Reset detection sau khi chụp để tránh chụp liên tục
           stabilityFrames = 0;
           lastCornerKey = '';
           lastCaptureTime = Date.now();
         }
       }
 
-      // ============ Upload ============
+      // ============ UPLOAD ============
       uploadBtn.addEventListener('click', () => fileInput.click());
 
       fileInput.addEventListener('change', async (e) => {
@@ -2215,7 +2658,8 @@
             scannedPages.push({
               id: Date.now() + Math.random() + i,
               original: dataURL,
-              processed: processedDataURL
+              processed: processedDataURL,
+              ocrText: null
             });
           } catch (err) { console.warn(err); }
         }
@@ -2224,24 +2668,20 @@
         showToast(`Đã thêm ${files.length} ảnh`, 1500, 'fa-check');
       });
 
-      // ============ Switch camera ============
+      // ============ SWITCH CAMERA ============
       switchCameraBtn.addEventListener('click', async () => {
         const newMode = currentFacingMode === 'environment' ? 'user' : 'environment';
         await startCamera(newMode);
         showToast(newMode === 'environment' ? 'Camera sau' : 'Camera trước', 1000, 'fa-camera');
       });
 
-      // ============ Auto scan toggle ============
+      // ============ AUTO TOGGLE ============
       autoToggle.addEventListener('click', () => {
         autoScanEnabled = !autoScanEnabled;
         autoToggle.classList.toggle('on', autoScanEnabled);
         sensitivityRow.style.display = autoScanEnabled ? 'flex' : 'none';
-        if (autoScanEnabled && cameraActive) {
-          setStatusBadge('searching', 'SEARCHING');
-          stabilityMeter.classList.add('show');
-        } else {
-          stabilityMeter.classList.remove('show');
-        }
+        if (autoScanEnabled && cameraActive) stabilityMeter.classList.add('show');
+        else stabilityMeter.classList.remove('show');
         showToast(autoScanEnabled ? '⚡ Bật tự động chụp' : 'Tắt tự động chụp', 1400, autoScanEnabled ? 'fa-bolt' : 'fa-pause');
       });
 
@@ -2250,34 +2690,7 @@
         sensitivityValue.textContent = sensitivity;
       });
 
-      // ============ Modes ============
-      autoCropChip.addEventListener('click', () => {
-        autoCropEnabled = !autoCropEnabled;
-        autoCropChip.classList.toggle('active', autoCropEnabled);
-        showToast(autoCropEnabled ? 'Bật tự cắt viền' : 'Tắt tự cắt viền', 1200);
-      });
-
-      autoEnhanceChip.addEventListener('click', () => {
-        autoEnhanceEnabled = !autoEnhanceEnabled;
-        autoEnhanceChip.classList.toggle('active', autoEnhanceEnabled);
-        showToast(autoEnhanceEnabled ? 'Bật làm nét' : 'Tắt làm nét', 1200);
-      });
-
-      grayChip.addEventListener('click', () => {
-        grayEnabled = !grayEnabled;
-        grayChip.classList.toggle('active', grayEnabled);
-        if (grayEnabled) { bwEnabled = false; bwChip.classList.remove('active'); }
-        showToast(grayEnabled ? 'Chế độ xám' : 'Chế độ màu', 1200);
-      });
-
-      bwChip.addEventListener('click', () => {
-        bwEnabled = !bwEnabled;
-        bwChip.classList.toggle('active', bwEnabled);
-        if (bwEnabled) { grayEnabled = false; grayChip.classList.remove('active'); }
-        showToast(bwEnabled ? 'Chế độ đen trắng' : 'Chế độ màu', 1200);
-      });
-
-      // ============ Gallery ============
+      // ============ GALLERY ============
       function updateGallery() {
         pagesGrid.innerHTML = '';
         if (scannedPages.length === 0) {
@@ -2327,7 +2740,14 @@
         pageCountSpan.textContent = `${scannedPages.length} trang`;
       }
 
-      // ============ Modal ============
+      // ============ MODAL: PREVIEW ============
+      const modalOverlay = $('modalOverlay');
+      const modalImage = $('modalImage');
+      const sharpnessSlider = $('sharpnessSlider');
+      const contrastSlider = $('contrastSlider');
+      const sharpnessValue = $('sharpnessValue');
+      const contrastValue = $('contrastValue');
+
       async function openPreviewModal(page) {
         currentPreviewPageId = page.id;
         modalImage.src = page.processed;
@@ -2343,40 +2763,23 @@
         currentPreviewPageId = null;
       }
 
-      modalCloseBtn.addEventListener('click', closeModal);
-      modalCancelBtn.addEventListener('click', closeModal);
-      modalOverlay.addEventListener('click', (e) => {
-        if (e.target === modalOverlay) closeModal();
-      });
+      $('modalCloseBtn').addEventListener('click', closeModal);
+      $('modalCancelBtn').addEventListener('click', closeModal);
+      modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
 
-      sharpnessSlider.addEventListener('input', (e) => {
-        sharpnessValue.textContent = e.target.value;
-      });
+      sharpnessSlider.addEventListener('input', (e) => sharpnessValue.textContent = e.target.value);
+      contrastSlider.addEventListener('input', (e) => contrastValue.textContent = e.target.value);
 
-      contrastSlider.addEventListener('input', (e) => {
-        contrastValue.textContent = e.target.value;
-      });
-
-      reapplyBtn.addEventListener('click', async () => {
+      $('reapplyBtn').addEventListener('click', async () => {
         const page = scannedPages.find(p => p.id === currentPreviewPageId);
         if (!page) return;
-
         processingOverlay.classList.add('show');
         processingText.textContent = 'Đang tinh chỉnh...';
-
-        const sharp = parseInt(sharpnessSlider.value);
-        const contrast = parseInt(contrastSlider.value);
-
         const srcCanvas = await dataURLToCanvas(page.original);
         const processedCanvas = await processImage(srcCanvas, {
-          doCrop: autoCropEnabled,
-          doEnhance: true,
-          doGray: grayEnabled,
-          doBW: bwEnabled,
-          sharpness: sharp,
-          contrast: contrast
+          sharpness: parseInt(sharpnessSlider.value),
+          contrast: parseInt(contrastSlider.value)
         });
-
         page.processed = canvasToDataURL(processedCanvas, 0.95);
         updateGallery();
         modalImage.src = page.processed;
@@ -2384,7 +2787,7 @@
         showToast('Đã áp dụng tinh chỉnh', 1500, 'fa-wand-magic-sparkles');
       });
 
-      // ============ PDF ============
+      // ============ PDF GENERATION ============
       async function generatePdf() {
         if (scannedPages.length === 0) {
           showToast('Chưa có trang nào', 1500, 'fa-circle-info');
@@ -2426,9 +2829,7 @@
         if (!blob) return;
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = `ScanPro_${Date.now()}.pdf`;
-        a.click();
+        a.href = url; a.download = `ScanPro_${Date.now()}.pdf`; a.click();
         URL.revokeObjectURL(url);
         showToast('Đã tải PDF', 1800, 'fa-download');
       });
@@ -2447,26 +2848,476 @@
         } else {
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
-          a.href = url;
-          a.download = `ScanPro_${Date.now()}.pdf`;
-          a.click();
+          a.href = url; a.download = `ScanPro_${Date.now()}.pdf`; a.click();
           URL.revokeObjectURL(url);
-          showToast('Đã tải về', 2000, 'fa-download');
+          showToast('Đã tải về (không hỗ trợ chia sẻ)', 2000, 'fa-download');
         }
       });
 
-      // ============ Settings ============
-      settingsBtn.addEventListener('click', () => {
+      // ============ OCR ============
+      const ocrModal = $('ocrModal');
+      const ocrResult = $('ocrResult');
+
+      $('toolOCR').addEventListener('click', () => {
+        if (scannedPages.length === 0) { showToast('Chưa có trang nào để OCR', 1500, 'fa-circle-info'); return; }
+        const lastPage = scannedPages[scannedPages.length - 1];
+        if (lastPage.ocrText) ocrResult.value = lastPage.ocrText;
+        else ocrResult.value = '';
+        ocrModal.classList.add('show');
+        // Lưu page id hiện tại
+        ocrModal.dataset.pageId = lastPage.id;
+      });
+
+      $('ocrCloseBtn').addEventListener('click', () => ocrModal.classList.remove('show'));
+      ocrModal.addEventListener('click', (e) => { if (e.target === ocrModal) ocrModal.classList.remove('show'); });
+
+      $('ocrRunBtn').addEventListener('click', async () => {
+        const pageId = parseFloat(ocrModal.dataset.pageId);
+        const page = scannedPages.find(p => p.id === pageId);
+        if (!page) { showToast('Không tìm thấy trang', 1500, 'fa-triangle-exclamation'); return; }
+
+        ocrResult.value = '⏳ Đang nhận diện văn bản...';
+        try {
+          const lang = $('ocrLang').value;
+          const result = await Tesseract.recognize(page.processed, lang, {
+            logger: m => {
+              if (m.status === 'recognizing text') {
+                ocrResult.value = `⏳ Đang xử lý... ${Math.round(m.progress * 100)}%`;
+              }
+            }
+          });
+          const text = result.data.text;
+          ocrResult.value = text;
+          page.ocrText = text;
+          showToast('OCR hoàn tất', 1500, 'fa-check');
+        } catch (e) {
+          ocrResult.value = '❌ Lỗi OCR: ' + e.message;
+          showToast('Lỗi OCR', 1500, 'fa-triangle-exclamation');
+        }
+      });
+
+      $('ocrCopyBtn').addEventListener('click', () => {
+        if (!ocrResult.value.trim()) return;
+        navigator.clipboard.writeText(ocrResult.value);
+        showToast('Đã copy văn bản', 1200, 'fa-copy');
+      });
+
+      // ============ TRANSLATE ============
+      const translateModal = $('translateModal');
+
+      $('toolTranslate').addEventListener('click', () => {
+        // Điền sẵn text từ OCR nếu có
+        const lastOcr = scannedPages.filter(p => p.ocrText).pop();
+        if (lastOcr) $('transInput').value = lastOcr.ocrText;
+        translateModal.classList.add('show');
+      });
+
+      $('transCloseBtn').addEventListener('click', () => translateModal.classList.remove('show'));
+      translateModal.addEventListener('click', (e) => { if (e.target === translateModal) translateModal.classList.remove('show'); });
+
+      $('transRunBtn').addEventListener('click', async () => {
+        const input = $('transInput').value.trim();
+        if (!input) { showToast('Nhập văn bản cần dịch', 1500, 'fa-circle-info'); return; }
+
+        $('transOutput').textContent = '⏳ Đang dịch...';
+        try {
+          // Dùng Google Translate unofficial API
+          const from = $('transFrom').value;
+          const to = $('transTo').value;
+          const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${from}&tl=${to}&dt=t&q=${encodeURIComponent(input)}`;
+          const res = await fetch(url);
+          const data = await res.json();
+          const translated = data[0].map(item => item[0]).filter(Boolean).join('');
+          $('transOutput').textContent = translated;
+          showToast('Dịch hoàn tất', 1500, 'fa-check');
+        } catch (e) {
+          $('transOutput').textContent = '❌ Lỗi dịch: ' + e.message;
+          showToast('Lỗi dịch thuật', 1500, 'fa-triangle-exclamation');
+        }
+      });
+
+      $('transCopyBtn').addEventListener('click', () => {
+        const text = $('transOutput').textContent;
+        if (!text.trim()) return;
+        navigator.clipboard.writeText(text);
+        showToast('Đã copy bản dịch', 1200, 'fa-copy');
+      });
+
+      // ============ SEARCH ============
+      const searchModal = $('searchModal');
+
+      $('toolSearch').addEventListener('click', () => {
+        searchModal.classList.add('show');
+        $('searchResults').innerHTML = `
+          <div class="info-box">
+            <i class="fas fa-info-circle"></i>
+            <div>Nhập từ khóa để tìm trong tất cả các trang đã quét (sử dụng OCR).</div>
+          </div>`;
+      });
+
+      $('searchCloseBtn').addEventListener('click', () => searchModal.classList.remove('show'));
+      searchModal.addEventListener('click', (e) => { if (e.target === searchModal) searchModal.classList.remove('show'); });
+
+      $('searchRunBtn').addEventListener('click', async () => {
+        const query = $('searchInput').value.trim().toLowerCase();
+        if (!query) { showToast('Nhập từ khóa tìm kiếm', 1500, 'fa-circle-info'); return; }
+        if (scannedPages.length === 0) { showToast('Chưa có trang nào', 1500, 'fa-circle-info'); return; }
+
+        const results = $('searchResults');
+        results.innerHTML = '<div class="spinner-large" style="width:32px;height:32px;border-width:3px;margin:16px auto;"></div><p style="text-align:center;font-size:12px;color:#64748b;">Đang tìm kiếm...</p>';
+
+        let found = 0;
+        let html = '';
+        for (let i = 0; i < scannedPages.length; i++) {
+          const page = scannedPages[i];
+          let text = page.ocrText;
+          if (!text) {
+            try {
+              const result = await Tesseract.recognize(page.processed, 'vie+eng');
+              text = result.data.text;
+              page.ocrText = text;
+            } catch (e) { continue; }
+          }
+          if (text.toLowerCase().includes(query)) {
+            found++;
+            const idx = text.toLowerCase().indexOf(query);
+            const preview = text.substring(Math.max(0, idx - 50), Math.min(text.length, idx + 80));
+            html += `
+              <div style="background:white;border:1.5px solid #e2e8f0;border-radius:14px;padding:12px;margin-bottom:8px;">
+                <div style="font-size:11px;font-weight:800;color:#4338ca;margin-bottom:6px;">
+                  <i class="fas fa-file-lines"></i> Trang ${i + 1}
+                </div>
+                <div style="font-size:12px;color:#475569;line-height:1.5;">...${preview.replace(query, `<mark style="background:#fef3c7;color:#92400e;font-weight:700;">${query}</mark>`)}...</div>
+              </div>`;
+          }
+        }
+        if (found === 0) {
+          results.innerHTML = `<div class="info-box" style="background:#fee2e2;border-color:#fecaca;color:#991b1b;">
+            <i class="fas fa-circle-xmark" style="color:#dc2626;"></i>
+            <div>Không tìm thấy từ khóa "<b>${query}</b>" trong ${scannedPages.length} trang.</div>
+          </div>`;
+        } else {
+          results.innerHTML = `<div style="font-size:12px;font-weight:700;color:#059669;margin-bottom:10px;"><i class="fas fa-check-circle"></i> Tìm thấy ${found} kết quả</div>` + html;
+        }
+      });
+
+      // ============ SIGNATURE ============
+      const sigModal = $('sigModal');
+      const signatureCanvas = $('signatureCanvas');
+      const sigHint = $('sigHint');
+
+      function initSignatureCanvas() {
+        const rect = signatureCanvas.getBoundingClientRect();
+        signatureCanvas.width = rect.width * 2;
+        signatureCanvas.height = 180 * 2;
+        sigCtx = signatureCanvas.getContext('2d');
+        sigCtx.scale(2, 2);
+        sigCtx.strokeStyle = '#1e293b';
+        sigCtx.lineWidth = 2.5;
+        sigCtx.lineCap = 'round';
+        sigCtx.lineJoin = 'round';
+        sigHasContent = false;
+        sigHint.classList.remove('hidden');
+      }
+
+      $('toolSignature').addEventListener('click', () => {
+        if (scannedPages.length === 0) { showToast('Chưa có trang nào để chèn chữ ký', 1500, 'fa-circle-info'); return; }
+        sigModal.classList.add('show');
+        setTimeout(initSignatureCanvas, 50);
+        // Chọn trang cuối
+        sigModal.dataset.pageId = scannedPages[scannedPages.length - 1].id;
+      });
+
+      $('sigCloseBtn').addEventListener('click', () => sigModal.classList.remove('show'));
+      sigModal.addEventListener('click', (e) => { if (e.target === sigModal) sigModal.classList.remove('show'); });
+
+      function getSigPos(e) {
+        const rect = signatureCanvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: clientX - rect.left, y: clientY - rect.top };
+      }
+
+      signatureCanvas.addEventListener('mousedown', (e) => { sigDrawing = true; sigCtx.beginPath(); const p = getSigPos(e); sigCtx.moveTo(p.x, p.y); sigHint.classList.add('hidden'); sigHasContent = true; });
+      signatureCanvas.addEventListener('mousemove', (e) => { if (!sigDrawing) return; const p = getSigPos(e); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); });
+      signatureCanvas.addEventListener('mouseup', () => sigDrawing = false);
+      signatureCanvas.addEventListener('mouseleave', () => sigDrawing = false);
+
+      signatureCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); sigDrawing = true; sigCtx.beginPath(); const p = getSigPos(e); sigCtx.moveTo(p.x, p.y); sigHint.classList.add('hidden'); sigHasContent = true; }, { passive: false });
+      signatureCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); if (!sigDrawing) return; const p = getSigPos(e); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); }, { passive: false });
+      signatureCanvas.addEventListener('touchend', (e) => { e.preventDefault(); sigDrawing = false; }, { passive: false });
+
+      $('sigClearBtn').addEventListener('click', () => {
+        sigCtx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+        sigHasContent = false;
+        sigHint.classList.remove('hidden');
+      });
+
+      $('sigSaveBtn').addEventListener('click', async () => {
+        if (!sigHasContent) { showToast('Vui lòng ký tên trước', 1500, 'fa-circle-info'); return; }
+        const pageId = parseFloat(sigModal.dataset.pageId);
+        const page = scannedPages.find(p => p.id === pageId);
+        if (!page) return;
+
+        processingOverlay.classList.add('show');
+        processingText.textContent = 'Đang chèn chữ ký...';
+
+        try {
+          const sigDataURL = signatureCanvas.toDataURL('image/png');
+          const baseCanvas = await dataURLToCanvas(page.processed);
+          const ctx = baseCanvas.getContext('2d');
+          const sigImg = await new Promise(res => { const im = new Image(); im.onload = () => res(im); im.src = sigDataURL; });
+
+          // Chèn chữ ký ở góc dưới phải, kích thước 30% chiều rộng
+          const sigW = baseCanvas.width * 0.35;
+          const sigH = sigW * (sigImg.height / sigImg.width);
+          const x = baseCanvas.width - sigW - 30;
+          const y = baseCanvas.height - sigH - 30;
+          ctx.drawImage(sigImg, x, y, sigW, sigH);
+
+          page.processed = canvasToDataURL(baseCanvas, 0.95);
+          updateGallery();
+          sigModal.classList.remove('show');
+          showToast('Đã chèn chữ ký', 1500, 'fa-signature');
+        } catch (e) {
+          showToast('Lỗi chèn chữ ký', 1500, 'fa-triangle-exclamation');
+        } finally {
+          processingOverlay.classList.remove('show');
+        }
+      });
+
+      // ============ WATERMARK ============
+      const wmModal = $('wmModal');
+
+      $('toolWatermark').addEventListener('click', () => {
+        if (scannedPages.length === 0) { showToast('Chưa có trang nào', 1500, 'fa-circle-info'); return; }
+        wmModal.classList.add('show');
+      });
+
+      $('wmCloseBtn').addEventListener('click', () => wmModal.classList.remove('show'));
+      $('wmCancelBtn').addEventListener('click', () => wmModal.classList.remove('show'));
+      wmModal.addEventListener('click', (e) => { if (e.target === wmModal) wmModal.classList.remove('show'); });
+
+      document.querySelectorAll('.wm-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+          document.querySelectorAll('.wm-option').forEach(o => o.classList.remove('active'));
+          opt.classList.add('active');
+          $('wmText').value = opt.dataset.wm;
+        });
+      });
+
+      $('wmApplyBtn').addEventListener('click', async () => {
+        const text = $('wmText').value.trim();
+        if (!text) { showToast('Nhập nội dung watermark', 1500, 'fa-circle-info'); return; }
+
+        processingOverlay.classList.add('show');
+        processingText.textContent = `Đang thêm watermark "${text}"...`;
+
+        try {
+          for (let i = 0; i < scannedPages.length; i++) {
+            const page = scannedPages[i];
+            const canvas = await dataURLToCanvas(page.processed);
+            const ctx = canvas.getContext('2d');
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(-Math.PI / 6);
+            ctx.font = `bold ${Math.max(28, canvas.width / 14)}px Inter, sans-serif`;
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.18)';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, 0, 0);
+            ctx.fillText(text, 0, -canvas.height / 3);
+            ctx.fillText(text, 0, canvas.height / 3);
+            ctx.restore();
+            page.processed = canvasToDataURL(canvas, 0.95);
+            processingText.textContent = `Đang xử lý trang ${i + 1}/${scannedPages.length}...`;
+          }
+          updateGallery();
+          wmModal.classList.remove('show');
+          showToast(`Đã thêm watermark cho ${scannedPages.length} trang`, 1800, 'fa-droplet');
+        } catch (e) {
+          showToast('Lỗi watermark', 1500, 'fa-triangle-exclamation');
+        } finally {
+          processingOverlay.classList.remove('show');
+        }
+      });
+
+      // ============ ERASER ============
+      const eraserModal = $('eraserModal');
+      const eraserCanvas = $('eraserCanvas');
+      const eraserSize = $('eraserSize');
+      const eraserSizeValue = $('eraserSizeValue');
+
+      $('toolEraser').addEventListener('click', () => {
+        if (scannedPages.length === 0) { showToast('Chưa có trang nào', 1500, 'fa-circle-info'); return; }
+        const lastPage = scannedPages[scannedPages.length - 1];
+        eraserPageId = lastPage.id;
+        eraserModal.classList.add('show');
+
+        // Load ảnh vào canvas
+        const img = new Image();
+        img.onload = () => {
+          const maxW = 340;
+          const scale = Math.min(1, maxW / img.width);
+          eraserCanvas.width = img.width * scale;
+          eraserCanvas.height = img.height * scale;
+          eraserCtx = eraserCanvas.getContext('2d');
+          eraserCtx.drawImage(img, 0, 0, eraserCanvas.width, eraserCanvas.height);
+          eraserOriginalImage = img;
+        };
+        img.src = lastPage.processed;
+      });
+
+      $('eraserCloseBtn').addEventListener('click', () => eraserModal.classList.remove('show'));
+      eraserModal.addEventListener('click', (e) => { if (e.target === eraserModal) eraserModal.classList.remove('show'); });
+
+      eraserSize.addEventListener('input', (e) => eraserSizeValue.textContent = e.target.value);
+
+      function eraserGetPos(e) {
+        const rect = eraserCanvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+          x: (clientX - rect.left) * (eraserCanvas.width / rect.width),
+          y: (clientY - rect.top) * (eraserCanvas.height / rect.height)
+        };
+      }
+
+      function eraserPaint(pos) {
+        const size = parseInt(eraserSize.value) * (eraserCanvas.width / 340);
+        eraserCtx.save();
+        eraserCtx.globalCompositeOperation = 'destination-out';
+        eraserCtx.beginPath();
+        eraserCtx.arc(pos.x, pos.y, size / 2, 0, Math.PI * 2);
+        eraserCtx.fill();
+        eraserCtx.restore();
+      }
+
+      eraserCanvas.addEventListener('mousedown', (e) => { eraserDrawing = true; eraserPaint(eraserGetPos(e)); });
+      eraserCanvas.addEventListener('mousemove', (e) => { if (eraserDrawing) eraserPaint(eraserGetPos(e)); });
+      eraserCanvas.addEventListener('mouseup', () => eraserDrawing = false);
+      eraserCanvas.addEventListener('mouseleave', () => eraserDrawing = false);
+
+      eraserCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); eraserDrawing = true; eraserPaint(eraserGetPos(e)); }, { passive: false });
+      eraserCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); if (eraserDrawing) eraserPaint(eraserGetPos(e)); }, { passive: false });
+      eraserCanvas.addEventListener('touchend', (e) => { e.preventDefault(); eraserDrawing = false; }, { passive: false });
+
+      $('eraserResetBtn').addEventListener('click', () => {
+        if (eraserOriginalImage) {
+          eraserCtx.clearRect(0, 0, eraserCanvas.width, eraserCanvas.height);
+          eraserCtx.drawImage(eraserOriginalImage, 0, 0, eraserCanvas.width, eraserCanvas.height);
+        }
+      });
+
+      $('eraserSaveBtn').addEventListener('click', () => {
+        const page = scannedPages.find(p => p.id === eraserPageId);
+        if (!page) return;
+        page.processed = eraserCanvas.toDataURL('image/jpeg', 0.95);
+        updateGallery();
+        eraserModal.classList.remove('show');
+        showToast('Đã lưu thay đổi', 1500, 'fa-check');
+      });
+
+      // ============ MERGE (ghép file - demo) ============
+      $('toolMerge').addEventListener('click', () => {
+        showToast('Ghép file: tất cả trang sẽ được gộp khi xuất PDF', 2000, 'fa-object-group');
+      });
+
+      // ============ EXPORT MULTI-FORMAT ============
+      const exportModal = $('exportModal');
+
+      function openExportModal() {
+        if (scannedPages.length === 0) { showToast('Chưa có trang nào', 1500, 'fa-circle-info'); return; }
+        $('exportPageCount').textContent = scannedPages.length;
+        exportModal.classList.add('show');
+      }
+
+      $('toolExport').addEventListener('click', openExportModal);
+      $('exportCloseBtn').addEventListener('click', () => exportModal.classList.remove('show'));
+      exportModal.addEventListener('click', (e) => { if (e.target === exportModal) exportModal.classList.remove('show'); });
+
+      // Export helpers
+      $('exportPDF2').addEventListener('click', async () => { exportPdfBtn.click(); exportModal.classList.remove('show'); });
+      $('expPdf').addEventListener('click', async () => { exportPdfBtn.click(); exportModal.classList.remove('show'); });
+
+      async function exportJPG() {
+        if (scannedPages.length === 0) return;
+        showToast('Đang xuất JPG...', 1500, 'fa-image');
+        for (let i = 0; i < scannedPages.length; i++) {
+          const link = document.createElement('a');
+          link.href = scannedPages[i].processed;
+          link.download = `ScanPro_trang${i + 1}_${Date.now()}.jpg`;
+          link.click();
+          await new Promise(r => setTimeout(r, 300));
+        }
+        showToast(`Đã xuất ${scannedPages.length} file JPG`, 2000, 'fa-check');
+      }
+
+      $('exportJPG').addEventListener('click', () => { exportJPG(); exportModal.classList.remove('show'); });
+      $('expJpg').addEventListener('click', () => { exportJPG(); exportModal.classList.remove('show'); });
+
+      async function exportTXT() {
+        if (scannedPages.length === 0) return;
+        let allText = '';
+        showToast('Đang OCR và xuất TXT...', 2000, 'fa-file-lines');
+        for (let i = 0; i < scannedPages.length; i++) {
+          const page = scannedPages[i];
+          if (!page.ocrText) {
+            try {
+              const result = await Tesseract.recognize(page.processed, 'vie+eng');
+              page.ocrText = result.data.text;
+            } catch (e) { page.ocrText = '[Không nhận diện được]'; }
+          }
+          allText += `===== Trang ${i + 1} =====\n${page.ocrText}\n\n`;
+        }
+        const blob = new Blob([allText], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `ScanPro_${Date.now()}.txt`; a.click();
+        URL.revokeObjectURL(url);
+        showToast('Đã xuất TXT', 1500, 'fa-check');
+      }
+
+      $('exportTXT').addEventListener('click', () => { exportTXT(); exportModal.classList.remove('show'); });
+      $('expTxt').addEventListener('click', () => { exportTXT(); exportModal.classList.remove('show'); });
+
+      async function exportDocx() {
+        if (scannedPages.length === 0) return;
+        showToast('Đang OCR và xuất Word...', 2000, 'fa-file-word');
+        let body = '';
+        for (let i = 0; i < scannedPages.length; i++) {
+          const page = scannedPages[i];
+          if (!page.ocrText) {
+            try {
+              const result = await Tesseract.recognize(page.processed, 'vie+eng');
+              page.ocrText = result.data.text;
+            } catch (e) { page.ocrText = '[Không nhận diện được]'; }
+          }
+          body += `<h2 style="color:#4338ca;">Trang ${i + 1}</h2><p>${page.ocrText.replace(/\n/g, '<br>')}</p><hr>`;
+        }
+        const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ScanPro Document</title></head><body style="font-family:Arial,sans-serif;padding:40px;max-width:800px;margin:auto;">${body}</body></html>`;
+        const blob = new Blob([html], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `ScanPro_${Date.now()}.doc`; a.click();
+        URL.revokeObjectURL(url);
+        showToast('Đã xuất Word (.doc)', 1500, 'fa-check');
+      }
+
+      $('expDocx').addEventListener('click', () => { exportDocx(); exportModal.classList.remove('show'); });
+
+      // ============ SETTINGS ============
+      $('settingsBtn').addEventListener('click', () => {
         showToast('Cài đặt đang phát triển', 1500, 'fa-gear');
       });
 
-      // ============ Init ============
+      // ============ INIT ============
       cameraPlaceholder.addEventListener('click', async () => {
         await startCamera(currentFacingMode);
       });
 
       waitForOpenCV().then(() => {
-        if (opencvReady) console.log('✅ OpenCV ready - Smart detection active');
+        if (opencvReady) console.log('✅ OpenCV ready - Full features enabled');
       });
 
       window.addEventListener('beforeunload', () => {
@@ -2482,6 +3333,10 @@
           video.style.display = 'none';
         }
       });
+
+      // Init
+      updateGallery();
+      sensitivityRow.style.display = 'flex';
 
     })();
   </script>
