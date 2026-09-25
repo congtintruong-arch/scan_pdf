@@ -3,160 +3,86 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>ScanPro A4 • Smart Paper Detection</title>
+  <title>ScanPro Ultra • CamScanner Style</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://docs.opencv.org/4.8.0/opencv.js" async></script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
 
     :root {
-      --primary: #6366f1;
-      --primary-dark: #4f46e5;
-      --secondary: #8b5cf6;
-      --accent: #06b6d4;
-      --success: #10b981;
-      --danger: #f43f5e;
-      --warning: #f59e0b;
-      --dark: #0a0e1a;
-      --gray-1: #f8fafc;
-      --gray-2: #f1f5f9;
-      --gray-3: #e2e8f0;
-      --gray-5: #64748b;
-      --gray-7: #334155;
-      --radius-lg: 28px;
-      --radius-md: 20px;
-      --radius-sm: 14px;
+      --primary: #6366f1; --secondary: #8b5cf6; --accent: #06b6d4;
+      --success: #10b981; --danger: #f43f5e; --warning: #f59e0b;
+      --dark: #0a0e1a; --gray-1: #f8fafc; --gray-2: #f1f5f9; --gray-3: #e2e8f0;
+      --gray-5: #64748b; --gray-7: #334155;
+      --radius-lg: 28px; --radius-md: 20px; --radius-sm: 14px;
       --shadow-sm: 0 2px 8px -2px rgba(15, 23, 42, 0.08);
-      --shadow-md: 0 8px 24px -8px rgba(15, 23, 42, 0.15);
       --shadow-glow: 0 12px 32px -8px rgba(99, 102, 241, 0.4);
     }
 
-    html, body {
-      height: 100%;
-      overflow: hidden;
-    }
+    html, body { height: 100%; overflow: hidden; }
 
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: 
-        radial-gradient(ellipse 80% 60% at 50% 0%, #1e1b4b 0%, transparent 60%),
-        radial-gradient(ellipse 60% 50% at 100% 100%, #312e81 0%, transparent 50%),
-        radial-gradient(ellipse 60% 50% at 0% 100%, #0e7490 0%, transparent 50%),
-        #0a0e1a;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 8px;
-      position: relative;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, #1e1b4b 0%, transparent 60%),
+                  radial-gradient(ellipse 60% 50% at 100% 100%, #312e81 0%, transparent 50%),
+                  radial-gradient(ellipse 60% 50% at 0% 100%, #0e7490 0%, transparent 50%),
+                  #0a0e1a;
+      display: flex; align-items: center; justify-content: center;
+      padding: 8px; position: relative;
     }
 
     body::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image: 
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
+      content: ''; position: absolute; inset: 0;
+      background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 40px 40px; pointer-events: none;
     }
 
-    /* ============ PHONE FRAME ============ */
     .phone-frame {
-      width: 100%;
-      max-width: 410px;
-      height: 860px;
-      max-height: 97vh;
+      width: 100%; max-width: 410px; height: 880px; max-height: 98vh;
       background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
       border-radius: 52px;
-      box-shadow:
-        0 60px 120px -40px rgba(0, 0, 0, 0.8),
-        0 0 0 2px rgba(255, 255, 255, 0.08) inset,
-        0 0 0 10px rgba(255, 255, 255, 0.02),
-        0 0 0 11px rgba(255, 255, 255, 0.05);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      z-index: 1;
+      box-shadow: 0 60px 120px -40px rgba(0, 0, 0, 0.8),
+                  0 0 0 2px rgba(255, 255, 255, 0.08) inset,
+                  0 0 0 10px rgba(255, 255, 255, 0.02),
+                  0 0 0 11px rgba(255, 255, 255, 0.05);
+      overflow: hidden; display: flex; flex-direction: column;
+      position: relative; z-index: 1;
     }
 
     .dynamic-island {
-      position: absolute;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 110px;
-      height: 32px;
-      background: #000;
-      border-radius: 20px;
-      z-index: 100;
-      box-shadow: 0 0 0 2px rgba(255,255,255,0.05);
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
+      position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+      width: 110px; height: 32px; background: #000; border-radius: 20px;
+      z-index: 100; display: flex; align-items: center; justify-content: flex-end;
       padding-right: 10px;
     }
 
     .dynamic-island::after {
-      content: '';
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
+      content: ''; width: 8px; height: 8px; border-radius: 50%;
       background: radial-gradient(circle at 30% 30%, #1e3a5f, #0a0e1a);
       box-shadow: 0 0 0 1px rgba(255,255,255,0.1), inset 0 0 4px rgba(96, 165, 250, 0.4);
     }
 
-    /* ============ STATUS BAR ============ */
     .status-bar {
-      display: flex;
-      justify-content: space-between;
-      padding: 18px 32px 6px;
-      font-size: 14px;
-      font-weight: 700;
-      color: #0f172a;
-      background: transparent;
-      letter-spacing: -0.2px;
-      z-index: 5;
-      position: relative;
+      display: flex; justify-content: space-between;
+      padding: 18px 32px 6px; font-size: 14px; font-weight: 700;
+      color: #0f172a; letter-spacing: -0.2px; z-index: 5; position: relative;
     }
 
-    .status-bar .icons {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 12px;
-    }
+    .status-bar .icons { display: flex; align-items: center; gap: 5px; font-size: 12px; }
 
-    /* ============ APP SCREEN ============ */
     .app-screen {
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding: 0 18px 100px;
-      display: flex;
-      flex-direction: column;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-      scroll-behavior: smooth;
+      flex: 1; overflow-y: auto; overflow-x: hidden;
+      padding: 0 18px 100px; display: flex; flex-direction: column;
+      scrollbar-width: none; scroll-behavior: smooth;
     }
 
     .app-screen::-webkit-scrollbar { display: none; }
 
-    /* ============ HEADER ============ */
     .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      display: flex; justify-content: space-between; align-items: center;
       padding: 6px 2px 14px;
       animation: slideDown 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -169,184 +95,97 @@
     .logo-group { display: flex; align-items: center; gap: 10px; }
 
     .logo-mark {
-      width: 42px;
-      height: 42px;
-      border-radius: 14px;
+      width: 42px; height: 42px; border-radius: 14px;
       background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 19px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 19px;
       box-shadow: 0 8px 20px -4px rgba(99, 102, 241, 0.5), inset 0 1px 0 rgba(255,255,255,0.3);
-      position: relative;
-      overflow: hidden;
+      position: relative; overflow: hidden;
     }
 
     .logo-mark::before {
-      content: '';
-      position: absolute;
-      inset: 0;
+      content: ''; position: absolute; inset: 0;
       background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.2) 100%);
     }
 
     .logo-mark i { position: relative; z-index: 1; }
 
     .brand-text h1 {
-      font-size: 20px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      color: #0f172a;
-      line-height: 1.1;
+      font-size: 20px; font-weight: 800;
+      letter-spacing: -0.5px; color: #0f172a; line-height: 1.1;
     }
 
     .brand-text p {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      color: #64748b;
-      text-transform: uppercase;
-      margin-top: 1px;
+      font-size: 10px; font-weight: 600; letter-spacing: 0.5px;
+      color: #64748b; text-transform: uppercase; margin-top: 1px;
     }
 
     .header-btn {
-      width: 42px;
-      height: 42px;
-      border-radius: 14px;
-      background: white;
-      border: 1px solid #e2e8f0;
-      color: #334155;
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s;
-      box-shadow: var(--shadow-sm);
+      width: 42px; height: 42px; border-radius: 14px;
+      background: white; border: 1px solid #e2e8f0;
+      color: #334155; font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow-sm);
     }
 
     .header-btn:active { transform: scale(0.92); background: var(--gray-2); }
 
-    /* ============ CAPTURE CARD ============ */
     .capture-card {
       background: linear-gradient(160deg, #ffffff 0%, #f1f5f9 100%);
-      border-radius: var(--radius-lg);
-      padding: 12px;
-      margin-bottom: 16px;
-      box-shadow: 0 20px 40px -16px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(226, 232, 240, 0.8) inset;
-      border: 1px solid #e2e8f0;
-      position: relative;
-      animation: fadeUp 0.5s 0.1s cubic-bezier(0.4, 0, 0.2, 1) backwards;
-    }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(16px); }
-      to { opacity: 1; transform: translateY(0); }
+      border-radius: var(--radius-lg); padding: 12px; margin-bottom: 14px;
+      box-shadow: 0 20px 40px -16px rgba(15, 23, 42, 0.18),
+                  0 0 0 1px rgba(226, 232, 240, 0.8) inset;
+      border: 1px solid #e2e8f0; position: relative;
     }
 
     .camera-preview {
-      width: 100%;
-      aspect-ratio: 3 / 4;
-      background: #0a0e1a;
-      border-radius: var(--radius-md);
-      overflow: hidden;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: 100%; aspect-ratio: 3 / 4; background: #0a0e1a;
+      border-radius: var(--radius-md); overflow: hidden;
+      position: relative; display: flex; align-items: center; justify-content: center;
       box-shadow: 0 24px 40px -20px rgba(0, 0, 0, 0.5);
     }
 
     #videoPreview, #previewCanvas {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      background: #0a0e1a;
+      width: 100%; height: 100%; object-fit: cover;
+      display: block; background: #0a0e1a;
     }
 
     #previewCanvas { display: none; }
 
-    /* Edge detection live canvas */
-    #edgeCanvas {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 4;
-      display: none;
-      pointer-events: none;
-      opacity: 0.7;
+    /* Overlay canvas để vẽ detected polygon */
+    #overlayCanvas {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none; z-index: 5;
     }
-
-    .grid-overlay {
-      position: absolute;
-      inset: 0;
-      z-index: 3;
-      pointer-events: none;
-      opacity: 0.2;
-      background-image: 
-        linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px);
-      background-size: 33.33% 33.33%;
-      display: none;
-    }
-
-    .grid-overlay.show { display: block; }
 
     .camera-placeholder {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: #cbd5e1;
-      font-size: 14px;
-      font-weight: 500;
-      gap: 12px;
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: #cbd5e1; gap: 12px;
       background: linear-gradient(160deg, #1e293b, #0f172a);
-      z-index: 2;
-      text-align: center;
-      padding: 24px;
+      z-index: 2; text-align: center; padding: 24px;
     }
 
     .camera-placeholder .icon-wrap {
-      width: 76px;
-      height: 76px;
-      border-radius: 24px;
+      width: 76px; height: 76px; border-radius: 24px;
       background: rgba(99, 102, 241, 0.15);
       border: 1px solid rgba(99, 102, 241, 0.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 32px;
-      color: #818cf8;
-      margin-bottom: 4px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; color: #818cf8; margin-bottom: 4px;
       backdrop-filter: blur(8px);
     }
 
     .camera-placeholder .main-text { font-size: 15px; font-weight: 700; color: #e2e8f0; }
     .camera-placeholder .hint { font-size: 11.5px; color: #94a3b8; font-weight: 500; max-width: 240px; line-height: 1.5; }
 
-    /* ============ STATUS BADGE ============ */
     .status-badge {
-      position: absolute;
-      top: 14px;
-      left: 14px;
-      z-index: 6;
-      font-size: 10px;
-      font-weight: 800;
-      padding: 7px 13px;
-      border-radius: 30px;
-      display: none;
-      align-items: center;
-      gap: 7px;
-      letter-spacing: 0.7px;
-      backdrop-filter: blur(12px);
+      position: absolute; top: 14px; left: 14px; z-index: 6;
+      font-size: 10px; font-weight: 800; padding: 7px 13px;
+      border-radius: 30px; display: none; align-items: center; gap: 7px;
+      letter-spacing: 0.7px; backdrop-filter: blur(12px);
       border: 1px solid rgba(255,255,255,0.2);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      text-transform: uppercase;
+      transition: all 0.3s; text-transform: uppercase;
       box-shadow: 0 8px 20px -6px rgba(0,0,0,0.4);
     }
 
@@ -363,115 +202,49 @@
     }
 
     .status-badge.searching { background: linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(217, 119, 6, 0.95)); color: white; }
-    .status-badge.detected { background: linear-gradient(135deg, rgba(99, 102, 241, 0.95), rgba(139, 92, 246, 0.95)); color: white; animation: bounceIn 0.4s; }
-    .status-badge.locked { background: linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(5, 150, 105, 0.95)); color: white; box-shadow: 0 8px 24px -6px rgba(16, 185, 129, 0.6); animation: bounceIn 0.4s; }
+    .status-badge.detected { background: linear-gradient(135deg, rgba(99, 102, 241, 0.95), rgba(139, 92, 246, 0.95)); color: white; }
+    .status-badge.locked { background: linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(5, 150, 105, 0.95)); color: white; box-shadow: 0 8px 24px -6px rgba(16, 185, 129, 0.6); }
 
-    @keyframes bounceIn {
-      0% { transform: scale(0.85); opacity: 0; }
-      60% { transform: scale(1.05); opacity: 1; }
-      100% { transform: scale(1); }
-    }
-
-    /* ============ A4 RATIO BADGE ============ */
-    .a4-ratio-badge {
-      position: absolute;
-      top: 14px;
-      right: 60px;
-      z-index: 6;
-      font-size: 9px;
-      font-weight: 800;
-      padding: 6px 10px;
-      border-radius: 30px;
-      display: none;
-      align-items: center;
-      gap: 5px;
-      letter-spacing: 0.5px;
+    .a4-badge {
+      position: absolute; top: 14px; right: 60px; z-index: 6;
+      font-size: 9px; font-weight: 800; padding: 6px 10px;
+      border-radius: 30px; display: none; align-items: center; gap: 5px;
       backdrop-filter: blur(12px);
       background: linear-gradient(135deg, rgba(6, 182, 212, 0.95), rgba(8, 145, 178, 0.95));
-      color: white;
-      border: 1px solid rgba(255,255,255,0.2);
-      box-shadow: 0 6px 16px -4px rgba(6, 182, 212, 0.6);
+      color: white; border: 1px solid rgba(255,255,255,0.2);
     }
 
-    .a4-ratio-badge.show { display: flex; }
+    .a4-badge.show { display: flex; }
 
-    /* ============ STABILITY METER ============ */
+    .page-counter-badge {
+      position: absolute; bottom: 14px; right: 14px;
+      background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px);
+      color: white; font-size: 11px; font-weight: 700;
+      padding: 6px 12px; border-radius: 30px; z-index: 6;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
     .stability-meter {
-      position: absolute;
-      bottom: 14px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 70%;
-      height: 6px;
-      background: rgba(255,255,255,0.15);
-      border-radius: 10px;
-      overflow: hidden;
-      z-index: 6;
-      display: none;
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255,255,255,0.1);
+      position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+      width: 70%; height: 6px; background: rgba(255,255,255,0.15);
+      border-radius: 10px; overflow: hidden; z-index: 6; display: none;
+      backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1);
     }
 
     .stability-meter.show { display: block; }
 
     .stability-fill {
-      height: 100%;
-      width: 0%;
+      height: 100%; width: 0%;
       background: linear-gradient(90deg, #f59e0b, #10b981);
-      border-radius: 10px;
-      transition: width 0.15s linear;
+      border-radius: 10px; transition: width 0.15s linear;
       box-shadow: 0 0 12px rgba(16, 185, 129, 0.8);
     }
 
-    /* ============ CORNER MARKERS ============ */
-    .corner-marker {
-      position: absolute;
-      width: 22px;
-      height: 22px;
-      border: 3px solid #06b6d4;
-      z-index: 6;
-      display: none;
-      pointer-events: none;
-      filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.9));
-      transition: all 0.1s linear;
-    }
-
-    .corner-marker.show { display: block; }
-    .corner-marker.tl { border-right: none; border-bottom: none; border-radius: 8px 0 0 0; }
-    .corner-marker.tr { border-left: none; border-bottom: none; border-radius: 0 8px 0 0; }
-    .corner-marker.bl { border-right: none; border-top: none; border-radius: 0 0 0 8px; }
-    .corner-marker.br { border-left: none; border-top: none; border-radius: 0 0 8px 0; }
-
-    /* ============ PAGE COUNTER ============ */
-    .page-counter-badge {
-      position: absolute;
-      bottom: 14px;
-      right: 14px;
-      background: rgba(15, 23, 42, 0.75);
-      backdrop-filter: blur(12px);
-      color: white;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 6px 12px;
-      border-radius: 30px;
-      z-index: 6;
-      border: 1px solid rgba(255,255,255,0.15);
-    }
-
-    /* ============ PROCESSING OVERLAY ============ */
     .processing-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(10, 14, 26, 0.9);
-      backdrop-filter: blur(16px);
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 10;
-      color: white;
-      gap: 18px;
-      border-radius: var(--radius-md);
+      position: absolute; inset: 0;
+      background: rgba(10, 14, 26, 0.9); backdrop-filter: blur(16px);
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 10; color: white; gap: 18px; border-radius: var(--radius-md);
     }
 
     .processing-overlay.show { display: flex; }
@@ -479,78 +252,50 @@
     .spinner-wrap { position: relative; width: 60px; height: 60px; }
 
     .spinner {
-      width: 60px;
-      height: 60px;
+      width: 60px; height: 60px;
       border: 3px solid rgba(99, 102, 241, 0.15);
-      border-top-color: #6366f1;
-      border-right-color: #8b5cf6;
-      border-radius: 50%;
-      animation: spin 0.9s linear infinite;
+      border-top-color: #6366f1; border-right-color: #8b5cf6;
+      border-radius: 50%; animation: spin 0.9s linear infinite;
     }
 
     .spinner-inner {
-      position: absolute;
-      inset: 12px;
+      position: absolute; inset: 12px;
       border: 2px solid rgba(6, 182, 212, 0.15);
-      border-bottom-color: #06b6d4;
-      border-radius: 50%;
+      border-bottom-color: #06b6d4; border-radius: 50%;
       animation: spin 1.4s linear infinite reverse;
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .processing-overlay span {
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0.3px;
-      color: #e2e8f0;
-      text-align: center;
-      padding: 0 20px;
+      font-size: 13px; font-weight: 700; letter-spacing: 0.3px;
+      color: #e2e8f0; text-align: center; padding: 0 20px;
     }
 
-    /* ============ CAPTURE CONTROLS ============ */
     .capture-controls {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 16px;
-      padding: 0 6px;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 16px; padding: 0 6px;
     }
 
     .ctrl-btn {
-      width: 48px;
-      height: 48px;
-      border-radius: 16px;
-      background: white;
-      border: 1px solid #e2e8f0;
-      color: #334155;
-      font-size: 17px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s;
-      box-shadow: var(--shadow-sm);
-      position: relative;
+      width: 48px; height: 48px; border-radius: 16px;
+      background: white; border: 1px solid #e2e8f0;
+      color: #334155; font-size: 17px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow-sm);
     }
 
     .ctrl-btn:active { transform: scale(0.9); background: var(--gray-2); }
-    .ctrl-btn.active { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; border-color: transparent; }
 
     .shutter-wrap { position: relative; display: flex; align-items: center; justify-content: center; }
 
     .shutter-ring {
-      position: absolute;
-      width: 84px;
-      height: 84px;
-      border-radius: 50%;
-      border: 2px solid transparent;
+      position: absolute; width: 84px; height: 84px;
+      border-radius: 50%; border: 2px solid transparent;
       background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4) border-box;
       -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      animation: rotateRing 6s linear infinite;
-      opacity: 0.6;
+      -webkit-mask-composite: xor; mask-composite: exclude;
+      animation: rotateRing 6s linear infinite; opacity: 0.6;
     }
 
     .shutter-ring.auto-active { animation: rotateRing 1.5s linear infinite; opacity: 1; }
@@ -558,170 +303,101 @@
     @keyframes rotateRing { to { transform: rotate(360deg); } }
 
     .shutter-btn {
-      width: 68px;
-      height: 68px;
-      border-radius: 50%;
+      width: 68px; height: 68px; border-radius: 50%;
       background: linear-gradient(145deg, #ffffff, #f1f5f9);
-      border: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 
-        0 10px 24px -6px rgba(15, 23, 42, 0.25),
-        0 0 0 4px #ffffff,
-        0 0 0 5px #e2e8f0,
-        inset 0 1px 2px rgba(255,255,255,1);
-      transition: all 0.15s;
-      cursor: pointer;
-      color: #6366f1;
-      font-size: 26px;
-      position: relative;
+      border: none; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 10px 24px -6px rgba(15, 23, 42, 0.25),
+                  0 0 0 4px #ffffff, 0 0 0 5px #e2e8f0,
+                  inset 0 1px 2px rgba(255,255,255,1);
+      transition: all 0.15s; cursor: pointer;
+      color: #6366f1; font-size: 26px; position: relative;
     }
 
     .shutter-btn:active { transform: scale(0.9); }
     .shutter-btn::after { content: ''; position: absolute; inset: 6px; border-radius: 50%; border: 2px solid #e2e8f0; opacity: 0.6; }
-    .shutter-btn.locked {
-      color: #10b981;
-      box-shadow: 0 10px 24px -6px rgba(16, 185, 129, 0.4), 0 0 0 4px #ffffff, 0 0 0 5px #34d399, inset 0 1px 2px rgba(255,255,255,1);
-    }
+    .shutter-btn.locked { color: #10b981; box-shadow: 0 10px 24px -6px rgba(16, 185, 129, 0.4), 0 0 0 4px #ffffff, 0 0 0 5px #34d399, inset 0 1px 2px rgba(255,255,255,1); }
 
-    /* ============ AUTO TOGGLE ============ */
     .auto-toggle-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       padding: 10px 14px;
       background: linear-gradient(160deg, #eef2ff, #e0e7ff);
-      border-radius: 14px;
-      margin-bottom: 12px;
-      border: 1px solid #c7d2fe;
+      border-radius: 14px; margin-bottom: 12px; border: 1px solid #c7d2fe;
     }
 
     .auto-toggle-info { display: flex; align-items: center; gap: 10px; }
 
     .auto-toggle-icon {
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
+      width: 34px; height: 34px; border-radius: 10px;
       background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      box-shadow: 0 6px 14px -4px rgba(99, 102, 241, 0.5);
+      color: white; display: flex; align-items: center; justify-content: center;
+      font-size: 14px; box-shadow: 0 6px 14px -4px rgba(99, 102, 241, 0.5);
     }
 
     .auto-toggle-text .title { font-size: 12px; font-weight: 800; color: #3730a3; }
     .auto-toggle-text .sub { font-size: 10px; font-weight: 500; color: #6366f1; margin-top: 1px; }
 
     .toggle-switch {
-      width: 46px;
-      height: 26px;
-      border-radius: 20px;
-      background: #cbd5e1;
-      position: relative;
-      cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      flex-shrink: 0;
+      width: 46px; height: 26px; border-radius: 20px;
+      background: #cbd5e1; position: relative;
+      cursor: pointer; transition: all 0.3s; flex-shrink: 0;
     }
 
     .toggle-switch::after {
-      content: '';
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: white;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      content: ''; position: absolute; top: 3px; left: 3px;
+      width: 20px; height: 20px; border-radius: 50%; background: white;
+      transition: all 0.3s; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     }
 
-    .toggle-switch.on { background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 4px 12px -2px rgba(99, 102, 241, 0.6); }
+    .toggle-switch.on { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
     .toggle-switch.on::after { left: 23px; }
 
-    /* ============ PAPER SIZE SELECTOR ============ */
     .paper-size-row {
-      display: flex;
-      gap: 6px;
-      padding: 8px 12px;
-      background: #f8fafc;
-      border-radius: 12px;
-      margin-bottom: 12px;
-      border: 1px solid #e2e8f0;
-      overflow-x: auto;
-      scrollbar-width: none;
+      display: flex; gap: 6px; padding: 8px 12px;
+      background: #f8fafc; border-radius: 12px;
+      margin-bottom: 12px; border: 1px solid #e2e8f0;
+      overflow-x: auto; scrollbar-width: none;
     }
 
     .paper-size-row::-webkit-scrollbar { display: none; }
 
     .paper-size-chip {
-      flex: 0 0 auto;
-      padding: 6px 12px;
-      border-radius: 20px;
-      background: white;
-      border: 1.5px solid #e2e8f0;
-      font-size: 11px;
-      font-weight: 700;
-      color: #64748b;
-      cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
+      flex: 0 0 auto; padding: 6px 12px; border-radius: 20px;
+      background: white; border: 1.5px solid #e2e8f0;
+      font-size: 11px; font-weight: 700; color: #64748b;
+      cursor: pointer; transition: all 0.2s; white-space: nowrap;
     }
 
     .paper-size-chip.active {
       background: linear-gradient(135deg, #06b6d4, #0891b2);
-      color: white;
-      border-color: transparent;
+      color: white; border-color: transparent;
       box-shadow: 0 6px 14px -4px rgba(6, 182, 212, 0.5);
     }
 
-    /* ============ SECTION LABEL ============ */
     .section-label {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 4px;
-      margin: 4px 0 10px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 4px; margin: 4px 0 10px;
     }
 
     .section-label h3 {
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      color: #64748b;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      font-size: 13px; font-weight: 800; letter-spacing: 0.5px;
+      text-transform: uppercase; color: #64748b;
+      display: flex; align-items: center; gap: 6px;
     }
 
     .section-label h3 i { font-size: 11px; color: #6366f1; }
 
-    /* ============ FILTERS ============ */
     .modes-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-bottom: 16px;
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 8px; margin-bottom: 16px;
     }
 
     .mode-card {
-      background: white;
-      border-radius: var(--radius-sm);
-      padding: 10px 6px 9px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 5px;
-      border: 1.5px solid #e2e8f0;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      overflow: hidden;
-      box-shadow: var(--shadow-sm);
+      background: white; border-radius: var(--radius-sm);
+      padding: 10px 6px 9px; display: flex; flex-direction: column;
+      align-items: center; gap: 5px;
+      border: 1.5px solid #e2e8f0; cursor: pointer;
+      transition: all 0.2s; position: relative;
+      overflow: hidden; box-shadow: var(--shadow-sm);
     }
 
     .mode-card:active { transform: scale(0.95); }
@@ -733,98 +409,62 @@
     }
 
     .mode-card.active::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
       background: linear-gradient(90deg, #6366f1, #8b5cf6, #06b6d4);
     }
 
     .mode-icon {
-      width: 30px;
-      height: 30px;
-      border-radius: 10px;
+      width: 30px; height: 30px; border-radius: 10px;
       background: linear-gradient(135deg, #eef2ff, #e0e7ff);
-      color: #6366f1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      transition: all 0.2s;
+      color: #6366f1; display: flex; align-items: center; justify-content: center;
+      font-size: 13px; transition: all 0.2s;
     }
 
     .mode-card.active .mode-icon {
       background: linear-gradient(135deg, #6366f1, #8b5cf6);
       color: white;
-      box-shadow: 0 6px 14px -4px rgba(99, 102, 241, 0.6);
     }
 
     .mode-name {
-      font-size: 9.5px;
-      font-weight: 700;
-      color: #475569;
-      text-align: center;
-      letter-spacing: -0.1px;
-      line-height: 1.2;
+      font-size: 9.5px; font-weight: 700; color: #475569;
+      text-align: center; line-height: 1.2;
     }
 
     .mode-card.active .mode-name { color: #4338ca; }
 
-    /* ============ GALLERY ============ */
     .gallery-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      padding: 0 4px;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px; padding: 0 4px;
     }
 
     .gallery-header h3 {
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      color: #64748b;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      font-size: 13px; font-weight: 800; letter-spacing: 0.5px;
+      text-transform: uppercase; color: #64748b;
+      display: flex; align-items: center; gap: 6px;
     }
 
     .gallery-header h3 i { font-size: 11px; color: #6366f1; }
 
     .page-count-badge {
-      font-size: 11px;
-      font-weight: 800;
-      color: #4338ca;
+      font-size: 11px; font-weight: 800; color: #4338ca;
       background: linear-gradient(135deg, #eef2ff, #e0e7ff);
-      padding: 5px 12px;
-      border-radius: 30px;
-      border: 1px solid #c7d2fe;
+      padding: 5px 12px; border-radius: 30px; border: 1px solid #c7d2fe;
     }
 
     .pages-grid {
-      display: flex;
-      gap: 12px;
-      overflow-x: auto;
-      padding: 4px 4px 16px;
-      scrollbar-width: none;
-      min-height: 130px;
-      scroll-snap-type: x mandatory;
+      display: flex; gap: 12px; overflow-x: auto;
+      padding: 4px 4px 16px; scrollbar-width: none;
+      min-height: 130px; scroll-snap-type: x mandatory;
     }
 
     .pages-grid::-webkit-scrollbar { display: none; }
 
     .page-thumb {
-      flex: 0 0 92px;
-      height: 122px;
-      border-radius: 16px;
-      background: #f1f5f9;
-      border: 2px solid white;
+      flex: 0 0 92px; height: 122px; border-radius: 16px;
+      background: #f1f5f9; border: 2px solid white;
       box-shadow: 0 10px 22px -8px rgba(15, 23, 42, 0.25);
-      overflow: hidden;
-      position: relative;
-      transition: all 0.25s;
-      cursor: pointer;
+      overflow: hidden; position: relative;
+      transition: all 0.25s; cursor: pointer;
       scroll-snap-align: start;
       animation: popIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -838,184 +478,93 @@
 
     .page-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-    .page-thumb .thumb-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.5) 100%);
-      pointer-events: none;
-    }
-
     .page-thumb .remove-badge {
-      position: absolute;
-      top: 6px; right: 6px;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(8px);
-      width: 24px; height: 24px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      color: #f43f5e;
+      position: absolute; top: 6px; right: 6px;
+      background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px);
+      width: 24px; height: 24px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; color: #f43f5e;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-      border: 1px solid rgba(255,255,255,0.8);
     }
 
     .page-thumb .thumb-index {
-      position: absolute;
-      bottom: 6px; left: 6px;
-      background: rgba(255,255,255,0.95);
-      backdrop-filter: blur(8px);
-      color: #0f172a;
-      font-size: 9.5px;
-      font-weight: 800;
-      padding: 3px 7px;
-      border-radius: 8px;
+      position: absolute; bottom: 6px; left: 6px;
+      background: rgba(255,255,255,0.95); backdrop-filter: blur(8px);
+      color: #0f172a; font-size: 9.5px; font-weight: 800;
+      padding: 3px 7px; border-radius: 8px;
     }
 
     .page-thumb .thumb-edit {
-      position: absolute;
-      bottom: 6px; right: 6px;
+      position: absolute; bottom: 6px; right: 6px;
       width: 22px; height: 22px;
-      background: rgba(99, 102, 241, 0.95);
-      backdrop-filter: blur(8px);
-      border-radius: 7px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 9px;
-      box-shadow: 0 4px 10px rgba(99, 102, 241, 0.5);
+      background: rgba(99, 102, 241, 0.95); backdrop-filter: blur(8px);
+      border-radius: 7px; display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 9px;
     }
 
     .empty-gallery {
-      color: #94a3b8;
-      font-size: 13px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 122px;
+      color: #94a3b8; font-size: 13px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      width: 100%; height: 122px;
       background: linear-gradient(160deg, #f8fafc, #f1f5f9);
-      border-radius: 20px;
-      font-weight: 600;
-      border: 2px dashed #cbd5e1;
-      gap: 10px;
+      border-radius: 20px; font-weight: 600;
+      border: 2px dashed #cbd5e1; gap: 10px;
     }
 
     .empty-gallery i { font-size: 28px; color: #cbd5e1; }
 
-    /* ============ ACTION BAR ============ */
-    .action-bar {
-      display: flex;
-      gap: 10px;
-      margin-top: 4px;
-    }
+    .action-bar { display: flex; gap: 10px; margin-top: 4px; }
 
     .btn-primary {
-      flex: 1.4;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      border: none;
-      border-radius: 20px;
-      padding: 17px 12px;
-      color: white;
-      font-weight: 800;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      box-shadow: 0 16px 32px -10px rgba(99, 102, 241, 0.6), inset 0 1px 0 rgba(255,255,255,0.25);
-      transition: all 0.2s;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .btn-primary::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.15) 100%);
+      flex: 1.4; background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border: none; border-radius: 20px; padding: 17px 12px;
+      color: white; font-weight: 800; font-size: 14px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 16px 32px -10px rgba(99, 102, 241, 0.6);
+      transition: all 0.2s; cursor: pointer; position: relative; overflow: hidden;
     }
 
     .btn-primary:active { transform: scale(0.96); }
 
     .btn-outline {
-      flex: 1;
-      background: white;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 20px;
-      padding: 17px 12px;
-      color: #1e293b;
-      font-weight: 800;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      box-shadow: var(--shadow-sm);
-      transition: all 0.2s;
-      cursor: pointer;
+      flex: 1; background: white; border: 1.5px solid #e2e8f0;
+      border-radius: 20px; padding: 17px 12px;
+      color: #1e293b; font-weight: 800; font-size: 14px;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      box-shadow: var(--shadow-sm); transition: all 0.2s; cursor: pointer;
     }
 
     .btn-outline:active { background: #f1f5f9; transform: scale(0.96); }
 
-    /* ============ TOAST ============ */
     .toast-message {
-      position: fixed;
-      bottom: 100px;
-      left: 50%;
+      position: fixed; bottom: 100px; left: 50%;
       transform: translateX(-50%) translateY(20px) scale(0.9);
-      background: rgba(15, 23, 42, 0.95);
-      backdrop-filter: blur(20px);
-      color: white;
-      font-weight: 600;
-      font-size: 13px;
-      padding: 12px 20px;
-      border-radius: 60px;
+      background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px);
+      color: white; font-weight: 600; font-size: 13px;
+      padding: 12px 20px; border-radius: 60px;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-      z-index: 9999;
-      opacity: 0;
-      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-      pointer-events: none;
-      white-space: nowrap;
+      z-index: 9999; opacity: 0; transition: all 0.35s;
+      pointer-events: none; white-space: nowrap;
       border: 1px solid rgba(255,255,255,0.12);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      max-width: 90vw;
+      display: flex; align-items: center; gap: 10px; max-width: 90vw;
     }
 
     .toast-message.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 
     .toast-icon {
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
+      width: 22px; height: 22px; border-radius: 50%;
       background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; flex-shrink: 0;
     }
 
     #fileInput { display: none; }
 
-    /* ============ MODAL ============ */
     .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(5, 10, 25, 0.85);
-      backdrop-filter: blur(20px);
-      z-index: 1000;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      animation: fadeIn 0.25s;
+      position: fixed; inset: 0;
+      background: rgba(5, 10, 25, 0.85); backdrop-filter: blur(20px);
+      z-index: 1000; display: none; align-items: center; justify-content: center;
+      padding: 16px; animation: fadeIn 0.25s;
     }
 
     .modal-overlay.show { display: flex; }
@@ -1024,13 +573,9 @@
 
     .modal-content {
       background: linear-gradient(180deg, #ffffff, #f8fafc);
-      border-radius: 28px;
-      max-width: 380px;
-      width: 100%;
-      max-height: 92vh;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
+      border-radius: 28px; max-width: 380px; width: 100%;
+      max-height: 92vh; overflow: hidden;
+      display: flex; flex-direction: column;
       box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.7);
       animation: modalIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -1041,189 +586,88 @@
     }
 
     .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 18px 20px 14px;
-      border-bottom: 1px solid #f1f5f9;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 18px 20px 14px; border-bottom: 1px solid #f1f5f9;
     }
 
     .modal-header h4 {
-      font-size: 15px;
-      font-weight: 800;
-      color: #0f172a;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      font-size: 15px; font-weight: 800; color: #0f172a;
+      display: flex; align-items: center; gap: 8px;
     }
 
     .modal-header h4 i { color: #6366f1; font-size: 14px; }
 
     .modal-header .close-btn {
-      background: #f1f5f9;
-      border: none;
-      width: 32px;
-      height: 32px;
-      border-radius: 11px;
-      color: #334155;
-      font-size: 13px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      background: #f1f5f9; border: none;
+      width: 32px; height: 32px; border-radius: 11px;
+      color: #334155; font-size: 13px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
     }
 
-    .modal-header .close-btn:active { background: #e2e8f0; }
-
-    .modal-body {
-      padding: 16px 20px 20px;
-      overflow-y: auto;
-      flex: 1;
-      scrollbar-width: none;
-    }
-
+    .modal-body { padding: 16px 20px 20px; overflow-y: auto; flex: 1; }
     .modal-body::-webkit-scrollbar { display: none; }
+    .modal-body { scrollbar-width: none; }
 
     .modal-body img {
-      width: 100%;
-      border-radius: 16px;
+      width: 100%; border-radius: 16px;
       box-shadow: 0 10px 30px -10px rgba(0,0,0,0.2);
-      margin-bottom: 16px;
-      border: 1px solid #e2e8f0;
+      margin-bottom: 16px; border: 1px solid #e2e8f0;
     }
 
     .slider-group { margin-bottom: 16px; }
 
     .slider-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      display: flex; justify-content: space-between; align-items: center;
       margin-bottom: 10px;
     }
 
     .slider-header label {
-      font-size: 12px;
-      font-weight: 700;
-      color: #475569;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      font-size: 12px; font-weight: 700; color: #475569;
+      display: flex; align-items: center; gap: 6px;
     }
 
     .slider-header label i { color: #6366f1; font-size: 11px; }
 
     .slider-value {
-      font-size: 11px;
-      font-weight: 800;
-      color: #4338ca;
-      background: #eef2ff;
-      padding: 3px 9px;
-      border-radius: 8px;
-      min-width: 36px;
-      text-align: center;
+      font-size: 11px; font-weight: 800; color: #4338ca;
+      background: #eef2ff; padding: 3px 9px;
+      border-radius: 8px; min-width: 36px; text-align: center;
     }
 
     input[type=range].modal-range {
-      width: 100%;
-      height: 6px;
-      border-radius: 10px;
+      width: 100%; height: 6px; border-radius: 10px;
       background: linear-gradient(90deg, #6366f1, #8b5cf6);
-      outline: none;
-      -webkit-appearance: none;
-      appearance: none;
+      outline: none; -webkit-appearance: none;
     }
 
     input[type=range].modal-range::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: white;
+      -webkit-appearance: none; width: 22px; height: 22px;
+      border-radius: 50%; background: white;
       border: 3px solid #6366f1;
-      box-shadow: 0 4px 10px -2px rgba(99, 102, 241, 0.5);
     }
 
-    .modal-actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 8px;
-    }
+    .modal-actions { display: flex; gap: 10px; margin-top: 8px; }
 
     .modal-actions button {
-      flex: 1;
-      padding: 14px;
-      border-radius: 16px;
-      border: none;
-      font-weight: 800;
-      font-size: 13px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
+      flex: 1; padding: 14px; border-radius: 16px; border: none;
+      font-weight: 800; font-size: 13px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
       transition: all 0.2s;
     }
 
     .modal-actions .reapply {
       background: linear-gradient(135deg, #6366f1, #8b5cf6);
       color: white;
-      box-shadow: 0 12px 24px -8px rgba(99, 102, 241, 0.5);
     }
 
-    .modal-actions .cancel {
-      background: #f1f5f9;
-      color: #334155;
-    }
+    .modal-actions .cancel { background: #f1f5f9; color: #334155; }
 
-    /* ============ SCAN INFO ============ */
-    .scan-info-panel {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      padding: 12px;
-      background: linear-gradient(160deg, #ecfeff, #cffafe);
-      border-radius: 14px;
-      margin-bottom: 12px;
-      border: 1px solid #a5f3fc;
-    }
-
-    .scan-info-item {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .scan-info-label {
-      font-size: 9.5px;
-      font-weight: 700;
-      color: #0e7490;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-
-    .scan-info-value {
-      font-size: 13px;
-      font-weight: 800;
-      color: #155e75;
-      font-feature-settings: "tnum";
-    }
-
-    /* ============ RESPONSIVE ============ */
     @media (max-width: 430px) {
-      .phone-frame {
-        height: 100vh;
-        max-height: 100vh;
-        border-radius: 0;
-      }
+      .phone-frame { height: 100vh; max-height: 100vh; border-radius: 0; }
       body { padding: 0; }
       .dynamic-island { display: none; }
       .status-bar { padding: 14px 22px 4px; }
       .app-screen { padding: 0 14px 100px; }
-    }
-
-    @media (max-height: 800px) {
-      .phone-frame { height: 96vh; }
-      .camera-preview { aspect-ratio: 4 / 4.5; }
     }
   </style>
 </head>
@@ -1247,8 +691,8 @@
             <i class="fas fa-file-contract"></i>
           </div>
           <div class="brand-text">
-            <h1>ScanPro A4</h1>
-            <p>Smart Paper Detection</p>
+            <h1>ScanPro Ultra</h1>
+            <p>CamScanner Engine</p>
           </div>
         </div>
         <button class="header-btn" id="settingsBtn">
@@ -1256,25 +700,18 @@
         </button>
       </div>
 
-      <!-- Camera Card -->
       <div class="capture-card">
         <div class="camera-preview" id="cameraPreview">
           <video id="videoPreview" autoplay playsinline muted></video>
           <canvas id="previewCanvas"></canvas>
-          <canvas id="edgeCanvas"></canvas>
-          <div class="grid-overlay" id="gridOverlay"></div>
-          
-          <div class="corner-marker tl" id="markerTL"></div>
-          <div class="corner-marker tr" id="markerTR"></div>
-          <div class="corner-marker bl" id="markerBL"></div>
-          <div class="corner-marker br" id="markerBR"></div>
+          <canvas id="overlayCanvas"></canvas>
 
           <div class="status-badge" id="statusBadge">
             <span class="dot"></span>
             <span id="statusText">SEARCHING</span>
           </div>
 
-          <div class="a4-ratio-badge" id="a4Badge">
+          <div class="a4-badge" id="a4Badge">
             <i class="fas fa-check"></i>
             <span id="a4Text">A4</span>
           </div>
@@ -1292,7 +729,7 @@
               <i class="fas fa-file-contract"></i>
             </div>
             <span class="main-text">Nhấn để bật camera</span>
-            <span class="hint">AI nhận diện giấy A4 và tự động cắt viền chuẩn</span>
+            <span class="hint">AI nhận diện viền giấy tự động như CamScanner</span>
           </div>
 
           <div class="processing-overlay" id="processingOverlay">
@@ -1301,26 +738,6 @@
               <div class="spinner-inner"></div>
             </div>
             <span id="processingText">Đang xử lý...</span>
-          </div>
-        </div>
-
-        <!-- Scan info panel: hiển thị thông tin detect real-time -->
-        <div class="scan-info-panel" id="scanInfoPanel" style="display:none;">
-          <div class="scan-info-item">
-            <div class="scan-info-label">Loại giấy</div>
-            <div class="scan-info-value" id="infoPaperType">—</div>
-          </div>
-          <div class="scan-info-item">
-            <div class="scan-info-label">Tỉ lệ</div>
-            <div class="scan-info-value" id="infoRatio">—</div>
-          </div>
-          <div class="scan-info-item">
-            <div class="scan-info-label">Diện tích</div>
-            <div class="scan-info-value" id="infoArea">—</div>
-          </div>
-          <div class="scan-info-item">
-            <div class="scan-info-label">Góc nghiêng</div>
-            <div class="scan-info-value" id="infoAngle">—</div>
           </div>
         </div>
 
@@ -1341,7 +758,6 @@
         <input type="file" id="fileInput" accept="image/*" multiple>
       </div>
 
-      <!-- Paper size selector -->
       <div class="paper-size-row">
         <div class="paper-size-chip active" data-size="A4">📄 A4</div>
         <div class="paper-size-chip" data-size="A3">📰 A3</div>
@@ -1350,7 +766,6 @@
         <div class="paper-size-chip" data-size="Auto">🎯 Auto</div>
       </div>
 
-      <!-- Auto scan toggle -->
       <div class="auto-toggle-row">
         <div class="auto-toggle-info">
           <div class="auto-toggle-icon">
@@ -1358,13 +773,12 @@
           </div>
           <div class="auto-toggle-text">
             <div class="title">Tự động chụp</div>
-            <div class="sub">Chụp khi giấy A4 ổn định</div>
+            <div class="sub">Chụp khi tài liệu ổn định</div>
           </div>
         </div>
         <div class="toggle-switch on" id="autoToggle"></div>
       </div>
 
-      <!-- Smart Filters -->
       <div class="section-label">
         <h3><i class="fas fa-wand-magic-sparkles"></i> Bộ lọc</h3>
       </div>
@@ -1396,7 +810,6 @@
         </div>
       </div>
 
-      <!-- Gallery -->
       <div class="gallery-header">
         <h3><i class="fas fa-images"></i> Trang đã quét</h3>
         <span class="page-count-badge" id="pageCount">0 trang</span>
@@ -1422,13 +835,11 @@
     </div>
   </div>
 
-  <!-- Toast -->
   <div class="toast-message" id="toast">
     <div class="toast-icon"><i class="fas fa-check"></i></div>
     <span id="toastText">Thông báo</span>
   </div>
 
-  <!-- Modal Preview -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal-content">
       <div class="modal-header">
@@ -1437,7 +848,6 @@
       </div>
       <div class="modal-body">
         <img id="modalImage" src="" alt="Preview">
-        
         <div class="slider-group">
           <div class="slider-header">
             <label><i class="fas fa-sun"></i> Độ nét</label>
@@ -1445,7 +855,6 @@
           </div>
           <input type="range" class="modal-range" id="sharpnessSlider" min="0" max="100" value="45">
         </div>
-
         <div class="slider-group">
           <div class="slider-header">
             <label><i class="fas fa-circle-half-stroke"></i> Tương phản</label>
@@ -1453,7 +862,6 @@
           </div>
           <input type="range" class="modal-range" id="contrastSlider" min="0" max="100" value="30">
         </div>
-
         <div class="modal-actions">
           <button class="reapply" id="reapplyBtn"><i class="fas fa-check"></i> Áp dụng</button>
           <button class="cancel" id="modalCancelBtn"><i class="fas fa-xmark"></i> Đóng</button>
@@ -1466,11 +874,10 @@
     (function() {
       'use strict';
 
-      // ============ DOM ============
       const $ = id => document.getElementById(id);
       const video = $('videoPreview');
       const previewCanvas = $('previewCanvas');
-      const edgeCanvas = $('edgeCanvas');
+      const overlayCanvas = $('overlayCanvas');
       const cameraPlaceholder = $('cameraPlaceholder');
       const captureBtn = $('captureBtn');
       const switchCameraBtn = $('switchCameraBtn');
@@ -1484,12 +891,10 @@
       const toastEl = $('toast');
       const toastText = $('toastText');
       const toastIcon = toastEl.querySelector('.toast-icon i');
-      const gridOverlay = $('gridOverlay');
       const processingOverlay = $('processingOverlay');
       const processingText = $('processingText');
       const pageCounterBadge = $('pageCounterBadge');
       const counterText = $('counterText');
-
       const statusBadge = $('statusBadge');
       const statusText = $('statusText');
       const a4Badge = $('a4Badge');
@@ -1497,18 +902,7 @@
       const stabilityMeter = $('stabilityMeter');
       const stabilityFill = $('stabilityFill');
       const shutterRing = $('shutterRing');
-
-      const markerTL = $('markerTL');
-      const markerTR = $('markerTR');
-      const markerBL = $('markerBL');
-      const markerBR = $('markerBR');
-
       const autoToggle = $('autoToggle');
-      const scanInfoPanel = $('scanInfoPanel');
-      const infoPaperType = $('infoPaperType');
-      const infoRatio = $('infoRatio');
-      const infoArea = $('infoArea');
-      const infoAngle = $('infoAngle');
 
       // ============ STATE ============
       let stream = null;
@@ -1518,26 +912,11 @@
       let opencvReady = false;
       let currentPreviewPageId = null;
 
-      let filters = {
-        autoCrop: true,
-        enhance: true,
-        magic: false,
-        bw: false,
-        gray: false,
-        deskew: true
-      };
+      let filters = { autoCrop: true, enhance: true, magic: false, bw: false, gray: false, deskew: true };
 
-      // Paper size targets (width/height ratios)
-      const PAPER_RATIOS = {
-        'A4': 1.4142,      // 297/210
-        'A3': 1.4142,      // same ratio
-        'A5': 1.4142,      // same ratio
-        'Letter': 1.2941,  // 11/8.5
-        'Auto': null
-      };
+      const PAPER_RATIOS = { 'A4': 1.4142, 'A3': 1.4142, 'A5': 1.4142, 'Letter': 1.2941, 'Auto': null };
       let selectedPaperSize = 'A4';
 
-      // Smart detection
       let autoScanEnabled = true;
       let detectionLoopId = null;
       let stabilityFrames = 0;
@@ -1565,7 +944,7 @@
               resolve();
             }
           }, 200);
-          setTimeout(() => { clearInterval(check); resolve(); }, 10000);
+          setTimeout(() => { clearInterval(check); resolve(); }, 15000);
         });
       }
 
@@ -1574,8 +953,7 @@
           const img = new Image();
           img.onload = () => {
             const c = document.createElement('canvas');
-            c.width = img.width;
-            c.height = img.height;
+            c.width = img.width; c.height = img.height;
             c.getContext('2d').drawImage(img, 0, 0);
             resolve(c);
           };
@@ -1587,9 +965,8 @@
         return canvas.toDataURL('image/jpeg', quality);
       }
 
-      // ============ CORE: SORT CORNERS ============
+      // ============ SORT 4 CORNERS ============
       function sortCorners(pts) {
-        // Sắp xếp 4 điểm theo: TL, TR, BR, BL (theo góc)
         const sorted = [...pts];
         const sum = sorted.map(p => p.x + p.y);
         const diff = sorted.map(p => p.x - p.y);
@@ -1600,218 +977,7 @@
         return [tl, tr, br, bl];
       }
 
-      // ============ CORE: A4 RATIO CHECK ============
-      function checkA4Ratio(corners, paperType = 'A4') {
-        if (!corners || corners.length !== 4) return null;
-        const [tl, tr, br, bl] = corners;
-        
-        // Tính chiều rộng trung bình và chiều cao trung bình
-        const topWidth = Math.hypot(tr.x - tl.x, tr.y - tl.y);
-        const bottomWidth = Math.hypot(br.x - bl.x, br.y - bl.y);
-        const leftHeight = Math.hypot(bl.x - tl.x, bl.y - tl.y);
-        const rightHeight = Math.hypot(br.x - tr.x, br.y - tr.y);
-        
-        const avgWidth = (topWidth + bottomWidth) / 2;
-        const avgHeight = (leftHeight + rightHeight) / 2;
-        
-        const actualRatio = avgHeight / avgWidth;
-        const targetRatio = PAPER_RATIOS[paperType] || 1.4142;
-        
-        // Cho phép sai số 20% với A4, rộng hơn với Auto
-        const tolerance = paperType === 'Auto' ? 0.35 : 0.22;
-        const ratioDiff = Math.abs(actualRatio - targetRatio) / targetRatio;
-        const isMatch = ratioDiff < tolerance;
-        
-        // Tính góc nghiêng (độ lệch so với trục dọc)
-        const angle = Math.atan2(tr.y - tl.y, tr.x - tl.x) * 180 / Math.PI;
-        const angleFromHorizontal = Math.abs(angle);
-        const tiltAngle = Math.min(angleFromHorizontal, 180 - angleFromHorizontal);
-        
-        return {
-          ratio: actualRatio,
-          targetRatio,
-          ratioDiff,
-          isMatch,
-          width: avgWidth,
-          height: avgHeight,
-          tiltAngle,
-          quality: Math.max(0, 1 - ratioDiff / tolerance)
-        };
-      }
-
-      // ============ CORE: ADVANCED PAPER DETECTION ============
-      function detectPaperAdvanced(srcCanvas, paperType = 'A4') {
-        if (!opencvReady) return null;
-        
-        try {
-          const src = cv.imread(srcCanvas);
-          const imgArea = srcCanvas.width * srcCanvas.height;
-          const candidates = [];
-          
-          // === Chiến lược 1: Edge detection + contour ===
-          const gray = new cv.Mat();
-          const blurred = new cv.Mat();
-          const edges = new cv.Mat();
-          const contours = new cv.MatVector();
-          const hierarchy = new cv.Mat();
-
-          cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-          // Bilateral filter giữ cạnh sắc nét, giảm noise
-          cv.bilateralFilter(gray, blurred, 9, 75, 75, cv.BORDER_DEFAULT);
-          // Canny với threshold tự động
-          cv.Canny(blurred, edges, 40, 120);
-          // Morphological close để nối cạnh đứt
-          const kernel = cv.Mat.ones(5, 5, cv.CV_8U);
-          cv.morphologyEx(edges, edges, cv.MORPH_CLOSE, kernel);
-          cv.dilate(edges, edges, kernel, new cv.Point(-1, -1), 1);
-          kernel.delete();
-          
-          cv.findContours(edges, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-
-          for (let i = 0; i < contours.size(); i++) {
-            const cnt = contours.get(i);
-            const area = cv.contourArea(cnt);
-            
-            // Contour phải chiếm ít nhất 15% diện tích ảnh
-            if (area < imgArea * 0.15) { cnt.delete(); continue; }
-            
-            const peri = cv.arcLength(cnt, true);
-            // Dùng 0.015 cho chính xác hơn
-            const approx = new cv.Mat();
-            cv.approxPolyDP(cnt, approx, 0.015 * peri, true);
-            
-            if (approx.rows === 4 && cv.isContourConvex(approx)) {
-              // Kiểm tra 4 góc
-              const pts = [];
-              for (let j = 0; j < 4; j++) {
-                pts.push({ x: approx.data32S[j * 2], y: approx.data32S[j * 2 + 1] });
-              }
-              const corners = sortCorners(pts);
-              
-              // Kiểm tra góc vuông (mỗi góc phải gần 90 độ)
-              const isRectangular = checkRectangularity(corners);
-              
-              // Kiểm tra tỉ lệ A4
-              const ratioInfo = checkA4Ratio(corners, paperType);
-              
-              // Kiểm tra góc nghiêng
-              const isNotTooTilted = !ratioInfo || ratioInfo.tiltAngle < 45;
-              
-              // Tính score tổng hợp
-              const areaScore = Math.min(1, area / imgArea);
-              const ratioScore = ratioInfo ? ratioInfo.quality : 0;
-              const rectScore = isRectangular ? 1 : 0.3;
-              const tiltScore = ratioInfo ? (1 - ratioInfo.tiltAngle / 45) : 0.5;
-              const totalScore = areaScore * 0.35 + ratioScore * 0.35 + rectScore * 0.15 + tiltScore * 0.15;
-              
-              if (isRectangular && isNotTooTilted) {
-                candidates.push({
-                  corners,
-                  area,
-                  score: totalScore,
-                  ratioInfo,
-                  source: 'contour'
-                });
-              }
-            }
-            approx.delete();
-            cnt.delete();
-          }
-          
-          src.delete(); gray.delete(); blurred.delete(); edges.delete();
-          contours.delete(); hierarchy.delete();
-          
-          // === Chiến lược 2: Nếu không có contour tốt, thử threshold trắng ===
-          if (candidates.length === 0) {
-            const whiteCandidates = detectWhitePaper(srcCanvas, paperType);
-            candidates.push(...whiteCandidates);
-          }
-          
-          // Chọn candidate điểm cao nhất
-          if (candidates.length === 0) return null;
-          candidates.sort((a, b) => b.score - a.score);
-          
-          return candidates[0];
-        } catch (e) {
-          console.warn('Detect error:', e);
-          return null;
-        }
-      }
-
-      // Chiến lược 2: Phát hiện vùng giấy trắng sáng
-      function detectWhitePaper(srcCanvas, paperType) {
-        const candidates = [];
-        try {
-          const src = cv.imread(srcCanvas);
-          const imgArea = srcCanvas.width * srcCanvas.height;
-          const gray = new cv.Mat();
-          const thresh = new cv.Mat();
-          const contours = new cv.MatVector();
-          const hierarchy = new cv.Mat();
-          
-          cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-          // Otsu threshold - tách vùng sáng (giấy trắng) và tối (nền)
-          cv.threshold(gray, thresh, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
-          
-          // Morphological close
-          const kernel = cv.Mat.ones(7, 7, cv.CV_8U);
-          cv.morphologyEx(thresh, thresh, cv.MORPH_CLOSE, kernel);
-          kernel.delete();
-          
-          cv.findContours(thresh, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-          
-          for (let i = 0; i < contours.size(); i++) {
-            const cnt = contours.get(i);
-            const area = cv.contourArea(cnt);
-            if (area < imgArea * 0.2) { cnt.delete(); continue; }
-            
-            const peri = cv.arcLength(cnt, true);
-            const approx = new cv.Mat();
-            cv.approxPolyDP(cnt, approx, 0.02 * peri, true);
-            
-            if (approx.rows === 4 && cv.isContourConvex(approx)) {
-              const pts = [];
-              for (let j = 0; j < 4; j++) {
-                pts.push({ x: approx.data32S[j * 2], y: approx.data32S[j * 2 + 1] });
-              }
-              const corners = sortCorners(pts);
-              const ratioInfo = checkA4Ratio(corners, paperType);
-              
-              // Kiểm tra vùng sáng trung bình bên trong
-              const mask = cv.Mat.zeros(src.rows, src.cols, cv.CV_8U);
-              const cntVec = new cv.MatVector();
-              cntVec.push_back(cnt);
-              cv.fillPoly(mask, cntVec, new cv.Scalar(255));
-              const meanBrightness = cv.mean(gray, mask)[0];
-              mask.delete(); cntVec.delete();
-              
-              // Chỉ nhận nếu vùng sáng > 180 (giấy trắng)
-              if (meanBrightness > 170) {
-                const areaScore = Math.min(1, area / imgArea);
-                const ratioScore = ratioInfo ? ratioInfo.quality : 0.3;
-                const brightnessScore = Math.min(1, (meanBrightness - 170) / 85);
-                const totalScore = areaScore * 0.4 + ratioScore * 0.3 + brightnessScore * 0.3;
-                
-                candidates.push({
-                  corners,
-                  area,
-                  score: totalScore,
-                  ratioInfo,
-                  source: 'white'
-                });
-              }
-            }
-            approx.delete();
-            cnt.delete();
-          }
-          
-          src.delete(); gray.delete(); thresh.delete();
-          contours.delete(); hierarchy.delete();
-        } catch (e) { console.warn('White detect error:', e); }
-        return candidates;
-      }
-
-      // Kiểm tra 4 góc có gần vuông không
+      // ============ CHECK RECTANGULARITY ============
       function checkRectangularity(corners) {
         const [tl, tr, br, bl] = corners;
         const angles = [];
@@ -1826,23 +992,257 @@
           return Math.acos(Math.max(-1, Math.min(1, dot / (mag1 * mag2)))) * 180 / Math.PI;
         };
         
-        angles.push(calcAngle(bl, tl, tr)); // Góc tại TL
-        angles.push(calcAngle(tl, tr, br)); // Góc tại TR
-        angles.push(calcAngle(tr, br, bl)); // Góc tại BR
-        angles.push(calcAngle(br, bl, tl)); // Góc tại BL
+        angles.push(calcAngle(bl, tl, tr));
+        angles.push(calcAngle(tl, tr, br));
+        angles.push(calcAngle(tr, br, bl));
+        angles.push(calcAngle(br, bl, tl));
         
-        // Tất cả góc phải trong khoảng 60-120 độ
-        return angles.every(a => a > 55 && a < 125);
+        // Cho phép góc từ 50-130 độ (rộng hơn để chấp nhận góc chéo)
+        return angles.every(a => a > 50 && a < 130);
       }
 
-      // ============ CORE: PERSPECTIVE TRANSFORM (chuẩn A4) ============
+      // ============ CHECK A4 RATIO ============
+      function checkA4Ratio(corners, paperType = 'A4') {
+        if (!corners || corners.length !== 4) return null;
+        const [tl, tr, br, bl] = corners;
+        
+        const topWidth = Math.hypot(tr.x - tl.x, tr.y - tl.y);
+        const bottomWidth = Math.hypot(br.x - bl.x, br.y - bl.y);
+        const leftHeight = Math.hypot(bl.x - tl.x, bl.y - tl.y);
+        const rightHeight = Math.hypot(br.x - tr.x, br.y - tr.y);
+        
+        const avgWidth = (topWidth + bottomWidth) / 2;
+        const avgHeight = (leftHeight + rightHeight) / 2;
+        
+        const actualRatio = avgHeight / avgWidth;
+        const targetRatio = PAPER_RATIOS[paperType] || 1.4142;
+        
+        const tolerance = paperType === 'Auto' ? 0.4 : 0.25;
+        const ratioDiff = Math.abs(actualRatio - targetRatio) / targetRatio;
+        const isMatch = ratioDiff < tolerance;
+        
+        const angle = Math.atan2(tr.y - tl.y, tr.x - tl.x) * 180 / Math.PI;
+        const tiltAngle = Math.min(Math.abs(angle), 180 - Math.abs(angle));
+        
+        return {
+          ratio: actualRatio, targetRatio, ratioDiff, isMatch,
+          width: avgWidth, height: avgHeight, tiltAngle,
+          quality: Math.max(0, 1 - ratioDiff / tolerance)
+        };
+      }
+
+      // ============================================================
+      //  CORE: ADVANCED PAPER DETECTION (CamScanner Style)
+      //  5 chiến lược kết hợp:
+      //  1. Canny với threshold thích ứng
+      //  2. Otsu threshold (vùng sáng)
+      //  3. Adaptive threshold (ánh sáng không đều)
+      //  4. LAB color - L channel (phân biệt giấy trắng)
+      //  5. Morphological gradient (viền mượt)
+      // ============================================================
+      function detectPaperAdvanced(srcCanvas, paperType = 'A4') {
+        if (!opencvReady) return null;
+        
+        try {
+          const src = cv.imread(srcCanvas);
+          const imgArea = srcCanvas.width * srcCanvas.height;
+          const candidates = [];
+          
+          // Preprocessing chung: chuyển xám, blur nhẹ
+          const gray = new cv.Mat();
+          cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+
+          // === Chiến lược 1: Otsu threshold (giấy trắng nổi bật) ===
+          const otsu = new cv.Mat();
+          cv.threshold(gray, otsu, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
+          const kernel3 = cv.Mat.ones(3, 3, cv.CV_8U);
+          cv.morphologyEx(otsu, otsu, cv.MORPH_CLOSE, kernel3, new cv.Point(-1, -1), 2);
+          const c1 = extractCandidatesFromBinary(otsu, imgArea, paperType, 'otsu', gray);
+          candidates.push(...c1);
+          otsu.delete();
+
+          // === Chiến lược 2: Adaptive threshold (ánh sáng không đều) ===
+          const adaptive = new cv.Mat();
+          cv.adaptiveThreshold(gray, adaptive, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 21, 10);
+          cv.morphologyEx(adaptive, adaptive, cv.MORPH_CLOSE, kernel3, new cv.Point(-1, -1), 2);
+          const c2 = extractCandidatesFromBinary(adaptive, imgArea, paperType, 'adaptive', gray);
+          candidates.push(...c2);
+          adaptive.delete();
+
+          // === Chiến lược 3: Canny edge (viền sắc nét) ===
+          const blurred = new cv.Mat();
+          cv.bilateralFilter(gray, blurred, 9, 75, 75, cv.BORDER_DEFAULT);
+          const edges = new cv.Mat();
+          cv.Canny(blurred, edges, 30, 120);
+          const kernel5 = cv.Mat.ones(5, 5, cv.CV_8U);
+          cv.morphologyEx(edges, edges, cv.MORPH_CLOSE, kernel5, new cv.Point(-1, -1), 2);
+          cv.dilate(edges, edges, kernel5, new cv.Point(-1, -1), 1);
+          const c3 = extractCandidatesFromBinary(edges, imgArea, paperType, 'canny', gray);
+          candidates.push(...c3);
+          edges.delete(); blurred.delete();
+
+          // === Chiến lược 4: LAB - kênh L sáng (giấy trắng phản sáng) ===
+          try {
+            const lab = new cv.Mat();
+            cv.cvtColor(src, lab, cv.COLOR_RGBA2RGB);
+            cv.cvtColor(lab, lab, cv.COLOR_RGB2Lab);
+            const channels = new cv.MatVector();
+            cv.split(lab, channels);
+            const lChan = channels.get(0);
+            
+            // Otsu trên kênh L
+            const lOtsu = new cv.Mat();
+            cv.threshold(lChan, lOtsu, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
+            cv.morphologyEx(lOtsu, lOtsu, cv.MORPH_CLOSE, kernel3, new cv.Point(-1, -1), 2);
+            const c4 = extractCandidatesFromBinary(lOtsu, imgArea, paperType, 'lab-l', lChan);
+            candidates.push(...c4);
+            
+            lOtsu.delete(); lChan.delete(); channels.delete(); lab.delete();
+          } catch (e) { /* skip */ }
+
+          // === Chiến lược 5: Morph gradient (viền trơn) ===
+          const grad = new cv.Mat();
+          cv.morphologyEx(gray, grad, cv.MORPH_GRADIENT, kernel3);
+          const gradThresh = new cv.Mat();
+          cv.threshold(grad, gradThresh, 30, 255, cv.THRESH_BINARY);
+          cv.morphologyEx(gradThresh, gradThresh, cv.MORPH_CLOSE, kernel5, new cv.Point(-1, -1), 2);
+          const c5 = extractCandidatesFromBinary(gradThresh, imgArea, paperType, 'gradient', gray);
+          candidates.push(...c5);
+          grad.delete(); gradThresh.delete();
+
+          kernel3.delete(); kernel5.delete();
+          gray.delete(); src.delete();
+
+          if (candidates.length === 0) return null;
+
+          // Loại bỏ trùng lặp: gom các candidate có corners gần giống nhau, lấy max score
+          const uniqueCandidates = [];
+          for (const cand of candidates) {
+            let isDup = false;
+            for (const existing of uniqueCandidates) {
+              if (cornersSimilar(cand.corners, existing.corners, 20)) {
+                isDup = true;
+                if (cand.score > existing.score) {
+                  Object.assign(existing, cand);
+                }
+                break;
+              }
+            }
+            if (!isDup) uniqueCandidates.push(cand);
+          }
+
+          uniqueCandidates.sort((a, b) => b.score - a.score);
+          return uniqueCandidates[0];
+        } catch (e) {
+          console.warn('Detect error:', e);
+          return null;
+        }
+      }
+
+      // Kiểm tra 2 bộ corners có gần giống nhau không
+      function cornersSimilar(c1, c2, threshold) {
+        for (let i = 0; i < 4; i++) {
+          const d = Math.hypot(c1[i].x - c2[i].x, c1[i].y - c2[i].y);
+          if (d > threshold) return false;
+        }
+        return true;
+      }
+
+      // Trích xuất candidate từ binary mask
+      function extractCandidatesFromBinary(binaryMat, imgArea, paperType, source, grayForBrightness) {
+        const candidates = [];
+        try {
+          const contours = new cv.MatVector();
+          const hierarchy = new cv.Mat();
+          cv.findContours(binaryMat, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+          
+          const imgW = binaryMat.cols;
+          const imgH = binaryMat.rows;
+          const imgAreaActual = imgW * imgH;
+
+          for (let i = 0; i < contours.size(); i++) {
+            const cnt = contours.get(i);
+            const area = cv.contourArea(cnt);
+            
+            // Contour chiếm ít nhất 12% diện tích ảnh (giảm từ 15% để bắt được giấy nhỏ hơn)
+            if (area < imgAreaActual * 0.12) { cnt.delete(); continue; }
+            
+            const peri = cv.arcLength(cnt, true);
+            // Dùng nhiều epsilon để tìm 4 góc
+            let bestApprox = null;
+            for (const eps of [0.01, 0.015, 0.02, 0.03, 0.04]) {
+              const approx = new cv.Mat();
+              cv.approxPolyDP(cnt, approx, eps * peri, true);
+              if (approx.rows === 4 && cv.isContourConvex(approx)) {
+                if (!bestApprox) bestApprox = approx;
+                else approx.delete();
+                break;
+              }
+              approx.delete();
+            }
+            
+            if (bestApprox) {
+              const pts = [];
+              for (let j = 0; j < 4; j++) {
+                pts.push({ x: bestApprox.data32S[j * 2], y: bestApprox.data32S[j * 2 + 1] });
+              }
+              const corners = sortCorners(pts);
+              
+              const isRect = checkRectangularity(corners);
+              const ratioInfo = checkA4Ratio(corners, paperType);
+              
+              if (isRect) {
+                // Đo độ sáng trung bình bên trong
+                let brightness = 200;
+                if (grayForBrightness) {
+                  try {
+                    const mask = cv.Mat.zeros(grayForBrightness.rows, grayForBrightness.cols, cv.CV_8U);
+                    const cntVec = new cv.MatVector();
+                    cntVec.push_back(cnt);
+                    cv.fillPoly(mask, cntVec, new cv.Scalar(255));
+                    brightness = cv.mean(grayForBrightness, mask)[0];
+                    mask.delete(); cntVec.delete();
+                  } catch (e) {}
+                }
+                
+                // Tính score đa chiều
+                const areaScore = Math.min(1, area / imgAreaActual);
+                const ratioScore = ratioInfo ? ratioInfo.quality : 0.3;
+                const rectScore = 1;
+                const brightnessScore = Math.min(1, Math.max(0, (brightness - 80) / 150));
+                const tiltScore = ratioInfo ? Math.max(0, 1 - ratioInfo.tiltAngle / 45) : 0.5;
+                
+                // Source weight - ưu tiên otsu/lab vì đáng tin hơn
+                const sourceWeight = { 'otsu': 1.0, 'lab-l': 1.0, 'adaptive': 0.9, 'canny': 0.85, 'gradient': 0.8 }[source] || 0.8;
+                
+                const totalScore = (areaScore * 0.30 + 
+                                    ratioScore * 0.30 + 
+                                    rectScore * 0.10 + 
+                                    brightnessScore * 0.15 + 
+                                    tiltScore * 0.15) * sourceWeight;
+                
+                candidates.push({
+                  corners, area, score: totalScore,
+                  ratioInfo, source, brightness
+                });
+              }
+              bestApprox.delete();
+            }
+            cnt.delete();
+          }
+          
+          contours.delete(); hierarchy.delete();
+        } catch (e) {}
+        return candidates;
+      }
+
+      // ============ WARP TO A4 ============
       function warpToA4(srcCanvas, corners, paperType = 'A4') {
         if (!opencvReady || !corners) return null;
         try {
           const src = cv.imread(srcCanvas);
           const [tl, tr, br, bl] = corners;
           
-          // Tính kích thước thực của tài liệu
           const widthTop = Math.hypot(tr.x - tl.x, tr.y - tl.y);
           const widthBottom = Math.hypot(br.x - bl.x, br.y - bl.y);
           const heightLeft = Math.hypot(bl.x - tl.x, bl.y - tl.y);
@@ -1851,35 +1251,22 @@
           let maxWidth = Math.round(Math.max(widthTop, widthBottom));
           let maxHeight = Math.round(Math.max(heightLeft, heightRight));
           
-          // Ép về tỉ lệ A4 chuẩn nếu paperType cụ thể
+          // Ép về tỉ lệ A4 chuẩn
           const targetRatio = PAPER_RATIOS[paperType];
           if (targetRatio) {
-            // Giữ chiều rộng, điều chỉnh chiều cao theo tỉ lệ A4 chuẩn
             const expectedHeight = Math.round(maxWidth * targetRatio);
             const expectedWidth = Math.round(maxHeight / targetRatio);
-            
-            // Chọn cái ít biến dạng hơn
             const heightDiff = Math.abs(maxHeight - expectedHeight) / expectedHeight;
             const widthDiff = Math.abs(maxWidth - expectedWidth) / expectedWidth;
-            
-            if (heightDiff < widthDiff) {
-              maxHeight = expectedHeight;
-            } else {
-              maxWidth = expectedWidth;
-            }
+            if (heightDiff < widthDiff) maxHeight = expectedHeight;
+            else maxWidth = expectedWidth;
           }
           
-          // Đảm bảo kích thước tối thiểu
-          maxWidth = Math.max(maxWidth, 300);
-          maxHeight = Math.max(maxHeight, 400);
+          maxWidth = Math.max(maxWidth, 400);
+          maxHeight = Math.max(maxHeight, 500);
           
-          // Perspective transform
-          const srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
-            tl.x, tl.y, tr.x, tr.y, br.x, br.y, bl.x, bl.y
-          ]);
-          const dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
-            0, 0, maxWidth - 1, 0, maxWidth - 1, maxHeight - 1, 0, maxHeight - 1
-          ]);
+          const srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [tl.x, tl.y, tr.x, tr.y, br.x, br.y, bl.x, bl.y]);
+          const dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [0, 0, maxWidth - 1, 0, maxWidth - 1, maxHeight - 1, 0, maxHeight - 1]);
           
           const M = cv.getPerspectiveTransform(srcTri, dstTri);
           const dst = new cv.Mat();
@@ -1893,13 +1280,10 @@
           
           src.delete(); srcTri.delete(); dstTri.delete(); M.delete(); dst.delete();
           return outCanvas;
-        } catch (e) {
-          console.warn('Warp error:', e);
-          return null;
-        }
+        } catch (e) { return null; }
       }
 
-      // ============ DESKEW: XOAY THẲNG VĂN BẢN ============
+      // ============ DESKEW ============
       function deskewImage(srcCanvas) {
         if (!opencvReady) return srcCanvas;
         try {
@@ -1912,7 +1296,6 @@
           cv.Canny(gray, edges, 50, 150);
           cv.HoughLinesP(edges, lines, 1, Math.PI / 180, 100, srcCanvas.width / 4, 20);
           
-          // Tính góc trung bình của các đường gần ngang
           let angleSum = 0, count = 0;
           for (let i = 0; i < lines.rows; i++) {
             const x1 = lines.data32S[i * 4];
@@ -1920,27 +1303,23 @@
             const x2 = lines.data32S[i * 4 + 2];
             const y2 = lines.data32S[i * 4 + 3];
             const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
-            // Chỉ lấy đường gần ngang (trong khoảng -20 đến 20 độ)
             if (Math.abs(angle) < 20) {
               angleSum += angle;
               count++;
             }
           }
           
-          let medianAngle = count > 0 ? angleSum / count : 0;
+          const medianAngle = count > 0 ? angleSum / count : 0;
           
-          // Nếu góc nghiêng nhỏ (< 0.5 độ), bỏ qua
           if (Math.abs(medianAngle) < 0.5) {
             src.delete(); gray.delete(); edges.delete(); lines.delete();
             return srcCanvas;
           }
           
-          // Xoay ảnh
           const center = new cv.Point(src.cols / 2, src.rows / 2);
           const M = cv.getRotationMatrix2D(center, medianAngle, 1);
           const dst = new cv.Mat();
-          cv.warpAffine(src, dst, M, new cv.Size(src.cols, src.rows), 
-            cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar(255, 255, 255, 255));
+          cv.warpAffine(src, dst, M, new cv.Size(src.cols, src.rows), cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar(255, 255, 255, 255));
           
           const out = document.createElement('canvas');
           out.width = dst.cols;
@@ -1949,10 +1328,7 @@
           
           src.delete(); gray.delete(); edges.delete(); lines.delete(); M.delete(); dst.delete();
           return out;
-        } catch (e) {
-          console.warn('Deskew error:', e);
-          return srcCanvas;
-        }
+        } catch (e) { return srcCanvas; }
       }
 
       // ============ ENHANCE ============
@@ -1968,7 +1344,7 @@
             cv.cvtColor(lab, lab, cv.COLOR_RGB2Lab);
             const channels = new cv.MatVector();
             cv.split(lab, channels);
-            const clip = magic ? 3.5 : (2.0 + contrast / 40);
+            const clip = magic ? 4.0 : (2.0 + contrast / 40);
             const clahe = new cv.CLAHE(clip, new cv.Size(8, 8));
             const l = channels.get(0);
             clahe.apply(l, l);
@@ -1985,7 +1361,7 @@
             const blurred = new cv.Mat();
             const sharp = new cv.Mat();
             cv.GaussianBlur(enhanced, blurred, new cv.Size(5, 5), 0, 0);
-            const amount = sharpness / 100 * 1.5;
+            const amount = sharpness / 100 * 1.8;
             cv.addWeighted(enhanced, 1 + amount, blurred, -amount, 0, sharp);
             enhanced.delete();
             enhanced = sharp;
@@ -2024,7 +1400,7 @@
         } catch (e) { return srcCanvas; }
       }
 
-      // ============ MAIN PROCESSING PIPELINE ============
+      // ============ MAIN PROCESSING ============
       async function processImage(srcCanvas, customOpts = {}) {
         let currentCanvas = srcCanvas;
         const doCrop = customOpts.doCrop !== undefined ? customOpts.doCrop : filters.autoCrop;
@@ -2037,29 +1413,22 @@
         const contrast = customOpts.contrast || 30;
         const paperType = customOpts.paperType || selectedPaperSize;
 
-        // 1. Auto crop với A4 detection
         if (doCrop && opencvReady) {
-          processingText && (processingText.textContent = 'Đang nhận diện giấy A4...');
           const detection = detectPaperAdvanced(currentCanvas, paperType);
           if (detection && detection.corners) {
             const warped = warpToA4(currentCanvas, detection.corners, paperType);
-            if (warped) {
-              currentCanvas = warped;
-            }
+            if (warped) currentCanvas = warped;
           }
         }
 
-        // 2. Deskew (xoay thẳng)
         if (doDeskew && opencvReady) {
           currentCanvas = deskewImage(currentCanvas);
         }
 
-        // 3. Enhance (làm nét)
         if ((doEnhance || doMagic) && opencvReady) {
           currentCanvas = enhanceImage(currentCanvas, sharpness, contrast, doMagic);
         }
 
-        // 4. Color mode
         if (opencvReady) {
           if (doBw) currentCanvas = applyColorMode(currentCanvas, 'bw');
           else if (doGray) currentCanvas = applyColorMode(currentCanvas, 'gray');
@@ -2068,11 +1437,10 @@
         return currentCanvas;
       }
 
-      // ============ REAL-TIME DETECTION LOOP ============
+      // ============ LIVE DETECTION ============
       function detectPaperLive() {
         if (!opencvReady || !cameraActive || !video.videoWidth) return null;
         try {
-          // Downscale để nhanh
           const scale = 400 / video.videoWidth;
           const w = 400;
           const h = Math.round(video.videoHeight * scale);
@@ -2081,67 +1449,95 @@
           tmpCanvas.height = h;
           tmpCanvas.getContext('2d').drawImage(video, 0, 0, w, h);
 
-          const src = cv.imread(tmpCanvas);
-          const imgArea = w * h;
-          
-          // Canny + Bilateral
-          const gray = new cv.Mat();
-          const blurred = new cv.Mat();
-          const edges = new cv.Mat();
-          const contours = new cv.MatVector();
-          const hierarchy = new cv.Mat();
-
-          cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-          cv.bilateralFilter(gray, blurred, 9, 75, 75, cv.BORDER_DEFAULT);
-          cv.Canny(blurred, edges, 40, 120);
-          const kernel = cv.Mat.ones(5, 5, cv.CV_8U);
-          cv.morphologyEx(edges, edges, cv.MORPH_CLOSE, kernel);
-          cv.dilate(edges, edges, kernel, new cv.Point(-1, -1), 1);
-          kernel.delete();
-          cv.findContours(edges, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-
-          let bestCandidate = null;
-          let bestScore = 0;
-
-          for (let i = 0; i < contours.size(); i++) {
-            const cnt = contours.get(i);
-            const area = cv.contourArea(cnt);
-            if (area < imgArea * 0.15) { cnt.delete(); continue; }
-            
-            const peri = cv.arcLength(cnt, true);
-            const approx = new cv.Mat();
-            cv.approxPolyDP(cnt, approx, 0.015 * peri, true);
-            
-            if (approx.rows === 4 && cv.isContourConvex(approx)) {
-              const pts = [];
-              for (let j = 0; j < 4; j++) {
-                pts.push({ x: approx.data32S[j * 2] / scale, y: approx.data32S[j * 2 + 1] / scale });
-              }
-              const corners = sortCorners(pts);
-              const isRect = checkRectangularity(corners);
-              const ratioInfo = checkA4Ratio(corners, selectedPaperSize);
-              
-              const areaScore = Math.min(1, area / imgArea);
-              const ratioScore = ratioInfo ? ratioInfo.quality : 0.3;
-              const rectScore = isRect ? 1 : 0.3;
-              const score = areaScore * 0.4 + ratioScore * 0.4 + rectScore * 0.2;
-              
-              if (score > bestScore) {
-                bestScore = score;
-                bestCandidate = { corners, ratioInfo, score };
-              }
-            }
-            approx.delete();
-            cnt.delete();
+          // Scale corners back
+          const detection = detectPaperAdvanced(tmpCanvas, selectedPaperSize);
+          if (detection && detection.corners) {
+            detection.corners = detection.corners.map(c => ({
+              x: c.x / scale,
+              y: c.y / scale
+            }));
           }
-
-          src.delete(); gray.delete(); blurred.delete(); edges.delete();
-          contours.delete(); hierarchy.delete();
-          
-          return bestCandidate;
+          return detection;
         } catch (e) { return null; }
       }
 
+      // ============ DRAW DETECTED POLYGON ON OVERLAY ============
+      function drawDetectedPolygon(corners) {
+        const rect = video.getBoundingClientRect();
+        const parentRect = video.parentElement.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        
+        overlayCanvas.width = parentRect.width * dpr;
+        overlayCanvas.height = parentRect.height * dpr;
+        overlayCanvas.style.width = parentRect.width + 'px';
+        overlayCanvas.style.height = parentRect.height + 'px';
+        
+        const ctx = overlayCanvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, parentRect.width, parentRect.height);
+        
+        if (!corners || corners.length !== 4) return;
+
+        // Transform video coords -> display coords
+        const vw = video.videoWidth, vh = video.videoHeight;
+        const displayW = rect.width, displayH = rect.height;
+        const videoAspect = vw / vh, displayAspect = displayW / displayH;
+        let scaleX, scaleY, cropX = 0, cropY = 0;
+
+        if (videoAspect > displayAspect) {
+          scaleY = displayH / vh; scaleX = scaleY;
+          cropX = (vw * scaleX - displayW) / 2;
+        } else {
+          scaleX = displayW / vw; scaleY = scaleX;
+          cropY = (vh * scaleY - displayH) / 2;
+        }
+
+        const offsetX = rect.left - parentRect.left;
+        const offsetY = rect.top - parentRect.top;
+
+        const displayCorners = corners.map(pt => ({
+          x: offsetX + pt.x * scaleX - cropX,
+          y: offsetY + pt.y * scaleY - cropY
+        }));
+
+        // Vẽ polygon
+        ctx.beginPath();
+        ctx.moveTo(displayCorners[0].x, displayCorners[0].y);
+        for (let i = 1; i < 4; i++) {
+          ctx.lineTo(displayCorners[i].x, displayCorners[i].y);
+        }
+        ctx.closePath();
+
+        // Fill với màu xanh mờ
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.15)';
+        ctx.fill();
+
+        // Stroke viền cyan đậm
+        ctx.strokeStyle = '#06b6d4';
+        ctx.lineWidth = 3;
+        ctx.shadowColor = 'rgba(6, 182, 212, 0.9)';
+        ctx.shadowBlur = 10;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Vẽ 4 góc tròn
+        displayCorners.forEach(c => {
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, 8, 0, Math.PI * 2);
+          ctx.fillStyle = '#06b6d4';
+          ctx.fill();
+          ctx.strokeStyle = 'white';
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+        });
+      }
+
+      function clearOverlay() {
+        const ctx = overlayCanvas.getContext('2d');
+        ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+      }
+
+      // ============ DETECTION LOOP ============
       function startDetectionLoop() {
         stopDetectionLoop();
         detectionLoopId = setInterval(() => {
@@ -2149,23 +1545,18 @@
           const candidate = detectPaperLive();
 
           if (candidate && candidate.corners) {
-            const { corners, ratioInfo } = candidate;
-            updateCornerMarkers(corners);
+            drawDetectedPolygon(candidate.corners);
             
-            const key = corners.map(c => `${Math.round(c.x / 10)},${Math.round(c.y / 10)}`).join('|');
+            const key = candidate.corners.map(c => `${Math.round(c.x / 15)},${Math.round(c.y / 15)}`).join('|');
             if (key === lastCornerKey) stabilityFrames++;
             else { stabilityFrames = 0; lastCornerKey = key; }
 
             const stabilityPercent = Math.min(100, (stabilityFrames / STABILITY_THRESHOLD) * 100);
             stabilityFill.style.width = stabilityPercent + '%';
 
-            // Cập nhật info panel
-            updateInfoPanel(ratioInfo);
-
-            // Badge A4
-            if (ratioInfo && ratioInfo.isMatch) {
+            if (candidate.ratioInfo && candidate.ratioInfo.isMatch) {
               a4Badge.classList.add('show');
-              a4Text.textContent = selectedPaperSize + ' ✓';
+              a4Text.textContent = selectedPaperSize + ' ✓ ' + candidate.ratioInfo.ratio.toFixed(2);
             } else {
               a4Badge.classList.remove('show');
             }
@@ -2186,15 +1577,14 @@
           } else {
             stabilityFrames = 0;
             lastCornerKey = '';
-            hideCornerMarkers();
+            clearOverlay();
             setStatusBadge('searching', 'SEARCHING');
             stabilityFill.style.width = '0%';
             a4Badge.classList.remove('show');
             shutterRing.classList.remove('auto-active');
             captureBtn.classList.remove('locked');
-            resetInfoPanel();
           }
-        }, 100);
+        }, 150);
       }
 
       function stopDetectionLoop() {
@@ -2202,63 +1592,12 @@
         stabilityFrames = 0;
         lastCornerKey = '';
         stabilityFill.style.width = '0%';
-        hideCornerMarkers();
+        clearOverlay();
       }
 
       function setStatusBadge(type, text) {
         statusBadge.className = 'status-badge show ' + type;
         statusText.textContent = text;
-      }
-
-      function updateInfoPanel(ratioInfo) {
-        scanInfoPanel.style.display = 'grid';
-        if (!ratioInfo) {
-          resetInfoPanel();
-          return;
-        }
-        infoPaperType.textContent = ratioInfo.isMatch ? selectedPaperSize + ' ✓' : 'Khác';
-        infoRatio.textContent = ratioInfo.ratio.toFixed(2);
-        infoArea.textContent = Math.round((ratioInfo.width * ratioInfo.height) / 100) + ' cm²';
-        infoAngle.textContent = ratioInfo.tiltAngle.toFixed(1) + '°';
-      }
-
-      function resetInfoPanel() {
-        scanInfoPanel.style.display = 'none';
-      }
-
-      function updateCornerMarkers(corners) {
-        const rect = video.getBoundingClientRect();
-        const parentRect = video.parentElement.getBoundingClientRect();
-        const offsetX = rect.left - parentRect.left;
-        const offsetY = rect.top - parentRect.top;
-        const vw = video.videoWidth, vh = video.videoHeight;
-        const displayW = rect.width, displayH = rect.height;
-        const videoAspect = vw / vh, displayAspect = displayW / displayH;
-        let scaleX, scaleY, cropX = 0, cropY = 0;
-
-        if (videoAspect > displayAspect) {
-          scaleY = displayH / vh; scaleX = scaleY;
-          cropX = (vw * scaleX - displayW) / 2;
-        } else {
-          scaleX = displayW / vw; scaleY = scaleX;
-          cropY = (vh * scaleY - displayH) / 2;
-        }
-
-        const transform = (pt) => ({
-          x: offsetX + pt.x * scaleX - cropX,
-          y: offsetY + pt.y * scaleY - cropY
-        });
-
-        const [tl, tr, br, bl] = corners.map(transform);
-        setMarker(markerTL, tl.x - 4, tl.y - 4);
-        setMarker(markerTR, tr.x - 18, tr.y - 4);
-        setMarker(markerBL, bl.x - 4, bl.y - 18);
-        setMarker(markerBR, br.x - 18, br.y - 18);
-      }
-
-      function setMarker(el, x, y) { el.style.left = x + 'px'; el.style.top = y + 'px'; el.classList.add('show'); }
-      function hideCornerMarkers() {
-        [markerTL, markerTR, markerBL, markerBR].forEach(m => m.classList.remove('show'));
       }
 
       // ============ CAMERA ============
@@ -2275,7 +1614,6 @@
           cameraPlaceholder.style.display = 'none';
           video.style.display = 'block';
           previewCanvas.style.display = 'none';
-          gridOverlay.classList.add('show');
           currentFacingMode = facingMode;
 
           if (opencvReady) {
@@ -2298,12 +1636,10 @@
       function stopCamera() {
         if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
         cameraActive = false;
-        gridOverlay.classList.remove('show');
         stopDetectionLoop();
         statusBadge.classList.remove('show');
         stabilityMeter.classList.remove('show');
         a4Badge.classList.remove('show');
-        resetInfoPanel();
       }
 
       // ============ CAPTURE ============
@@ -2329,7 +1665,7 @@
       async function captureAndProcess(isAuto = false) {
         if (!video.videoWidth) return;
         processingOverlay.classList.add('show');
-        processingText.textContent = 'Đang phát hiện giấy A4...';
+        processingText.textContent = 'Đang nhận diện tài liệu...';
 
         const srcCanvas = document.createElement('canvas');
         srcCanvas.width = video.videoWidth;
@@ -2339,6 +1675,7 @@
 
         try {
           await new Promise(r => setTimeout(r, 30));
+          processingText.textContent = 'Đang cắt viền & làm phẳng...';
           const processedCanvas = await processImage(srcCanvas);
           const processedDataURL = canvasToDataURL(processedCanvas, 0.95);
 
@@ -2349,9 +1686,8 @@
             paperSize: selectedPaperSize
           });
           updateGallery();
-          showToast(isAuto ? '⚡ Auto chụp A4 thành công' : 'Đã thêm trang A4', 1400, 'fa-check');
+          showToast(isAuto ? '⚡ Auto chụp thành công' : 'Đã thêm trang mới', 1400, 'fa-check');
         } catch (e) {
-          console.error(e);
           scannedPages.push({
             id: Date.now() + Math.random(),
             original: originalDataURL,
@@ -2388,7 +1724,7 @@
               r.readAsDataURL(files[i]);
             });
             const srcCanvas = await dataURLToCanvas(dataURL);
-            processingText.textContent = `Đang xử lý ảnh ${i + 1}/${files.length}...`;
+            processingText.textContent = `Đang xử lý ${i + 1}/${files.length}...`;
             const processedCanvas = await processImage(srcCanvas);
             const processedDataURL = canvasToDataURL(processedCanvas, 0.95);
             scannedPages.push({
@@ -2418,13 +1754,13 @@
         showToast(autoScanEnabled ? '⚡ Bật tự động chụp' : 'Tắt tự động chụp', 1400, autoScanEnabled ? 'fa-bolt' : 'fa-pause');
       });
 
-      // ============ PAPER SIZE SELECTOR ============
+      // ============ PAPER SIZE ============
       document.querySelectorAll('.paper-size-chip').forEach(chip => {
         chip.addEventListener('click', () => {
           document.querySelectorAll('.paper-size-chip').forEach(c => c.classList.remove('active'));
           chip.classList.add('active');
           selectedPaperSize = chip.dataset.size;
-          showToast(`Chọn khổ giấy: ${selectedPaperSize}`, 1200, 'fa-file-contract');
+          showToast(`Khổ giấy: ${selectedPaperSize}`, 1200, 'fa-file-contract');
         });
       });
 
@@ -2466,10 +1802,6 @@
             const img = document.createElement('img');
             img.src = page.processed;
             thumb.appendChild(img);
-
-            const overlay = document.createElement('div');
-            overlay.className = 'thumb-overlay';
-            thumb.appendChild(overlay);
 
             const idx = document.createElement('div');
             idx.className = 'thumb-index';
@@ -2545,7 +1877,7 @@
         updateGallery();
         modalImage.src = page.processed;
         processingOverlay.classList.remove('show');
-        showToast('Đã áp dụng tinh chỉnh', 1500, 'fa-wand-magic-sparkles');
+        showToast('Đã áp dụng', 1500, 'fa-wand-magic-sparkles');
       });
 
       // ============ PDF ============
@@ -2611,7 +1943,7 @@
           const a = document.createElement('a');
           a.href = url; a.download = `ScanPro_${Date.now()}.pdf`; a.click();
           URL.revokeObjectURL(url);
-          showToast('Đã tải về (không hỗ trợ chia sẻ)', 2000, 'fa-download');
+          showToast('Đã tải về', 2000, 'fa-download');
         }
       });
 
@@ -2626,8 +1958,8 @@
 
       waitForOpenCV().then(() => {
         if (opencvReady) {
-          console.log('✅ OpenCV ready - A4 Smart Detection enabled');
-          showToast('AI sẵn sàng nhận diện A4', 1500, 'fa-check');
+          console.log('✅ OpenCV ready - CamScanner-style engine');
+          showToast('AI sẵn sàng', 1500, 'fa-check');
         }
       });
 
