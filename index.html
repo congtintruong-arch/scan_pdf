@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>ScanPro Ultra • CamScanner Style</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet">
+  <title>ScanPro • A4 White Paper Scan</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://docs.opencv.org/4.8.0/opencv.js" async></script>
@@ -15,29 +15,19 @@
       --primary: #6366f1; --secondary: #8b5cf6; --accent: #06b6d4;
       --success: #10b981; --danger: #f43f5e; --warning: #f59e0b;
       --dark: #0a0e1a; --gray-1: #f8fafc; --gray-2: #f1f5f9; --gray-3: #e2e8f0;
-      --gray-5: #64748b; --gray-7: #334155;
       --radius-lg: 28px; --radius-md: 20px; --radius-sm: 14px;
       --shadow-sm: 0 2px 8px -2px rgba(15, 23, 42, 0.08);
-      --shadow-glow: 0 12px 32px -8px rgba(99, 102, 241, 0.4);
     }
 
     html, body { height: 100%; overflow: hidden; }
 
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: 'Inter', sans-serif;
       background: radial-gradient(ellipse 80% 60% at 50% 0%, #1e1b4b 0%, transparent 60%),
                   radial-gradient(ellipse 60% 50% at 100% 100%, #312e81 0%, transparent 50%),
-                  radial-gradient(ellipse 60% 50% at 0% 100%, #0e7490 0%, transparent 50%),
                   #0a0e1a;
       display: flex; align-items: center; justify-content: center;
-      padding: 8px; position: relative;
-    }
-
-    body::before {
-      content: ''; position: absolute; inset: 0;
-      background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-      background-size: 40px 40px; pointer-events: none;
+      padding: 8px;
     }
 
     .phone-frame {
@@ -46,37 +36,27 @@
       border-radius: 52px;
       box-shadow: 0 60px 120px -40px rgba(0, 0, 0, 0.8),
                   0 0 0 2px rgba(255, 255, 255, 0.08) inset,
-                  0 0 0 10px rgba(255, 255, 255, 0.02),
-                  0 0 0 11px rgba(255, 255, 255, 0.05);
-      overflow: hidden; display: flex; flex-direction: column;
-      position: relative; z-index: 1;
+                  0 0 0 10px rgba(255, 255, 255, 0.02);
+      overflow: hidden; display: flex; flex-direction: column; position: relative;
     }
 
     .dynamic-island {
       position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-      width: 110px; height: 32px; background: #000; border-radius: 20px;
-      z-index: 100; display: flex; align-items: center; justify-content: flex-end;
-      padding-right: 10px;
-    }
-
-    .dynamic-island::after {
-      content: ''; width: 8px; height: 8px; border-radius: 50%;
-      background: radial-gradient(circle at 30% 30%, #1e3a5f, #0a0e1a);
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.1), inset 0 0 4px rgba(96, 165, 250, 0.4);
+      width: 110px; height: 32px; background: #000; border-radius: 20px; z-index: 100;
     }
 
     .status-bar {
       display: flex; justify-content: space-between;
       padding: 18px 32px 6px; font-size: 14px; font-weight: 700;
-      color: #0f172a; letter-spacing: -0.2px; z-index: 5; position: relative;
+      color: #0f172a; z-index: 5; position: relative;
     }
 
     .status-bar .icons { display: flex; align-items: center; gap: 5px; font-size: 12px; }
 
     .app-screen {
-      flex: 1; overflow-y: auto; overflow-x: hidden;
-      padding: 0 18px 100px; display: flex; flex-direction: column;
-      scrollbar-width: none; scroll-behavior: smooth;
+      flex: 1; overflow-y: auto; padding: 0 18px 30px;
+      display: flex; flex-direction: column;
+      scrollbar-width: none;
     }
 
     .app-screen::-webkit-scrollbar { display: none; }
@@ -84,12 +64,6 @@
     .header {
       display: flex; justify-content: space-between; align-items: center;
       padding: 6px 2px 14px;
-      animation: slideDown 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
     }
 
     .logo-group { display: flex; align-items: center; gap: 10px; }
@@ -99,20 +73,11 @@
       background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
       display: flex; align-items: center; justify-content: center;
       color: white; font-size: 19px;
-      box-shadow: 0 8px 20px -4px rgba(99, 102, 241, 0.5), inset 0 1px 0 rgba(255,255,255,0.3);
-      position: relative; overflow: hidden;
+      box-shadow: 0 8px 20px -4px rgba(99, 102, 241, 0.5);
     }
-
-    .logo-mark::before {
-      content: ''; position: absolute; inset: 0;
-      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.2) 100%);
-    }
-
-    .logo-mark i { position: relative; z-index: 1; }
 
     .brand-text h1 {
-      font-size: 20px; font-weight: 800;
-      letter-spacing: -0.5px; color: #0f172a; line-height: 1.1;
+      font-size: 20px; font-weight: 800; color: #0f172a; line-height: 1.1;
     }
 
     .brand-text p {
@@ -122,20 +87,16 @@
 
     .header-btn {
       width: 42px; height: 42px; border-radius: 14px;
-      background: white; border: 1px solid #e2e8f0;
-      color: #334155; font-size: 16px;
+      background: white; border: 1px solid #e2e8f0; color: #334155;
       display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow-sm);
+      cursor: pointer; box-shadow: var(--shadow-sm);
     }
-
-    .header-btn:active { transform: scale(0.92); background: var(--gray-2); }
 
     .capture-card {
       background: linear-gradient(160deg, #ffffff 0%, #f1f5f9 100%);
       border-radius: var(--radius-lg); padding: 12px; margin-bottom: 14px;
-      box-shadow: 0 20px 40px -16px rgba(15, 23, 42, 0.18),
-                  0 0 0 1px rgba(226, 232, 240, 0.8) inset;
-      border: 1px solid #e2e8f0; position: relative;
+      box-shadow: 0 20px 40px -16px rgba(15, 23, 42, 0.18);
+      border: 1px solid #e2e8f0;
     }
 
     .camera-preview {
@@ -152,11 +113,30 @@
 
     #previewCanvas { display: none; }
 
-    /* Overlay canvas để vẽ detected polygon */
-    #overlayCanvas {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%;
-      pointer-events: none; z-index: 5;
+    .a4-frame {
+      position: absolute; inset: 8%;
+      border: 3px dashed rgba(255, 255, 255, 0.7);
+      border-radius: 12px;
+      pointer-events: none; z-index: 3;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.35);
+    }
+
+    .a4-frame::before,
+    .a4-frame::after {
+      content: ''; position: absolute; width: 30px; height: 30px;
+      border: 4px solid #10b981;
+    }
+
+    .a4-frame::before {
+      top: -4px; left: -4px;
+      border-right: none; border-bottom: none;
+      border-radius: 12px 0 0 0;
+    }
+
+    .a4-frame::after {
+      bottom: -4px; right: -4px;
+      border-left: none; border-top: none;
+      border-radius: 0 0 12px 0;
     }
 
     .camera-placeholder {
@@ -173,76 +153,22 @@
       border: 1px solid rgba(99, 102, 241, 0.3);
       display: flex; align-items: center; justify-content: center;
       font-size: 32px; color: #818cf8; margin-bottom: 4px;
-      backdrop-filter: blur(8px);
     }
 
     .camera-placeholder .main-text { font-size: 15px; font-weight: 700; color: #e2e8f0; }
-    .camera-placeholder .hint { font-size: 11.5px; color: #94a3b8; font-weight: 500; max-width: 240px; line-height: 1.5; }
-
-    .status-badge {
-      position: absolute; top: 14px; left: 14px; z-index: 6;
-      font-size: 10px; font-weight: 800; padding: 7px 13px;
-      border-radius: 30px; display: none; align-items: center; gap: 7px;
-      letter-spacing: 0.7px; backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.2);
-      transition: all 0.3s; text-transform: uppercase;
-      box-shadow: 0 8px 20px -6px rgba(0,0,0,0.4);
-    }
-
-    .status-badge.show { display: flex; }
-
-    .status-badge .dot {
-      width: 7px; height: 7px; border-radius: 50%; background: currentColor;
-      animation: pulse 1.2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.6); }
-    }
-
-    .status-badge.searching { background: linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(217, 119, 6, 0.95)); color: white; }
-    .status-badge.detected { background: linear-gradient(135deg, rgba(99, 102, 241, 0.95), rgba(139, 92, 246, 0.95)); color: white; }
-    .status-badge.locked { background: linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(5, 150, 105, 0.95)); color: white; box-shadow: 0 8px 24px -6px rgba(16, 185, 129, 0.6); }
-
-    .a4-badge {
-      position: absolute; top: 14px; right: 60px; z-index: 6;
-      font-size: 9px; font-weight: 800; padding: 6px 10px;
-      border-radius: 30px; display: none; align-items: center; gap: 5px;
-      backdrop-filter: blur(12px);
-      background: linear-gradient(135deg, rgba(6, 182, 212, 0.95), rgba(8, 145, 178, 0.95));
-      color: white; border: 1px solid rgba(255,255,255,0.2);
-    }
-
-    .a4-badge.show { display: flex; }
+    .camera-placeholder .hint { font-size: 11.5px; color: #94a3b8; max-width: 240px; line-height: 1.5; }
 
     .page-counter-badge {
-      position: absolute; bottom: 14px; right: 14px;
+      position: absolute; top: 14px; right: 14px;
       background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px);
       color: white; font-size: 11px; font-weight: 700;
       padding: 6px 12px; border-radius: 30px; z-index: 6;
       border: 1px solid rgba(255,255,255,0.15);
     }
 
-    .stability-meter {
-      position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
-      width: 70%; height: 6px; background: rgba(255,255,255,0.15);
-      border-radius: 10px; overflow: hidden; z-index: 6; display: none;
-      backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .stability-meter.show { display: block; }
-
-    .stability-fill {
-      height: 100%; width: 0%;
-      background: linear-gradient(90deg, #f59e0b, #10b981);
-      border-radius: 10px; transition: width 0.15s linear;
-      box-shadow: 0 0 12px rgba(16, 185, 129, 0.8);
-    }
-
     .processing-overlay {
       position: absolute; inset: 0;
-      background: rgba(10, 14, 26, 0.9); backdrop-filter: blur(16px);
+      background: rgba(10, 14, 26, 0.92); backdrop-filter: blur(16px);
       display: none; flex-direction: column; align-items: center; justify-content: center;
       z-index: 10; color: white; gap: 18px; border-radius: var(--radius-md);
     }
@@ -258,18 +184,15 @@
       border-radius: 50%; animation: spin 0.9s linear infinite;
     }
 
-    .spinner-inner {
-      position: absolute; inset: 12px;
-      border: 2px solid rgba(6, 182, 212, 0.15);
-      border-bottom-color: #06b6d4; border-radius: 50%;
-      animation: spin 1.4s linear infinite reverse;
-    }
-
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .processing-overlay span {
-      font-size: 13px; font-weight: 700; letter-spacing: 0.3px;
-      color: #e2e8f0; text-align: center; padding: 0 20px;
+      font-size: 13px; font-weight: 700; color: #e2e8f0;
+      text-align: center; padding: 0 20px;
+    }
+
+    .processing-overlay .hint-small {
+      font-size: 11px; color: #94a3b8; margin-top: -10px;
     }
 
     .capture-controls {
@@ -279,13 +202,13 @@
 
     .ctrl-btn {
       width: 48px; height: 48px; border-radius: 16px;
-      background: white; border: 1px solid #e2e8f0;
-      color: #334155; font-size: 17px;
+      background: white; border: 1px solid #e2e8f0; color: #334155;
+      font-size: 17px;
       display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow-sm);
+      cursor: pointer; box-shadow: var(--shadow-sm);
     }
 
-    .ctrl-btn:active { transform: scale(0.9); background: var(--gray-2); }
+    .ctrl-btn:active { transform: scale(0.9); }
 
     .shutter-wrap { position: relative; display: flex; align-items: center; justify-content: center; }
 
@@ -295,86 +218,22 @@
       background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4) border-box;
       -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
       -webkit-mask-composite: xor; mask-composite: exclude;
-      animation: rotateRing 6s linear infinite; opacity: 0.6;
+      opacity: 0.8;
     }
-
-    .shutter-ring.auto-active { animation: rotateRing 1.5s linear infinite; opacity: 1; }
-
-    @keyframes rotateRing { to { transform: rotate(360deg); } }
 
     .shutter-btn {
       width: 68px; height: 68px; border-radius: 50%;
       background: linear-gradient(145deg, #ffffff, #f1f5f9);
       border: none; display: flex; align-items: center; justify-content: center;
       box-shadow: 0 10px 24px -6px rgba(15, 23, 42, 0.25),
-                  0 0 0 4px #ffffff, 0 0 0 5px #e2e8f0,
-                  inset 0 1px 2px rgba(255,255,255,1);
-      transition: all 0.15s; cursor: pointer;
-      color: #6366f1; font-size: 26px; position: relative;
+                  0 0 0 4px #ffffff, 0 0 0 5px #e2e8f0;
+      cursor: pointer; color: #6366f1; font-size: 26px;
     }
 
     .shutter-btn:active { transform: scale(0.9); }
-    .shutter-btn::after { content: ''; position: absolute; inset: 6px; border-radius: 50%; border: 2px solid #e2e8f0; opacity: 0.6; }
-    .shutter-btn.locked { color: #10b981; box-shadow: 0 10px 24px -6px rgba(16, 185, 129, 0.4), 0 0 0 4px #ffffff, 0 0 0 5px #34d399, inset 0 1px 2px rgba(255,255,255,1); }
 
-    .auto-toggle-row {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 14px;
-      background: linear-gradient(160deg, #eef2ff, #e0e7ff);
-      border-radius: 14px; margin-bottom: 12px; border: 1px solid #c7d2fe;
-    }
-
-    .auto-toggle-info { display: flex; align-items: center; gap: 10px; }
-
-    .auto-toggle-icon {
-      width: 34px; height: 34px; border-radius: 10px;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      color: white; display: flex; align-items: center; justify-content: center;
-      font-size: 14px; box-shadow: 0 6px 14px -4px rgba(99, 102, 241, 0.5);
-    }
-
-    .auto-toggle-text .title { font-size: 12px; font-weight: 800; color: #3730a3; }
-    .auto-toggle-text .sub { font-size: 10px; font-weight: 500; color: #6366f1; margin-top: 1px; }
-
-    .toggle-switch {
-      width: 46px; height: 26px; border-radius: 20px;
-      background: #cbd5e1; position: relative;
-      cursor: pointer; transition: all 0.3s; flex-shrink: 0;
-    }
-
-    .toggle-switch::after {
-      content: ''; position: absolute; top: 3px; left: 3px;
-      width: 20px; height: 20px; border-radius: 50%; background: white;
-      transition: all 0.3s; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    }
-
-    .toggle-switch.on { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
-    .toggle-switch.on::after { left: 23px; }
-
-    .paper-size-row {
-      display: flex; gap: 6px; padding: 8px 12px;
-      background: #f8fafc; border-radius: 12px;
-      margin-bottom: 12px; border: 1px solid #e2e8f0;
-      overflow-x: auto; scrollbar-width: none;
-    }
-
-    .paper-size-row::-webkit-scrollbar { display: none; }
-
-    .paper-size-chip {
-      flex: 0 0 auto; padding: 6px 12px; border-radius: 20px;
-      background: white; border: 1.5px solid #e2e8f0;
-      font-size: 11px; font-weight: 700; color: #64748b;
-      cursor: pointer; transition: all 0.2s; white-space: nowrap;
-    }
-
-    .paper-size-chip.active {
-      background: linear-gradient(135deg, #06b6d4, #0891b2);
-      color: white; border-color: transparent;
-      box-shadow: 0 6px 14px -4px rgba(6, 182, 212, 0.5);
-    }
-
+    /* ===== Filter modes ===== */
     .section-label {
-      display: flex; align-items: center; justify-content: space-between;
       padding: 0 4px; margin: 4px 0 10px;
     }
 
@@ -400,12 +259,9 @@
       overflow: hidden; box-shadow: var(--shadow-sm);
     }
 
-    .mode-card:active { transform: scale(0.95); }
-
     .mode-card.active {
       background: linear-gradient(150deg, #eef2ff, #faf5ff);
       border-color: #a5b4fc;
-      box-shadow: 0 8px 20px -8px rgba(99, 102, 241, 0.4);
     }
 
     .mode-card.active::before {
@@ -417,7 +273,7 @@
       width: 30px; height: 30px; border-radius: 10px;
       background: linear-gradient(135deg, #eef2ff, #e0e7ff);
       color: #6366f1; display: flex; align-items: center; justify-content: center;
-      font-size: 13px; transition: all 0.2s;
+      font-size: 13px;
     }
 
     .mode-card.active .mode-icon {
@@ -454,7 +310,7 @@
     .pages-grid {
       display: flex; gap: 12px; overflow-x: auto;
       padding: 4px 4px 16px; scrollbar-width: none;
-      min-height: 130px; scroll-snap-type: x mandatory;
+      min-height: 130px;
     }
 
     .pages-grid::-webkit-scrollbar { display: none; }
@@ -463,43 +319,24 @@
       flex: 0 0 92px; height: 122px; border-radius: 16px;
       background: #f1f5f9; border: 2px solid white;
       box-shadow: 0 10px 22px -8px rgba(15, 23, 42, 0.25);
-      overflow: hidden; position: relative;
-      transition: all 0.25s; cursor: pointer;
-      scroll-snap-align: start;
-      animation: popIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden; position: relative; cursor: pointer;
     }
-
-    @keyframes popIn {
-      from { opacity: 0; transform: scale(0.85); }
-      to { opacity: 1; transform: scale(1); }
-    }
-
-    .page-thumb:active { transform: scale(0.94); }
 
     .page-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
     .page-thumb .remove-badge {
       position: absolute; top: 6px; right: 6px;
-      background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px);
+      background: rgba(255, 255, 255, 0.95);
       width: 24px; height: 24px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       font-size: 10px; color: #f43f5e;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
     }
 
     .page-thumb .thumb-index {
       position: absolute; bottom: 6px; left: 6px;
-      background: rgba(255,255,255,0.95); backdrop-filter: blur(8px);
+      background: rgba(255,255,255,0.95);
       color: #0f172a; font-size: 9.5px; font-weight: 800;
       padding: 3px 7px; border-radius: 8px;
-    }
-
-    .page-thumb .thumb-edit {
-      position: absolute; bottom: 6px; right: 6px;
-      width: 22px; height: 22px;
-      background: rgba(99, 102, 241, 0.95); backdrop-filter: blur(8px);
-      border-radius: 7px; display: flex; align-items: center; justify-content: center;
-      color: white; font-size: 9px;
     }
 
     .empty-gallery {
@@ -521,35 +358,31 @@
       color: white; font-weight: 800; font-size: 14px;
       display: flex; align-items: center; justify-content: center; gap: 8px;
       box-shadow: 0 16px 32px -10px rgba(99, 102, 241, 0.6);
-      transition: all 0.2s; cursor: pointer; position: relative; overflow: hidden;
+      cursor: pointer;
     }
-
-    .btn-primary:active { transform: scale(0.96); }
 
     .btn-outline {
       flex: 1; background: white; border: 1.5px solid #e2e8f0;
       border-radius: 20px; padding: 17px 12px;
       color: #1e293b; font-weight: 800; font-size: 14px;
       display: flex; align-items: center; justify-content: center; gap: 7px;
-      box-shadow: var(--shadow-sm); transition: all 0.2s; cursor: pointer;
+      cursor: pointer;
     }
 
-    .btn-outline:active { background: #f1f5f9; transform: scale(0.96); }
+    .btn-primary:active, .btn-outline:active { transform: scale(0.96); }
 
     .toast-message {
-      position: fixed; bottom: 100px; left: 50%;
-      transform: translateX(-50%) translateY(20px) scale(0.9);
-      background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px);
+      position: fixed; bottom: 30px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(15, 23, 42, 0.95);
       color: white; font-weight: 600; font-size: 13px;
       padding: 12px 20px; border-radius: 60px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-      z-index: 9999; opacity: 0; transition: all 0.35s;
-      pointer-events: none; white-space: nowrap;
-      border: 1px solid rgba(255,255,255,0.12);
-      display: flex; align-items: center; gap: 10px; max-width: 90vw;
+      z-index: 9999; opacity: 0; transition: all 0.3s;
+      pointer-events: none; display: flex; align-items: center; gap: 10px;
+      max-width: 90vw;
     }
 
-    .toast-message.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+    .toast-message.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
     .toast-icon {
       width: 22px; height: 22px; border-radius: 50%;
@@ -560,29 +393,21 @@
 
     #fileInput { display: none; }
 
+    /* Modal */
     .modal-overlay {
       position: fixed; inset: 0;
       background: rgba(5, 10, 25, 0.85); backdrop-filter: blur(20px);
       z-index: 1000; display: none; align-items: center; justify-content: center;
-      padding: 16px; animation: fadeIn 0.25s;
+      padding: 16px;
     }
 
     .modal-overlay.show { display: flex; }
 
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
     .modal-content {
-      background: linear-gradient(180deg, #ffffff, #f8fafc);
-      border-radius: 28px; max-width: 380px; width: 100%;
-      max-height: 92vh; overflow: hidden;
-      display: flex; flex-direction: column;
+      background: white; border-radius: 28px;
+      max-width: 380px; width: 100%; max-height: 92vh;
+      overflow: hidden; display: flex; flex-direction: column;
       box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.7);
-      animation: modalIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    @keyframes modalIn {
-      from { opacity: 0; transform: scale(0.9) translateY(20px); }
-      to { opacity: 1; transform: scale(1) translateY(0); }
     }
 
     .modal-header {
@@ -595,55 +420,20 @@
       display: flex; align-items: center; gap: 8px;
     }
 
-    .modal-header h4 i { color: #6366f1; font-size: 14px; }
+    .modal-header h4 i { color: #6366f1; }
 
     .modal-header .close-btn {
       background: #f1f5f9; border: none;
       width: 32px; height: 32px; border-radius: 11px;
-      color: #334155; font-size: 13px; cursor: pointer;
+      color: #334155; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
     }
 
-    .modal-body { padding: 16px 20px 20px; overflow-y: auto; flex: 1; }
-    .modal-body::-webkit-scrollbar { display: none; }
-    .modal-body { scrollbar-width: none; }
+    .modal-body { padding: 16px 20px 20px; overflow-y: auto; }
 
     .modal-body img {
       width: 100%; border-radius: 16px;
-      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.2);
       margin-bottom: 16px; border: 1px solid #e2e8f0;
-    }
-
-    .slider-group { margin-bottom: 16px; }
-
-    .slider-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .slider-header label {
-      font-size: 12px; font-weight: 700; color: #475569;
-      display: flex; align-items: center; gap: 6px;
-    }
-
-    .slider-header label i { color: #6366f1; font-size: 11px; }
-
-    .slider-value {
-      font-size: 11px; font-weight: 800; color: #4338ca;
-      background: #eef2ff; padding: 3px 9px;
-      border-radius: 8px; min-width: 36px; text-align: center;
-    }
-
-    input[type=range].modal-range {
-      width: 100%; height: 6px; border-radius: 10px;
-      background: linear-gradient(90deg, #6366f1, #8b5cf6);
-      outline: none; -webkit-appearance: none;
-    }
-
-    input[type=range].modal-range::-webkit-slider-thumb {
-      -webkit-appearance: none; width: 22px; height: 22px;
-      border-radius: 50%; background: white;
-      border: 3px solid #6366f1;
     }
 
     .modal-actions { display: flex; gap: 10px; margin-top: 8px; }
@@ -652,12 +442,6 @@
       flex: 1; padding: 14px; border-radius: 16px; border: none;
       font-weight: 800; font-size: 13px; cursor: pointer;
       display: flex; align-items: center; justify-content: center; gap: 7px;
-      transition: all 0.2s;
-    }
-
-    .modal-actions .reapply {
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      color: white;
     }
 
     .modal-actions .cancel { background: #f1f5f9; color: #334155; }
@@ -667,7 +451,7 @@
       body { padding: 0; }
       .dynamic-island { display: none; }
       .status-bar { padding: 14px 22px 4px; }
-      .app-screen { padding: 0 14px 100px; }
+      .app-screen { padding: 0 14px 30px; }
     }
   </style>
 </head>
@@ -691,8 +475,8 @@
             <i class="fas fa-file-contract"></i>
           </div>
           <div class="brand-text">
-            <h1>ScanPro Ultra</h1>
-            <p>CamScanner Engine</p>
+            <h1>ScanPro A4</h1>
+            <p>White Paper Scan</p>
           </div>
         </div>
         <button class="header-btn" id="settingsBtn">
@@ -704,24 +488,11 @@
         <div class="camera-preview" id="cameraPreview">
           <video id="videoPreview" autoplay playsinline muted></video>
           <canvas id="previewCanvas"></canvas>
-          <canvas id="overlayCanvas"></canvas>
 
-          <div class="status-badge" id="statusBadge">
-            <span class="dot"></span>
-            <span id="statusText">SEARCHING</span>
-          </div>
-
-          <div class="a4-badge" id="a4Badge">
-            <i class="fas fa-check"></i>
-            <span id="a4Text">A4</span>
-          </div>
+          <div class="a4-frame" id="a4Frame" style="display:none;"></div>
 
           <div class="page-counter-badge" id="pageCounterBadge" style="display:none;">
             <i class="fas fa-file-alt" style="font-size:9px;margin-right:3px;"></i><span id="counterText">0</span>
-          </div>
-
-          <div class="stability-meter" id="stabilityMeter">
-            <div class="stability-fill" id="stabilityFill"></div>
           </div>
 
           <div class="camera-placeholder" id="cameraPlaceholder">
@@ -729,15 +500,15 @@
               <i class="fas fa-file-contract"></i>
             </div>
             <span class="main-text">Nhấn để bật camera</span>
-            <span class="hint">AI nhận diện viền giấy tự động như CamScanner</span>
+            <span class="hint">Đặt tài liệu vào khung A4, chụp là tự động tách nền trắng</span>
           </div>
 
           <div class="processing-overlay" id="processingOverlay">
             <div class="spinner-wrap">
               <div class="spinner"></div>
-              <div class="spinner-inner"></div>
             </div>
             <span id="processingText">Đang xử lý...</span>
+            <span class="hint-small" id="processingHint">Vui lòng chờ trong giây lát</span>
           </div>
         </div>
 
@@ -746,7 +517,7 @@
             <i class="fas fa-camera-rotate"></i>
           </button>
           <div class="shutter-wrap">
-            <div class="shutter-ring" id="shutterRing"></div>
+            <div class="shutter-ring"></div>
             <button class="shutter-btn" id="captureBtn">
               <i class="fas fa-circle"></i>
             </button>
@@ -758,55 +529,34 @@
         <input type="file" id="fileInput" accept="image/*" multiple>
       </div>
 
-      <div class="paper-size-row">
-        <div class="paper-size-chip active" data-size="A4">📄 A4</div>
-        <div class="paper-size-chip" data-size="A3">📰 A3</div>
-        <div class="paper-size-chip" data-size="A5">📝 A5</div>
-        <div class="paper-size-chip" data-size="Letter">📋 Letter</div>
-        <div class="paper-size-chip" data-size="Auto">🎯 Auto</div>
-      </div>
-
-      <div class="auto-toggle-row">
-        <div class="auto-toggle-info">
-          <div class="auto-toggle-icon">
-            <i class="fas fa-wand-magic-sparkles"></i>
-          </div>
-          <div class="auto-toggle-text">
-            <div class="title">Tự động chụp</div>
-            <div class="sub">Chụp khi tài liệu ổn định</div>
-          </div>
-        </div>
-        <div class="toggle-switch on" id="autoToggle"></div>
-      </div>
-
       <div class="section-label">
-        <h3><i class="fas fa-wand-magic-sparkles"></i> Bộ lọc</h3>
+        <h3><i class="fas fa-wand-magic-sparkles"></i> Chế độ xử lý</h3>
       </div>
 
       <div class="modes-grid">
-        <div class="mode-card active" data-filter="auto">
-          <div class="mode-icon"><i class="fas fa-crop-simple"></i></div>
-          <div class="mode-name">Tự cắt viền</div>
+        <div class="mode-card active" data-mode="auto-white">
+          <div class="mode-icon"><i class="fas fa-file"></i></div>
+          <div class="mode-name">Nền trắng A4</div>
         </div>
-        <div class="mode-card active" data-filter="enhance">
-          <div class="mode-icon"><i class="fas fa-sparkles"></i></div>
-          <div class="mode-name">Làm nét</div>
+        <div class="mode-card" data-mode="bw">
+          <div class="mode-icon"><i class="fas fa-font"></i></div>
+          <div class="mode-name">Đen trắng</div>
         </div>
-        <div class="mode-card" data-filter="magic">
+        <div class="mode-card" data-mode="gray">
+          <div class="mode-icon"><i class="fas fa-adjust"></i></div>
+          <div class="mode-name">Xám</div>
+        </div>
+        <div class="mode-card" data-mode="magic">
           <div class="mode-icon"><i class="fas fa-wand-sparkles"></i></div>
           <div class="mode-name">Magic Color</div>
         </div>
-        <div class="mode-card" data-filter="bw">
-          <div class="mode-icon"><i class="fas fa-font"></i></div>
-          <div class="mode-name">B&W</div>
+        <div class="mode-card" data-mode="original">
+          <div class="mode-icon"><i class="fas fa-image"></i></div>
+          <div class="mode-name">Ảnh gốc</div>
         </div>
-        <div class="mode-card" data-filter="gray">
-          <div class="mode-icon"><i class="fas fa-adjust"></i></div>
-          <div class="mode-name">Grayscale</div>
-        </div>
-        <div class="mode-card" data-filter="deskew">
-          <div class="mode-icon"><i class="fas fa-rotate"></i></div>
-          <div class="mode-name">Xoay thẳng</div>
+        <div class="mode-card" data-mode="high-contrast">
+          <div class="mode-icon"><i class="fas fa-sun"></i></div>
+          <div class="mode-name">Nét đậm</div>
         </div>
       </div>
 
@@ -843,27 +593,12 @@
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal-content">
       <div class="modal-header">
-        <h4><i class="fas fa-wand-magic-sparkles"></i> Tinh chỉnh</h4>
+        <h4><i class="fas fa-eye"></i> Xem trước</h4>
         <button class="close-btn" id="modalCloseBtn"><i class="fas fa-times"></i></button>
       </div>
       <div class="modal-body">
         <img id="modalImage" src="" alt="Preview">
-        <div class="slider-group">
-          <div class="slider-header">
-            <label><i class="fas fa-sun"></i> Độ nét</label>
-            <span class="slider-value" id="sharpnessValue">45</span>
-          </div>
-          <input type="range" class="modal-range" id="sharpnessSlider" min="0" max="100" value="45">
-        </div>
-        <div class="slider-group">
-          <div class="slider-header">
-            <label><i class="fas fa-circle-half-stroke"></i> Tương phản</label>
-            <span class="slider-value" id="contrastValue">30</span>
-          </div>
-          <input type="range" class="modal-range" id="contrastSlider" min="0" max="100" value="30">
-        </div>
         <div class="modal-actions">
-          <button class="reapply" id="reapplyBtn"><i class="fas fa-check"></i> Áp dụng</button>
           <button class="cancel" id="modalCancelBtn"><i class="fas fa-xmark"></i> Đóng</button>
         </div>
       </div>
@@ -877,7 +612,7 @@
       const $ = id => document.getElementById(id);
       const video = $('videoPreview');
       const previewCanvas = $('previewCanvas');
-      const overlayCanvas = $('overlayCanvas');
+      const a4Frame = $('a4Frame');
       const cameraPlaceholder = $('cameraPlaceholder');
       const captureBtn = $('captureBtn');
       const switchCameraBtn = $('switchCameraBtn');
@@ -893,16 +628,9 @@
       const toastIcon = toastEl.querySelector('.toast-icon i');
       const processingOverlay = $('processingOverlay');
       const processingText = $('processingText');
+      const processingHint = $('processingHint');
       const pageCounterBadge = $('pageCounterBadge');
       const counterText = $('counterText');
-      const statusBadge = $('statusBadge');
-      const statusText = $('statusText');
-      const a4Badge = $('a4Badge');
-      const a4Text = $('a4Text');
-      const stabilityMeter = $('stabilityMeter');
-      const stabilityFill = $('stabilityFill');
-      const shutterRing = $('shutterRing');
-      const autoToggle = $('autoToggle');
 
       // ============ STATE ============
       let stream = null;
@@ -910,22 +638,13 @@
       let scannedPages = [];
       let cameraActive = false;
       let opencvReady = false;
+      let currentMode = 'auto-white'; // Chế độ xử lý
       let currentPreviewPageId = null;
 
-      let filters = { autoCrop: true, enhance: true, magic: false, bw: false, gray: false, deskew: true };
+      // A4 ratio chuẩn = 297/210 = 1.4142
+      const A4_RATIO = 1.4142;
 
-      const PAPER_RATIOS = { 'A4': 1.4142, 'A3': 1.4142, 'A5': 1.4142, 'Letter': 1.2941, 'Auto': null };
-      let selectedPaperSize = 'A4';
-
-      let autoScanEnabled = true;
-      let detectionLoopId = null;
-      let stabilityFrames = 0;
-      let lastCornerKey = '';
-      let lastCaptureTime = 0;
-      const MIN_CAPTURE_INTERVAL = 3500;
-      const STABILITY_THRESHOLD = 12;
-
-      // ============ UTILS ============
+      // ============ TOAST ============
       function showToast(msg, duration = 1800, iconClass = 'fa-check') {
         toastText.textContent = msg;
         toastIcon.className = `fas ${iconClass}`;
@@ -965,7 +684,208 @@
         return canvas.toDataURL('image/jpeg', quality);
       }
 
-      // ============ SORT 4 CORNERS ============
+      // ==================================================
+      //  CORE: SCAN NỘI DUNG VÀ ĐẶT LÊN NỀN A4 TRẮNG
+      //  Đây là thuật toán chính bạn cần
+      // ==================================================
+      async function scanToWhiteA4(srcCanvas) {
+        if (!opencvReady) return srcCanvas;
+
+        try {
+          const src = cv.imread(srcCanvas);
+          const W = src.cols, H = src.rows;
+
+          // Bước 1: Chuyển xám
+          const gray = new cv.Mat();
+          cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+
+          // Bước 2: Tìm vùng tài liệu (giấy) - dùng adaptive threshold
+          // để tách vùng sáng (giấy) ra khỏi nền tối (bàn, sàn)
+          const docMask = new cv.Mat();
+          cv.adaptiveThreshold(gray, docMask, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 51, -10);
+          
+          // Morphology để làm sạch mask
+          const kernel = cv.Mat.ones(15, 15, cv.CV_8U);
+          cv.morphologyEx(docMask, docMask, cv.MORPH_CLOSE, kernel, new cv.Point(-1, -1), 3);
+          cv.morphologyEx(docMask, docMask, cv.MORPH_OPEN, kernel, new cv.Point(-1, -1), 1);
+          kernel.delete();
+
+          // Bước 3: Tìm contour lớn nhất = vùng giấy
+          const contours = new cv.MatVector();
+          const hierarchy = new cv.Mat();
+          cv.findContours(docMask, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+          let maxArea = 0, bestIdx = -1;
+          const imgArea = W * H;
+          for (let i = 0; i < contours.size(); i++) {
+            const area = cv.contourArea(contours.get(i));
+            if (area > maxArea && area > imgArea * 0.15) {
+              maxArea = area;
+              bestIdx = i;
+            }
+          }
+
+          // Nếu không tìm được contour → dùng toàn bộ ảnh
+          let corners = [
+            { x: 0, y: 0 },
+            { x: W - 1, y: 0 },
+            { x: W - 1, y: H - 1 },
+            { x: 0, y: H - 1 }
+          ];
+
+          if (bestIdx >= 0) {
+            const cnt = contours.get(bestIdx);
+            const peri = cv.arcLength(cnt, true);
+            const approx = new cv.Mat();
+            cv.approxPolyDP(cnt, approx, 0.02 * peri, true);
+
+            if (approx.rows === 4) {
+              const pts = [];
+              for (let j = 0; j < 4; j++) {
+                pts.push({ x: approx.data32S[j * 2], y: approx.data32S[j * 2 + 1] });
+              }
+              corners = sortCorners(pts);
+            }
+            approx.delete();
+            cnt.delete();
+          }
+
+          contours.delete(); hierarchy.delete(); docMask.delete();
+
+          // Bước 4: Warp vùng giấy về hình chữ nhật A4 chuẩn
+          const [tl, tr, br, bl] = corners;
+          const widthTop = Math.hypot(tr.x - tl.x, tr.y - tl.y);
+          const widthBottom = Math.hypot(br.x - bl.x, br.y - bl.y);
+          const heightLeft = Math.hypot(bl.x - tl.x, bl.y - tl.y);
+          const heightRight = Math.hypot(br.x - tr.x, br.y - tr.y);
+
+          let warpedW = Math.round(Math.max(widthTop, widthBottom));
+          let warpedH = Math.round(Math.max(heightLeft, heightRight));
+
+          // Chuẩn hóa theo A4 ratio
+          const actualRatio = warpedH / warpedW;
+          if (actualRatio < A4_RATIO) {
+            // Ảnh quá rộng → tăng chiều cao
+            warpedH = Math.round(warpedW * A4_RATIO);
+          } else {
+            // Ảnh quá cao → tăng chiều rộng
+            warpedW = Math.round(warpedH / A4_RATIO);
+          }
+
+          // Đảm bảo kích thước tối thiểu
+          warpedW = Math.max(warpedW, 600);
+          warpedH = Math.max(warpedH, 850);
+
+          const srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
+            tl.x, tl.y, tr.x, tr.y, br.x, br.y, bl.x, bl.y
+          ]);
+          const dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
+            0, 0, warpedW - 1, 0, warpedW - 1, warpedH - 1, 0, warpedH - 1
+          ]);
+          const M = cv.getPerspectiveTransform(srcTri, dstTri);
+          const warped = new cv.Mat();
+          cv.warpPerspective(src, warped, M, new cv.Size(warpedW, warpedH),
+                             cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar(255, 255, 255, 255));
+
+          srcTri.delete(); dstTri.delete(); M.delete();
+
+          // ==================================================
+          //  BƯỚC 5 QUAN TRỌNG NHẤT:
+          //  Tách nội dung (chữ/sáng) khỏi nền và đặt lên A4 trắng
+          // ==================================================
+          
+          // Chuyển warped sang xám
+          const warpedGray = new cv.Mat();
+          cv.cvtColor(warped, warpedGray, cv.COLOR_RGBA2GRAY);
+
+          // Dùng Otsu để tách nội dung sáng/tối
+          const thresh = new cv.Mat();
+          cv.threshold(warpedGray, thresh, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
+
+          // Kiểm tra xem Otsu có đảo ngược không (nếu nền tối → đảo)
+          // Đếm pixel trắng, nếu < 30% thì đảo
+          const whitePixels = cv.countNonZero(thresh);
+          const totalPixels = thresh.rows * thresh.cols;
+          if (whitePixels < totalPixels * 0.3) {
+            cv.bitwise_not(thresh, thresh);
+          }
+
+          // Morphology nhẹ để loại noise
+          const smallKernel = cv.Mat.ones(2, 2, cv.CV_8U);
+          cv.morphologyEx(thresh, thresh, cv.MORPH_OPEN, smallKernel);
+          smallKernel.delete();
+
+          // Tạo ảnh A4 trắng tinh (nền trắng hoàn toàn)
+          const a4White = new cv.Mat(warpedH, warpedW, cv.CV_8UC4, new cv.Scalar(255, 255, 255, 255));
+
+          // Áp dụng mask: những vùng nào là nội dung (đen) thì giữ, còn lại trắng
+          // Dùng thresh làm mask: vùng trắng (255) = nền → giữ A4 trắng
+          //                       vùng đen (0) = chữ → copy pixel từ warped
+          
+          // Cách 1: Đơn giản - dùng bitwise
+          const contentMask = new cv.Mat();
+          cv.bitwise_not(thresh, contentMask); // đảo: chữ = trắng (255), nền = đen (0)
+
+          // Tạo ảnh kết quả: bắt đầu với A4 trắng
+          const result = a4White.clone();
+
+          // Copy những pixel thuộc contentMask từ warped gốc
+          // Dùng warped gốc (không phải xám) để giữ màu chữ
+          warped.copyTo(result, contentMask);
+
+          contentMask.delete();
+          thresh.delete();
+          warpedGray.delete();
+          warped.delete();
+          gray.delete();
+          a4White.delete();
+          src.delete();
+
+          // ==================================================
+          //  BƯỚC 6: Làm sạch và tăng độ tương phản chữ
+          // ==================================================
+          const resultGray = new cv.Mat();
+          cv.cvtColor(result, resultGray, cv.COLOR_RGBA2GRAY);
+
+          // CLAHE để làm rõ chữ
+          const clahe = new cv.CLAHE(2.5, new cv.Size(8, 8));
+          const lChannel = new cv.Mat();
+          resultGray.copyTo(lChannel);
+          clahe.apply(lChannel, lChannel);
+
+          // Unsharp mask để làm nét
+          const blurred = new cv.Mat();
+          cv.GaussianBlur(lChannel, blurred, new cv.Size(5, 5), 0);
+          const sharpened = new cv.Mat();
+          cv.addWeighted(lChannel, 1.6, blurred, -0.6, 0, sharpened);
+
+          // Chuyển về RGBA để giữ định dạng
+          cv.cvtColor(sharpened, result, cv.COLOR_GRAY2RGBA);
+
+          // Set alpha = 255
+          const alpha = new cv.Mat(result.rows, result.cols, cv.CV_8UC1, new cv.Scalar(255));
+          const channels = new cv.MatVector();
+          cv.split(result, channels);
+          channels.set(3, alpha);
+          cv.merge(channels, result);
+
+          alpha.delete(); channels.delete();
+          resultGray.delete(); lChannel.delete(); blurred.delete(); sharpened.delete(); clahe.delete();
+
+          // Export
+          const out = document.createElement('canvas');
+          out.width = result.cols;
+          out.height = result.rows;
+          cv.imshow(out, result);
+          result.delete();
+
+          return out;
+        } catch (e) {
+          console.error('scanToWhiteA4 error:', e);
+          return srcCanvas;
+        }
+      }
+
       function sortCorners(pts) {
         const sorted = [...pts];
         const sum = sorted.map(p => p.x + p.y);
@@ -977,627 +897,98 @@
         return [tl, tr, br, bl];
       }
 
-      // ============ CHECK RECTANGULARITY ============
-      function checkRectangularity(corners) {
-        const [tl, tr, br, bl] = corners;
-        const angles = [];
-        
-        const calcAngle = (a, b, c) => {
-          const v1 = { x: a.x - b.x, y: a.y - b.y };
-          const v2 = { x: c.x - b.x, y: c.y - b.y };
-          const dot = v1.x * v2.x + v1.y * v2.y;
-          const mag1 = Math.hypot(v1.x, v1.y);
-          const mag2 = Math.hypot(v2.x, v2.y);
-          if (mag1 === 0 || mag2 === 0) return 0;
-          return Math.acos(Math.max(-1, Math.min(1, dot / (mag1 * mag2)))) * 180 / Math.PI;
-        };
-        
-        angles.push(calcAngle(bl, tl, tr));
-        angles.push(calcAngle(tl, tr, br));
-        angles.push(calcAngle(tr, br, bl));
-        angles.push(calcAngle(br, bl, tl));
-        
-        // Cho phép góc từ 50-130 độ (rộng hơn để chấp nhận góc chéo)
-        return angles.every(a => a > 50 && a < 130);
-      }
+      // ============ XỬ LÝ ẢNH THEO MODE ============
+      async function processByMode(srcCanvas, mode) {
+        if (!opencvReady) return srcCanvas;
 
-      // ============ CHECK A4 RATIO ============
-      function checkA4Ratio(corners, paperType = 'A4') {
-        if (!corners || corners.length !== 4) return null;
-        const [tl, tr, br, bl] = corners;
-        
-        const topWidth = Math.hypot(tr.x - tl.x, tr.y - tl.y);
-        const bottomWidth = Math.hypot(br.x - bl.x, br.y - bl.y);
-        const leftHeight = Math.hypot(bl.x - tl.x, bl.y - tl.y);
-        const rightHeight = Math.hypot(br.x - tr.x, br.y - tr.y);
-        
-        const avgWidth = (topWidth + bottomWidth) / 2;
-        const avgHeight = (leftHeight + rightHeight) / 2;
-        
-        const actualRatio = avgHeight / avgWidth;
-        const targetRatio = PAPER_RATIOS[paperType] || 1.4142;
-        
-        const tolerance = paperType === 'Auto' ? 0.4 : 0.25;
-        const ratioDiff = Math.abs(actualRatio - targetRatio) / targetRatio;
-        const isMatch = ratioDiff < tolerance;
-        
-        const angle = Math.atan2(tr.y - tl.y, tr.x - tl.x) * 180 / Math.PI;
-        const tiltAngle = Math.min(Math.abs(angle), 180 - Math.abs(angle));
-        
-        return {
-          ratio: actualRatio, targetRatio, ratioDiff, isMatch,
-          width: avgWidth, height: avgHeight, tiltAngle,
-          quality: Math.max(0, 1 - ratioDiff / tolerance)
-        };
-      }
-
-      // ============================================================
-      //  CORE: ADVANCED PAPER DETECTION (CamScanner Style)
-      //  5 chiến lược kết hợp:
-      //  1. Canny với threshold thích ứng
-      //  2. Otsu threshold (vùng sáng)
-      //  3. Adaptive threshold (ánh sáng không đều)
-      //  4. LAB color - L channel (phân biệt giấy trắng)
-      //  5. Morphological gradient (viền mượt)
-      // ============================================================
-      function detectPaperAdvanced(srcCanvas, paperType = 'A4') {
-        if (!opencvReady) return null;
-        
         try {
-          const src = cv.imread(srcCanvas);
-          const imgArea = srcCanvas.width * srcCanvas.height;
-          const candidates = [];
+          // Mode "original": trả về ảnh gốc
+          if (mode === 'original') return srcCanvas;
+
+          // Mode "auto-white": scan nội dung lên nền A4 trắng
+          if (mode === 'auto-white') {
+            return await scanToWhiteA4(srcCanvas);
+          }
+
+          // Các mode khác: dùng scanToWhiteA4 làm base, rồi filter thêm
+          let canvas = srcCanvas;
           
-          // Preprocessing chung: chuyển xám, blur nhẹ
+          // Nếu mode là bw/gray/magic/high-contrast → đều scan lên A4 trắng trước
+          if (mode === 'bw' || mode === 'gray' || mode === 'magic' || mode === 'high-contrast') {
+            canvas = await scanToWhiteA4(srcCanvas);
+          }
+
+          const mat = cv.imread(canvas);
           const gray = new cv.Mat();
-          cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+          cv.cvtColor(mat, gray, cv.COLOR_RGBA2GRAY);
 
-          // === Chiến lược 1: Otsu threshold (giấy trắng nổi bật) ===
-          const otsu = new cv.Mat();
-          cv.threshold(gray, otsu, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
-          const kernel3 = cv.Mat.ones(3, 3, cv.CV_8U);
-          cv.morphologyEx(otsu, otsu, cv.MORPH_CLOSE, kernel3, new cv.Point(-1, -1), 2);
-          const c1 = extractCandidatesFromBinary(otsu, imgArea, paperType, 'otsu', gray);
-          candidates.push(...c1);
-          otsu.delete();
+          if (mode === 'bw') {
+            // Đen trắng thuần - adaptive threshold
+            const bw = new cv.Mat();
+            cv.adaptiveThreshold(gray, bw, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 15, 8);
+            cv.cvtColor(bw, bw, cv.COLOR_GRAY2RGBA);
+            const out = document.createElement('canvas');
+            out.width = bw.cols; out.height = bw.rows;
+            cv.imshow(out, bw);
+            mat.delete(); gray.delete(); bw.delete();
+            return out;
+          }
 
-          // === Chiến lược 2: Adaptive threshold (ánh sáng không đều) ===
-          const adaptive = new cv.Mat();
-          cv.adaptiveThreshold(gray, adaptive, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 21, 10);
-          cv.morphologyEx(adaptive, adaptive, cv.MORPH_CLOSE, kernel3, new cv.Point(-1, -1), 2);
-          const c2 = extractCandidatesFromBinary(adaptive, imgArea, paperType, 'adaptive', gray);
-          candidates.push(...c2);
-          adaptive.delete();
+          if (mode === 'gray') {
+            const out = document.createElement('canvas');
+            out.width = gray.cols; out.height = gray.rows;
+            cv.imshow(out, gray);
+            mat.delete(); gray.delete();
+            return out;
+          }
 
-          // === Chiến lược 3: Canny edge (viền sắc nét) ===
-          const blurred = new cv.Mat();
-          cv.bilateralFilter(gray, blurred, 9, 75, 75, cv.BORDER_DEFAULT);
-          const edges = new cv.Mat();
-          cv.Canny(blurred, edges, 30, 120);
-          const kernel5 = cv.Mat.ones(5, 5, cv.CV_8U);
-          cv.morphologyEx(edges, edges, cv.MORPH_CLOSE, kernel5, new cv.Point(-1, -1), 2);
-          cv.dilate(edges, edges, kernel5, new cv.Point(-1, -1), 1);
-          const c3 = extractCandidatesFromBinary(edges, imgArea, paperType, 'canny', gray);
-          candidates.push(...c3);
-          edges.delete(); blurred.delete();
-
-          // === Chiến lược 4: LAB - kênh L sáng (giấy trắng phản sáng) ===
-          try {
+          if (mode === 'magic') {
+            // Magic color: tăng mạnh độ tương phản, làm trắng nền
             const lab = new cv.Mat();
-            cv.cvtColor(src, lab, cv.COLOR_RGBA2RGB);
+            cv.cvtColor(mat, lab, cv.COLOR_RGBA2RGB);
             cv.cvtColor(lab, lab, cv.COLOR_RGB2Lab);
             const channels = new cv.MatVector();
             cv.split(lab, channels);
-            const lChan = channels.get(0);
-            
-            // Otsu trên kênh L
-            const lOtsu = new cv.Mat();
-            cv.threshold(lChan, lOtsu, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
-            cv.morphologyEx(lOtsu, lOtsu, cv.MORPH_CLOSE, kernel3, new cv.Point(-1, -1), 2);
-            const c4 = extractCandidatesFromBinary(lOtsu, imgArea, paperType, 'lab-l', lChan);
-            candidates.push(...c4);
-            
-            lOtsu.delete(); lChan.delete(); channels.delete(); lab.delete();
-          } catch (e) { /* skip */ }
-
-          // === Chiến lược 5: Morph gradient (viền trơn) ===
-          const grad = new cv.Mat();
-          cv.morphologyEx(gray, grad, cv.MORPH_GRADIENT, kernel3);
-          const gradThresh = new cv.Mat();
-          cv.threshold(grad, gradThresh, 30, 255, cv.THRESH_BINARY);
-          cv.morphologyEx(gradThresh, gradThresh, cv.MORPH_CLOSE, kernel5, new cv.Point(-1, -1), 2);
-          const c5 = extractCandidatesFromBinary(gradThresh, imgArea, paperType, 'gradient', gray);
-          candidates.push(...c5);
-          grad.delete(); gradThresh.delete();
-
-          kernel3.delete(); kernel5.delete();
-          gray.delete(); src.delete();
-
-          if (candidates.length === 0) return null;
-
-          // Loại bỏ trùng lặp: gom các candidate có corners gần giống nhau, lấy max score
-          const uniqueCandidates = [];
-          for (const cand of candidates) {
-            let isDup = false;
-            for (const existing of uniqueCandidates) {
-              if (cornersSimilar(cand.corners, existing.corners, 20)) {
-                isDup = true;
-                if (cand.score > existing.score) {
-                  Object.assign(existing, cand);
-                }
-                break;
-              }
-            }
-            if (!isDup) uniqueCandidates.push(cand);
-          }
-
-          uniqueCandidates.sort((a, b) => b.score - a.score);
-          return uniqueCandidates[0];
-        } catch (e) {
-          console.warn('Detect error:', e);
-          return null;
-        }
-      }
-
-      // Kiểm tra 2 bộ corners có gần giống nhau không
-      function cornersSimilar(c1, c2, threshold) {
-        for (let i = 0; i < 4; i++) {
-          const d = Math.hypot(c1[i].x - c2[i].x, c1[i].y - c2[i].y);
-          if (d > threshold) return false;
-        }
-        return true;
-      }
-
-      // Trích xuất candidate từ binary mask
-      function extractCandidatesFromBinary(binaryMat, imgArea, paperType, source, grayForBrightness) {
-        const candidates = [];
-        try {
-          const contours = new cv.MatVector();
-          const hierarchy = new cv.Mat();
-          cv.findContours(binaryMat, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-          
-          const imgW = binaryMat.cols;
-          const imgH = binaryMat.rows;
-          const imgAreaActual = imgW * imgH;
-
-          for (let i = 0; i < contours.size(); i++) {
-            const cnt = contours.get(i);
-            const area = cv.contourArea(cnt);
-            
-            // Contour chiếm ít nhất 12% diện tích ảnh (giảm từ 15% để bắt được giấy nhỏ hơn)
-            if (area < imgAreaActual * 0.12) { cnt.delete(); continue; }
-            
-            const peri = cv.arcLength(cnt, true);
-            // Dùng nhiều epsilon để tìm 4 góc
-            let bestApprox = null;
-            for (const eps of [0.01, 0.015, 0.02, 0.03, 0.04]) {
-              const approx = new cv.Mat();
-              cv.approxPolyDP(cnt, approx, eps * peri, true);
-              if (approx.rows === 4 && cv.isContourConvex(approx)) {
-                if (!bestApprox) bestApprox = approx;
-                else approx.delete();
-                break;
-              }
-              approx.delete();
-            }
-            
-            if (bestApprox) {
-              const pts = [];
-              for (let j = 0; j < 4; j++) {
-                pts.push({ x: bestApprox.data32S[j * 2], y: bestApprox.data32S[j * 2 + 1] });
-              }
-              const corners = sortCorners(pts);
-              
-              const isRect = checkRectangularity(corners);
-              const ratioInfo = checkA4Ratio(corners, paperType);
-              
-              if (isRect) {
-                // Đo độ sáng trung bình bên trong
-                let brightness = 200;
-                if (grayForBrightness) {
-                  try {
-                    const mask = cv.Mat.zeros(grayForBrightness.rows, grayForBrightness.cols, cv.CV_8U);
-                    const cntVec = new cv.MatVector();
-                    cntVec.push_back(cnt);
-                    cv.fillPoly(mask, cntVec, new cv.Scalar(255));
-                    brightness = cv.mean(grayForBrightness, mask)[0];
-                    mask.delete(); cntVec.delete();
-                  } catch (e) {}
-                }
-                
-                // Tính score đa chiều
-                const areaScore = Math.min(1, area / imgAreaActual);
-                const ratioScore = ratioInfo ? ratioInfo.quality : 0.3;
-                const rectScore = 1;
-                const brightnessScore = Math.min(1, Math.max(0, (brightness - 80) / 150));
-                const tiltScore = ratioInfo ? Math.max(0, 1 - ratioInfo.tiltAngle / 45) : 0.5;
-                
-                // Source weight - ưu tiên otsu/lab vì đáng tin hơn
-                const sourceWeight = { 'otsu': 1.0, 'lab-l': 1.0, 'adaptive': 0.9, 'canny': 0.85, 'gradient': 0.8 }[source] || 0.8;
-                
-                const totalScore = (areaScore * 0.30 + 
-                                    ratioScore * 0.30 + 
-                                    rectScore * 0.10 + 
-                                    brightnessScore * 0.15 + 
-                                    tiltScore * 0.15) * sourceWeight;
-                
-                candidates.push({
-                  corners, area, score: totalScore,
-                  ratioInfo, source, brightness
-                });
-              }
-              bestApprox.delete();
-            }
-            cnt.delete();
-          }
-          
-          contours.delete(); hierarchy.delete();
-        } catch (e) {}
-        return candidates;
-      }
-
-      // ============ WARP TO A4 ============
-      function warpToA4(srcCanvas, corners, paperType = 'A4') {
-        if (!opencvReady || !corners) return null;
-        try {
-          const src = cv.imread(srcCanvas);
-          const [tl, tr, br, bl] = corners;
-          
-          const widthTop = Math.hypot(tr.x - tl.x, tr.y - tl.y);
-          const widthBottom = Math.hypot(br.x - bl.x, br.y - bl.y);
-          const heightLeft = Math.hypot(bl.x - tl.x, bl.y - tl.y);
-          const heightRight = Math.hypot(br.x - tr.x, br.y - tr.y);
-          
-          let maxWidth = Math.round(Math.max(widthTop, widthBottom));
-          let maxHeight = Math.round(Math.max(heightLeft, heightRight));
-          
-          // Ép về tỉ lệ A4 chuẩn
-          const targetRatio = PAPER_RATIOS[paperType];
-          if (targetRatio) {
-            const expectedHeight = Math.round(maxWidth * targetRatio);
-            const expectedWidth = Math.round(maxHeight / targetRatio);
-            const heightDiff = Math.abs(maxHeight - expectedHeight) / expectedHeight;
-            const widthDiff = Math.abs(maxWidth - expectedWidth) / expectedWidth;
-            if (heightDiff < widthDiff) maxHeight = expectedHeight;
-            else maxWidth = expectedWidth;
-          }
-          
-          maxWidth = Math.max(maxWidth, 400);
-          maxHeight = Math.max(maxHeight, 500);
-          
-          const srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [tl.x, tl.y, tr.x, tr.y, br.x, br.y, bl.x, bl.y]);
-          const dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [0, 0, maxWidth - 1, 0, maxWidth - 1, maxHeight - 1, 0, maxHeight - 1]);
-          
-          const M = cv.getPerspectiveTransform(srcTri, dstTri);
-          const dst = new cv.Mat();
-          const dsize = new cv.Size(maxWidth, maxHeight);
-          cv.warpPerspective(src, dst, M, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar(255, 255, 255, 255));
-          
-          const outCanvas = document.createElement('canvas');
-          outCanvas.width = maxWidth;
-          outCanvas.height = maxHeight;
-          cv.imshow(outCanvas, dst);
-          
-          src.delete(); srcTri.delete(); dstTri.delete(); M.delete(); dst.delete();
-          return outCanvas;
-        } catch (e) { return null; }
-      }
-
-      // ============ DESKEW ============
-      function deskewImage(srcCanvas) {
-        if (!opencvReady) return srcCanvas;
-        try {
-          const src = cv.imread(srcCanvas);
-          const gray = new cv.Mat();
-          const edges = new cv.Mat();
-          const lines = new cv.Mat();
-          
-          cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-          cv.Canny(gray, edges, 50, 150);
-          cv.HoughLinesP(edges, lines, 1, Math.PI / 180, 100, srcCanvas.width / 4, 20);
-          
-          let angleSum = 0, count = 0;
-          for (let i = 0; i < lines.rows; i++) {
-            const x1 = lines.data32S[i * 4];
-            const y1 = lines.data32S[i * 4 + 1];
-            const x2 = lines.data32S[i * 4 + 2];
-            const y2 = lines.data32S[i * 4 + 3];
-            const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
-            if (Math.abs(angle) < 20) {
-              angleSum += angle;
-              count++;
-            }
-          }
-          
-          const medianAngle = count > 0 ? angleSum / count : 0;
-          
-          if (Math.abs(medianAngle) < 0.5) {
-            src.delete(); gray.delete(); edges.delete(); lines.delete();
-            return srcCanvas;
-          }
-          
-          const center = new cv.Point(src.cols / 2, src.rows / 2);
-          const M = cv.getRotationMatrix2D(center, medianAngle, 1);
-          const dst = new cv.Mat();
-          cv.warpAffine(src, dst, M, new cv.Size(src.cols, src.rows), cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar(255, 255, 255, 255));
-          
-          const out = document.createElement('canvas');
-          out.width = dst.cols;
-          out.height = dst.rows;
-          cv.imshow(out, dst);
-          
-          src.delete(); gray.delete(); edges.delete(); lines.delete(); M.delete(); dst.delete();
-          return out;
-        } catch (e) { return srcCanvas; }
-      }
-
-      // ============ ENHANCE ============
-      function enhanceImage(srcCanvas, sharpness = 45, contrast = 30, magic = false) {
-        if (!opencvReady) return srcCanvas;
-        try {
-          const src = cv.imread(srcCanvas);
-          let enhanced = new cv.Mat();
-
-          if (contrast > 0 || magic) {
-            const lab = new cv.Mat();
-            cv.cvtColor(src, lab, cv.COLOR_RGBA2RGB);
-            cv.cvtColor(lab, lab, cv.COLOR_RGB2Lab);
-            const channels = new cv.MatVector();
-            cv.split(lab, channels);
-            const clip = magic ? 4.0 : (2.0 + contrast / 40);
-            const clahe = new cv.CLAHE(clip, new cv.Size(8, 8));
+            const clahe = new cv.CLAHE(4.0, new cv.Size(8, 8));
             const l = channels.get(0);
             clahe.apply(l, l);
             channels.set(0, l);
             cv.merge(channels, lab);
-            cv.cvtColor(lab, enhanced, cv.COLOR_Lab2RGB);
-            cv.cvtColor(enhanced, enhanced, cv.COLOR_RGB2RGBA);
-            lab.delete(); channels.delete(); l.delete();
-          } else {
-            src.copyTo(enhanced);
+            const result = new cv.Mat();
+            cv.cvtColor(lab, result, cv.COLOR_Lab2RGB);
+            cv.cvtColor(result, result, cv.COLOR_RGB2RGBA);
+
+            const out = document.createElement('canvas');
+            out.width = result.cols; out.height = result.rows;
+            cv.imshow(out, result);
+            mat.delete(); gray.delete(); lab.delete(); channels.delete(); l.delete(); clahe.delete(); result.delete();
+            return out;
           }
 
-          if (sharpness > 0) {
-            const blurred = new cv.Mat();
-            const sharp = new cv.Mat();
-            cv.GaussianBlur(enhanced, blurred, new cv.Size(5, 5), 0, 0);
-            const amount = sharpness / 100 * 1.8;
-            cv.addWeighted(enhanced, 1 + amount, blurred, -amount, 0, sharp);
-            enhanced.delete();
-            enhanced = sharp;
-            blurred.delete();
-          }
-
-          const out = document.createElement('canvas');
-          out.width = enhanced.cols;
-          out.height = enhanced.rows;
-          cv.imshow(out, enhanced);
-          src.delete(); enhanced.delete();
-          return out;
-        } catch (e) { return srcCanvas; }
-      }
-
-      function applyColorMode(srcCanvas, mode) {
-        if (!opencvReady || mode === 'color') return srcCanvas;
-        try {
-          const src = cv.imread(srcCanvas);
-          const grayMat = new cv.Mat();
-          cv.cvtColor(src, grayMat, cv.COLOR_RGBA2GRAY);
-          let result = new cv.Mat();
-
-          if (mode === 'bw') {
-            cv.adaptiveThreshold(grayMat, result, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 15, 8);
-          } else {
-            grayMat.copyTo(result);
-          }
-          cv.cvtColor(result, result, cv.COLOR_GRAY2RGBA);
-          const out = document.createElement('canvas');
-          out.width = result.cols;
-          out.height = result.rows;
-          cv.imshow(out, result);
-          src.delete(); grayMat.delete(); result.delete();
-          return out;
-        } catch (e) { return srcCanvas; }
-      }
-
-      // ============ MAIN PROCESSING ============
-      async function processImage(srcCanvas, customOpts = {}) {
-        let currentCanvas = srcCanvas;
-        const doCrop = customOpts.doCrop !== undefined ? customOpts.doCrop : filters.autoCrop;
-        const doEnhance = customOpts.doEnhance !== undefined ? customOpts.doEnhance : filters.enhance;
-        const doMagic = customOpts.doMagic !== undefined ? customOpts.doMagic : filters.magic;
-        const doBw = customOpts.doBw !== undefined ? customOpts.doBw : filters.bw;
-        const doGray = customOpts.doGray !== undefined ? customOpts.doGray : filters.gray;
-        const doDeskew = customOpts.doDeskew !== undefined ? customOpts.doDeskew : filters.deskew;
-        const sharpness = customOpts.sharpness || 45;
-        const contrast = customOpts.contrast || 30;
-        const paperType = customOpts.paperType || selectedPaperSize;
-
-        if (doCrop && opencvReady) {
-          const detection = detectPaperAdvanced(currentCanvas, paperType);
-          if (detection && detection.corners) {
-            const warped = warpToA4(currentCanvas, detection.corners, paperType);
-            if (warped) currentCanvas = warped;
-          }
-        }
-
-        if (doDeskew && opencvReady) {
-          currentCanvas = deskewImage(currentCanvas);
-        }
-
-        if ((doEnhance || doMagic) && opencvReady) {
-          currentCanvas = enhanceImage(currentCanvas, sharpness, contrast, doMagic);
-        }
-
-        if (opencvReady) {
-          if (doBw) currentCanvas = applyColorMode(currentCanvas, 'bw');
-          else if (doGray) currentCanvas = applyColorMode(currentCanvas, 'gray');
-        }
-
-        return currentCanvas;
-      }
-
-      // ============ LIVE DETECTION ============
-      function detectPaperLive() {
-        if (!opencvReady || !cameraActive || !video.videoWidth) return null;
-        try {
-          const scale = 400 / video.videoWidth;
-          const w = 400;
-          const h = Math.round(video.videoHeight * scale);
-          const tmpCanvas = document.createElement('canvas');
-          tmpCanvas.width = w;
-          tmpCanvas.height = h;
-          tmpCanvas.getContext('2d').drawImage(video, 0, 0, w, h);
-
-          // Scale corners back
-          const detection = detectPaperAdvanced(tmpCanvas, selectedPaperSize);
-          if (detection && detection.corners) {
-            detection.corners = detection.corners.map(c => ({
-              x: c.x / scale,
-              y: c.y / scale
-            }));
-          }
-          return detection;
-        } catch (e) { return null; }
-      }
-
-      // ============ DRAW DETECTED POLYGON ON OVERLAY ============
-      function drawDetectedPolygon(corners) {
-        const rect = video.getBoundingClientRect();
-        const parentRect = video.parentElement.getBoundingClientRect();
-        const dpr = window.devicePixelRatio || 1;
-        
-        overlayCanvas.width = parentRect.width * dpr;
-        overlayCanvas.height = parentRect.height * dpr;
-        overlayCanvas.style.width = parentRect.width + 'px';
-        overlayCanvas.style.height = parentRect.height + 'px';
-        
-        const ctx = overlayCanvas.getContext('2d');
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        ctx.clearRect(0, 0, parentRect.width, parentRect.height);
-        
-        if (!corners || corners.length !== 4) return;
-
-        // Transform video coords -> display coords
-        const vw = video.videoWidth, vh = video.videoHeight;
-        const displayW = rect.width, displayH = rect.height;
-        const videoAspect = vw / vh, displayAspect = displayW / displayH;
-        let scaleX, scaleY, cropX = 0, cropY = 0;
-
-        if (videoAspect > displayAspect) {
-          scaleY = displayH / vh; scaleX = scaleY;
-          cropX = (vw * scaleX - displayW) / 2;
-        } else {
-          scaleX = displayW / vw; scaleY = scaleX;
-          cropY = (vh * scaleY - displayH) / 2;
-        }
-
-        const offsetX = rect.left - parentRect.left;
-        const offsetY = rect.top - parentRect.top;
-
-        const displayCorners = corners.map(pt => ({
-          x: offsetX + pt.x * scaleX - cropX,
-          y: offsetY + pt.y * scaleY - cropY
-        }));
-
-        // Vẽ polygon
-        ctx.beginPath();
-        ctx.moveTo(displayCorners[0].x, displayCorners[0].y);
-        for (let i = 1; i < 4; i++) {
-          ctx.lineTo(displayCorners[i].x, displayCorners[i].y);
-        }
-        ctx.closePath();
-
-        // Fill với màu xanh mờ
-        ctx.fillStyle = 'rgba(16, 185, 129, 0.15)';
-        ctx.fill();
-
-        // Stroke viền cyan đậm
-        ctx.strokeStyle = '#06b6d4';
-        ctx.lineWidth = 3;
-        ctx.shadowColor = 'rgba(6, 182, 212, 0.9)';
-        ctx.shadowBlur = 10;
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-
-        // Vẽ 4 góc tròn
-        displayCorners.forEach(c => {
-          ctx.beginPath();
-          ctx.arc(c.x, c.y, 8, 0, Math.PI * 2);
-          ctx.fillStyle = '#06b6d4';
-          ctx.fill();
-          ctx.strokeStyle = 'white';
-          ctx.lineWidth = 2.5;
-          ctx.stroke();
-        });
-      }
-
-      function clearOverlay() {
-        const ctx = overlayCanvas.getContext('2d');
-        ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-      }
-
-      // ============ DETECTION LOOP ============
-      function startDetectionLoop() {
-        stopDetectionLoop();
-        detectionLoopId = setInterval(() => {
-          if (!cameraActive) return;
-          const candidate = detectPaperLive();
-
-          if (candidate && candidate.corners) {
-            drawDetectedPolygon(candidate.corners);
+          if (mode === 'high-contrast') {
+            // Nét đậm: threshold + unsharp mạnh
+            const thresh = new cv.Mat();
+            cv.threshold(gray, thresh, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
             
-            const key = candidate.corners.map(c => `${Math.round(c.x / 15)},${Math.round(c.y / 15)}`).join('|');
-            if (key === lastCornerKey) stabilityFrames++;
-            else { stabilityFrames = 0; lastCornerKey = key; }
+            const blurred = new cv.Mat();
+            cv.GaussianBlur(thresh, blurred, new cv.Size(3, 3), 0);
+            const sharp = new cv.Mat();
+            cv.addWeighted(thresh, 2.0, blurred, -1.0, 0, sharp);
 
-            const stabilityPercent = Math.min(100, (stabilityFrames / STABILITY_THRESHOLD) * 100);
-            stabilityFill.style.width = stabilityPercent + '%';
-
-            if (candidate.ratioInfo && candidate.ratioInfo.isMatch) {
-              a4Badge.classList.add('show');
-              a4Text.textContent = selectedPaperSize + ' ✓ ' + candidate.ratioInfo.ratio.toFixed(2);
-            } else {
-              a4Badge.classList.remove('show');
-            }
-
-            if (stabilityFrames >= STABILITY_THRESHOLD) {
-              setStatusBadge('locked', 'LOCKED');
-              shutterRing.classList.add('auto-active');
-              captureBtn.classList.add('locked');
-              if (autoScanEnabled && Date.now() - lastCaptureTime > MIN_CAPTURE_INTERVAL) {
-                lastCaptureTime = Date.now();
-                autoCapture();
-              }
-            } else {
-              setStatusBadge('detected', 'DETECTED');
-              shutterRing.classList.remove('auto-active');
-              captureBtn.classList.remove('locked');
-            }
-          } else {
-            stabilityFrames = 0;
-            lastCornerKey = '';
-            clearOverlay();
-            setStatusBadge('searching', 'SEARCHING');
-            stabilityFill.style.width = '0%';
-            a4Badge.classList.remove('show');
-            shutterRing.classList.remove('auto-active');
-            captureBtn.classList.remove('locked');
+            cv.cvtColor(sharp, sharp, cv.COLOR_GRAY2RGBA);
+            const out = document.createElement('canvas');
+            out.width = sharp.cols; out.height = sharp.rows;
+            cv.imshow(out, sharp);
+            mat.delete(); gray.delete(); thresh.delete(); blurred.delete(); sharp.delete();
+            return out;
           }
-        }, 150);
-      }
 
-      function stopDetectionLoop() {
-        if (detectionLoopId) { clearInterval(detectionLoopId); detectionLoopId = null; }
-        stabilityFrames = 0;
-        lastCornerKey = '';
-        stabilityFill.style.width = '0%';
-        clearOverlay();
-      }
-
-      function setStatusBadge(type, text) {
-        statusBadge.className = 'status-badge show ' + type;
-        statusText.textContent = text;
+          mat.delete(); gray.delete();
+          return canvas;
+        } catch (e) {
+          console.error('processByMode error:', e);
+          return srcCanvas;
+        }
       }
 
       // ============ CAMERA ============
@@ -1614,19 +1005,8 @@
           cameraPlaceholder.style.display = 'none';
           video.style.display = 'block';
           previewCanvas.style.display = 'none';
+          a4Frame.style.display = 'block';
           currentFacingMode = facingMode;
-
-          if (opencvReady) {
-            setStatusBadge('searching', 'SEARCHING');
-            stabilityMeter.classList.add('show');
-            startDetectionLoop();
-          } else {
-            waitForOpenCV().then(() => {
-              setStatusBadge('searching', 'SEARCHING');
-              stabilityMeter.classList.add('show');
-              startDetectionLoop();
-            });
-          }
         } catch (err) {
           showToast('Không thể truy cập camera', 2000, 'fa-triangle-exclamation');
           cameraActive = false;
@@ -1636,10 +1016,7 @@
       function stopCamera() {
         if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
         cameraActive = false;
-        stopDetectionLoop();
-        statusBadge.classList.remove('show');
-        stabilityMeter.classList.remove('show');
-        a4Badge.classList.remove('show');
+        a4Frame.style.display = 'none';
       }
 
       // ============ CAPTURE ============
@@ -1648,8 +1025,19 @@
         await captureAndProcess();
       });
 
-      async function autoCapture() {
-        if (processingOverlay.classList.contains('show')) return;
+      async function captureAndProcess() {
+        if (!video.videoWidth) return;
+
+        processingOverlay.classList.add('show');
+        processingText.textContent = 'Đang chụp...';
+        processingHint.textContent = 'Vui lòng giữ yên máy';
+
+        const srcCanvas = document.createElement('canvas');
+        srcCanvas.width = video.videoWidth;
+        srcCanvas.height = video.videoHeight;
+        srcCanvas.getContext('2d').drawImage(video, 0, 0);
+
+        // Hiệu ứng flash
         previewCanvas.style.display = 'block';
         previewCanvas.width = video.videoWidth;
         previewCanvas.height = video.videoHeight;
@@ -1658,49 +1046,38 @@
         setTimeout(() => {
           previewCanvas.style.display = 'none';
           if (cameraActive) video.style.display = 'block';
-        }, 180);
-        await captureAndProcess(true);
-      }
+        }, 150);
 
-      async function captureAndProcess(isAuto = false) {
-        if (!video.videoWidth) return;
-        processingOverlay.classList.add('show');
-        processingText.textContent = 'Đang nhận diện tài liệu...';
-
-        const srcCanvas = document.createElement('canvas');
-        srcCanvas.width = video.videoWidth;
-        srcCanvas.height = video.videoHeight;
-        srcCanvas.getContext('2d').drawImage(video, 0, 0);
         const originalDataURL = canvasToDataURL(srcCanvas, 0.95);
 
         try {
-          await new Promise(r => setTimeout(r, 30));
-          processingText.textContent = 'Đang cắt viền & làm phẳng...';
-          const processedCanvas = await processImage(srcCanvas);
+          processingText.textContent = 'Đang tách nền trắng A4...';
+          processingHint.textContent = 'Nhận diện nội dung và làm sạch';
+          await new Promise(r => setTimeout(r, 100));
+
+          const processedCanvas = await processByMode(srcCanvas, currentMode);
           const processedDataURL = canvasToDataURL(processedCanvas, 0.95);
 
           scannedPages.push({
             id: Date.now() + Math.random(),
             original: originalDataURL,
             processed: processedDataURL,
-            paperSize: selectedPaperSize
+            mode: currentMode
           });
           updateGallery();
-          showToast(isAuto ? '⚡ Auto chụp thành công' : 'Đã thêm trang mới', 1400, 'fa-check');
+          showToast('✓ Đã thêm trang nền trắng A4', 1500, 'fa-check');
         } catch (e) {
+          console.error(e);
           scannedPages.push({
             id: Date.now() + Math.random(),
             original: originalDataURL,
             processed: originalDataURL,
-            paperSize: selectedPaperSize
+            mode: 'original'
           });
           updateGallery();
           showToast('Đã thêm (cơ bản)', 1500);
         } finally {
           processingOverlay.classList.remove('show');
-          stabilityFrames = 0;
-          lastCornerKey = '';
-          lastCaptureTime = Date.now();
         }
       }
 
@@ -1714,9 +1091,11 @@
 
         processingOverlay.classList.add('show');
         processingText.textContent = `Đang xử lý ${files.length} ảnh...`;
+        processingHint.textContent = 'Chuyển sang nền trắng A4';
 
         for (let i = 0; i < files.length; i++) {
           try {
+            processingText.textContent = `Đang xử lý ${i + 1}/${files.length}...`;
             const dataURL = await new Promise((res, rej) => {
               const r = new FileReader();
               r.onload = ev => res(ev.target.result);
@@ -1724,20 +1103,19 @@
               r.readAsDataURL(files[i]);
             });
             const srcCanvas = await dataURLToCanvas(dataURL);
-            processingText.textContent = `Đang xử lý ${i + 1}/${files.length}...`;
-            const processedCanvas = await processImage(srcCanvas);
+            const processedCanvas = await processByMode(srcCanvas, currentMode);
             const processedDataURL = canvasToDataURL(processedCanvas, 0.95);
             scannedPages.push({
               id: Date.now() + Math.random() + i,
               original: dataURL,
               processed: processedDataURL,
-              paperSize: selectedPaperSize
+              mode: currentMode
             });
           } catch (err) { console.warn(err); }
         }
         updateGallery();
         processingOverlay.classList.remove('show');
-        showToast(`Đã thêm ${files.length} ảnh`, 1500, 'fa-check');
+        showToast(`✓ Đã thêm ${files.length} ảnh nền A4`, 1500, 'fa-check');
       });
 
       // ============ SWITCH CAMERA ============
@@ -1747,44 +1125,21 @@
         showToast(newMode === 'environment' ? 'Camera sau' : 'Camera trước', 1000, 'fa-camera');
       });
 
-      // ============ AUTO TOGGLE ============
-      autoToggle.addEventListener('click', () => {
-        autoScanEnabled = !autoScanEnabled;
-        autoToggle.classList.toggle('on', autoScanEnabled);
-        showToast(autoScanEnabled ? '⚡ Bật tự động chụp' : 'Tắt tự động chụp', 1400, autoScanEnabled ? 'fa-bolt' : 'fa-pause');
-      });
-
-      // ============ PAPER SIZE ============
-      document.querySelectorAll('.paper-size-chip').forEach(chip => {
-        chip.addEventListener('click', () => {
-          document.querySelectorAll('.paper-size-chip').forEach(c => c.classList.remove('active'));
-          chip.classList.add('active');
-          selectedPaperSize = chip.dataset.size;
-          showToast(`Khổ giấy: ${selectedPaperSize}`, 1200, 'fa-file-contract');
-        });
-      });
-
-      // ============ FILTERS ============
+      // ============ MODE SELECTOR ============
       document.querySelectorAll('.mode-card').forEach(card => {
         card.addEventListener('click', () => {
-          const filter = card.dataset.filter;
-          if (filter === 'auto' || filter === 'enhance' || filter === 'deskew') {
-            const key = filter === 'auto' ? 'autoCrop' : filter;
-            filters[key] = !filters[key];
-            card.classList.toggle('active', filters[key]);
-          } else {
-            const wasActive = card.classList.contains('active');
-            ['magic', 'bw', 'gray'].forEach(f => {
-              filters[f] = false;
-              document.querySelector(`.mode-card[data-filter="${f}"]`).classList.remove('active');
-            });
-            if (!wasActive) {
-              filters[filter] = true;
-              card.classList.add('active');
-            }
-          }
-          const names = { auto: 'Tự cắt viền', enhance: 'Làm nét', magic: 'Magic Color', bw: 'B&W', gray: 'Grayscale', deskew: 'Xoay thẳng' };
-          showToast(`${names[filter]}: ${card.classList.contains('active') ? 'BẬT' : 'TẮT'}`, 1000);
+          document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
+          card.classList.add('active');
+          currentMode = card.dataset.mode;
+          const names = {
+            'auto-white': 'Nền trắng A4',
+            'bw': 'Đen trắng',
+            'gray': 'Xám',
+            'magic': 'Magic Color',
+            'original': 'Ảnh gốc',
+            'high-contrast': 'Nét đậm'
+          };
+          showToast(`Chế độ: ${names[currentMode]}`, 1200, 'fa-wand-magic-sparkles');
         });
       });
 
@@ -1807,11 +1162,6 @@
             idx.className = 'thumb-index';
             idx.textContent = `#${index + 1}`;
             thumb.appendChild(idx);
-
-            const edit = document.createElement('div');
-            edit.className = 'thumb-edit';
-            edit.innerHTML = '<i class="fas fa-pen"></i>';
-            thumb.appendChild(edit);
 
             const rm = document.createElement('div');
             rm.className = 'remove-badge';
@@ -1836,19 +1186,11 @@
       // ============ MODAL PREVIEW ============
       const modalOverlay = $('modalOverlay');
       const modalImage = $('modalImage');
-      const sharpnessSlider = $('sharpnessSlider');
-      const contrastSlider = $('contrastSlider');
-      const sharpnessValue = $('sharpnessValue');
-      const contrastValue = $('contrastValue');
 
-      async function openPreviewModal(page) {
+      function openPreviewModal(page) {
         currentPreviewPageId = page.id;
         modalImage.src = page.processed;
         modalOverlay.classList.add('show');
-        sharpnessSlider.value = 45;
-        contrastSlider.value = 30;
-        sharpnessValue.textContent = '45';
-        contrastValue.textContent = '30';
       }
 
       function closeModal() {
@@ -1859,26 +1201,6 @@
       $('modalCloseBtn').addEventListener('click', closeModal);
       $('modalCancelBtn').addEventListener('click', closeModal);
       modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
-
-      sharpnessSlider.addEventListener('input', (e) => sharpnessValue.textContent = e.target.value);
-      contrastSlider.addEventListener('input', (e) => contrastValue.textContent = e.target.value);
-
-      $('reapplyBtn').addEventListener('click', async () => {
-        const page = scannedPages.find(p => p.id === currentPreviewPageId);
-        if (!page) return;
-        processingOverlay.classList.add('show');
-        processingText.textContent = 'Đang tinh chỉnh...';
-        const srcCanvas = await dataURLToCanvas(page.original);
-        const processedCanvas = await processImage(srcCanvas, {
-          sharpness: parseInt(sharpnessSlider.value),
-          contrast: parseInt(contrastSlider.value)
-        });
-        page.processed = canvasToDataURL(processedCanvas, 0.95);
-        updateGallery();
-        modalImage.src = page.processed;
-        processingOverlay.classList.remove('show');
-        showToast('Đã áp dụng', 1500, 'fa-wand-magic-sparkles');
-      });
 
       // ============ PDF ============
       async function generatePdf() {
@@ -1892,9 +1214,7 @@
           const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
           const pw = pdf.internal.pageSize.getWidth();
           const ph = pdf.internal.pageSize.getHeight();
-          const margin = 8;
-          const maxW = pw - 2 * margin;
-          const maxH = ph - 2 * margin;
+          const margin = 0;
 
           for (let i = 0; i < scannedPages.length; i++) {
             if (i > 0) pdf.addPage();
@@ -1906,7 +1226,7 @@
               im.src = dataURL;
             });
             if (!img) continue;
-            const r = Math.min(maxW / img.width, maxH / img.height);
+            const r = Math.min(pw / img.width, ph / img.height);
             const w = img.width * r, h = img.height * r;
             pdf.addImage(dataURL, 'JPEG', (pw - w) / 2, (ph - h) / 2, w, h);
           }
@@ -1924,7 +1244,7 @@
         const a = document.createElement('a');
         a.href = url; a.download = `ScanPro_${Date.now()}.pdf`; a.click();
         URL.revokeObjectURL(url);
-        showToast('Đã tải PDF', 1800, 'fa-download');
+        showToast('✓ Đã tải PDF', 1800, 'fa-download');
       });
 
       sharePdfBtn.addEventListener('click', async () => {
@@ -1958,14 +1278,12 @@
 
       waitForOpenCV().then(() => {
         if (opencvReady) {
-          console.log('✅ OpenCV ready - CamScanner-style engine');
-          showToast('AI sẵn sàng', 1500, 'fa-check');
+          console.log('✅ OpenCV ready - A4 White Scan Engine');
         }
       });
 
       window.addEventListener('beforeunload', () => {
         if (stream) stream.getTracks().forEach(t => t.stop());
-        stopDetectionLoop();
       });
 
       document.addEventListener('visibilitychange', () => {
