@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>ScanPro • A4 White Paper Scan</title>
+  <meta http-equiv="Permissions-Policy" content="camera=*, microphone=*">
+  <title>ScanPro A4 • Camera Fixed</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -14,7 +15,6 @@
     :root {
       --primary: #6366f1; --secondary: #8b5cf6; --accent: #06b6d4;
       --success: #10b981; --danger: #f43f5e; --warning: #f59e0b;
-      --dark: #0a0e1a; --gray-1: #f8fafc; --gray-2: #f1f5f9; --gray-3: #e2e8f0;
       --radius-lg: 28px; --radius-md: 20px; --radius-sm: 14px;
       --shadow-sm: 0 2px 8px -2px rgba(15, 23, 42, 0.08);
     }
@@ -76,14 +76,8 @@
       box-shadow: 0 8px 20px -4px rgba(99, 102, 241, 0.5);
     }
 
-    .brand-text h1 {
-      font-size: 20px; font-weight: 800; color: #0f172a; line-height: 1.1;
-    }
-
-    .brand-text p {
-      font-size: 10px; font-weight: 600; letter-spacing: 0.5px;
-      color: #64748b; text-transform: uppercase; margin-top: 1px;
-    }
+    .brand-text h1 { font-size: 20px; font-weight: 800; color: #0f172a; line-height: 1.1; }
+    .brand-text p { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; color: #64748b; text-transform: uppercase; margin-top: 1px; }
 
     .header-btn {
       width: 42px; height: 42px; border-radius: 14px;
@@ -106,12 +100,22 @@
       box-shadow: 0 24px 40px -20px rgba(0, 0, 0, 0.5);
     }
 
-    #videoPreview, #previewCanvas {
+    /* Video element luôn hiển thị để có thể khởi tạo */
+    #videoPreview {
       width: 100%; height: 100%; object-fit: cover;
       display: block; background: #0a0e1a;
+      transform: scaleX(-1); /* Chỉ áp dụng cho selfie - sẽ toggle */
     }
 
-    #previewCanvas { display: none; }
+    #videoPreview.front-camera {
+      transform: scaleX(-1);
+    }
+
+    #previewCanvas {
+      width: 100%; height: 100%; object-fit: cover;
+      display: none; position: absolute; inset: 0;
+      background: #0a0e1a;
+    }
 
     .a4-frame {
       position: absolute; inset: 8%;
@@ -119,7 +123,10 @@
       border-radius: 12px;
       pointer-events: none; z-index: 3;
       box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.35);
+      display: none;
     }
+
+    .a4-frame.show { display: block; }
 
     .a4-frame::before,
     .a4-frame::after {
@@ -145,6 +152,7 @@
       color: #cbd5e1; gap: 12px;
       background: linear-gradient(160deg, #1e293b, #0f172a);
       z-index: 2; text-align: center; padding: 24px;
+      cursor: pointer;
     }
 
     .camera-placeholder .icon-wrap {
@@ -157,6 +165,19 @@
 
     .camera-placeholder .main-text { font-size: 15px; font-weight: 700; color: #e2e8f0; }
     .camera-placeholder .hint { font-size: 11.5px; color: #94a3b8; max-width: 240px; line-height: 1.5; }
+
+    .camera-placeholder .tap-btn {
+      margin-top: 8px;
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      border: none;
+      border-radius: 30px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 8px 20px -4px rgba(99, 102, 241, 0.5);
+    }
 
     .page-counter-badge {
       position: absolute; top: 14px; right: 14px;
@@ -186,14 +207,8 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .processing-overlay span {
-      font-size: 13px; font-weight: 700; color: #e2e8f0;
-      text-align: center; padding: 0 20px;
-    }
-
-    .processing-overlay .hint-small {
-      font-size: 11px; color: #94a3b8; margin-top: -10px;
-    }
+    .processing-overlay span { font-size: 13px; font-weight: 700; color: #e2e8f0; text-align: center; padding: 0 20px; }
+    .processing-overlay .hint-small { font-size: 11px; color: #94a3b8; margin-top: -10px; }
 
     .capture-controls {
       display: flex; justify-content: space-between; align-items: center;
@@ -206,9 +221,10 @@
       font-size: 17px;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; box-shadow: var(--shadow-sm);
+      transition: all 0.15s;
     }
 
-    .ctrl-btn:active { transform: scale(0.9); }
+    .ctrl-btn:active { transform: scale(0.9); background: #f1f5f9; }
 
     .shutter-wrap { position: relative; display: flex; align-items: center; justify-content: center; }
 
@@ -228,14 +244,13 @@
       box-shadow: 0 10px 24px -6px rgba(15, 23, 42, 0.25),
                   0 0 0 4px #ffffff, 0 0 0 5px #e2e8f0;
       cursor: pointer; color: #6366f1; font-size: 26px;
+      transition: all 0.15s;
     }
 
     .shutter-btn:active { transform: scale(0.9); }
+    .shutter-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* ===== Filter modes ===== */
-    .section-label {
-      padding: 0 4px; margin: 4px 0 10px;
-    }
+    .section-label { padding: 0 4px; margin: 4px 0 10px; }
 
     .section-label h3 {
       font-size: 13px; font-weight: 800; letter-spacing: 0.5px;
@@ -281,11 +296,7 @@
       color: white;
     }
 
-    .mode-name {
-      font-size: 9.5px; font-weight: 700; color: #475569;
-      text-align: center; line-height: 1.2;
-    }
-
+    .mode-name { font-size: 9.5px; font-weight: 700; color: #475569; text-align: center; line-height: 1.2; }
     .mode-card.active .mode-name { color: #4338ca; }
 
     .gallery-header {
@@ -393,7 +404,6 @@
 
     #fileInput { display: none; }
 
-    /* Modal */
     .modal-overlay {
       position: fixed; inset: 0;
       background: rgba(5, 10, 25, 0.85); backdrop-filter: blur(20px);
@@ -486,10 +496,10 @@
 
       <div class="capture-card">
         <div class="camera-preview" id="cameraPreview">
+          <!-- Video LUÔN có mặt trong DOM -->
           <video id="videoPreview" autoplay playsinline muted></video>
           <canvas id="previewCanvas"></canvas>
-
-          <div class="a4-frame" id="a4Frame" style="display:none;"></div>
+          <div class="a4-frame" id="a4Frame"></div>
 
           <div class="page-counter-badge" id="pageCounterBadge" style="display:none;">
             <i class="fas fa-file-alt" style="font-size:9px;margin-right:3px;"></i><span id="counterText">0</span>
@@ -497,10 +507,13 @@
 
           <div class="camera-placeholder" id="cameraPlaceholder">
             <div class="icon-wrap">
-              <i class="fas fa-file-contract"></i>
+              <i class="fas fa-camera"></i>
             </div>
             <span class="main-text">Nhấn để bật camera</span>
             <span class="hint">Đặt tài liệu vào khung A4, chụp là tự động tách nền trắng</span>
+            <button class="tap-btn" id="startCameraBtn">
+              <i class="fas fa-camera"></i> BẬT CAMERA
+            </button>
           </div>
 
           <div class="processing-overlay" id="processingOverlay">
@@ -518,7 +531,7 @@
           </button>
           <div class="shutter-wrap">
             <div class="shutter-ring"></div>
-            <button class="shutter-btn" id="captureBtn">
+            <button class="shutter-btn" id="captureBtn" disabled>
               <i class="fas fa-circle"></i>
             </button>
           </div>
@@ -631,6 +644,7 @@
       const processingHint = $('processingHint');
       const pageCounterBadge = $('pageCounterBadge');
       const counterText = $('counterText');
+      const startCameraBtn = $('startCameraBtn');
 
       // ============ STATE ============
       let stream = null;
@@ -638,10 +652,9 @@
       let scannedPages = [];
       let cameraActive = false;
       let opencvReady = false;
-      let currentMode = 'auto-white'; // Chế độ xử lý
+      let currentMode = 'auto-white';
       let currentPreviewPageId = null;
 
-      // A4 ratio chuẩn = 297/210 = 1.4142
       const A4_RATIO = 1.4142;
 
       // ============ TOAST ============
@@ -653,6 +666,7 @@
         window.toastTimeout = setTimeout(() => toastEl.classList.remove('show'), duration);
       }
 
+      // ============ OPENCV ============
       function waitForOpenCV() {
         return new Promise((resolve) => {
           if (window.cv && window.cv.Mat) { opencvReady = true; resolve(); return; }
@@ -667,26 +681,125 @@
         });
       }
 
-      function dataURLToCanvas(dataURL) {
-        return new Promise((resolve) => {
-          const img = new Image();
-          img.onload = () => {
-            const c = document.createElement('canvas');
-            c.width = img.width; c.height = img.height;
-            c.getContext('2d').drawImage(img, 0, 0);
-            resolve(c);
+      // ============ CAMERA - FIXED VERSION ============
+      async function startCamera(facingMode = 'environment') {
+        console.log('🎥 startCamera called with:', facingMode);
+
+        // Kiểm tra hỗ trợ
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          showToast('Thiết bị không hỗ trợ camera', 3000, 'fa-triangle-exclamation');
+          alert('⚠️ Trình duyệt không hỗ trợ camera.\n\nVui lòng:\n1. Mở bằng HTTPS hoặc localhost\n2. Dùng Chrome/Safari mới\n3. Không mở file:// trực tiếp');
+          return;
+        }
+
+        // Dừng stream cũ
+        if (stream) {
+          stream.getTracks().forEach(t => t.stop());
+          stream = null;
+        }
+
+        try {
+          // Constraints đơn giản hơn để tương thích rộng
+          const constraints = {
+            video: {
+              facingMode: { ideal: facingMode },
+              width: { ideal: 1920, min: 640 },
+              height: { ideal: 1080, min: 480 }
+            },
+            audio: false
           };
-          img.src = dataURL;
-        });
+
+          console.log('📞 Requesting getUserMedia...');
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+          console.log('✅ Got stream:', stream.getVideoTracks()[0].label);
+
+          // Gán stream vào video
+          video.srcObject = stream;
+
+          // Chờ video sẵn sàng
+          await new Promise((resolve, reject) => {
+            video.onloadedmetadata = () => {
+              video.play().then(resolve).catch(reject);
+            };
+            video.onerror = reject;
+            // Timeout fallback
+            setTimeout(resolve, 3000);
+          });
+
+          // Đợi thêm để video render
+          await new Promise(r => setTimeout(r, 300));
+
+          cameraActive = true;
+          cameraPlaceholder.style.display = 'none';
+          a4Frame.classList.add('show');
+          captureBtn.disabled = false;
+          currentFacingMode = facingMode;
+
+          // Xử lý mirror cho camera trước
+          if (facingMode === 'user') {
+            video.classList.add('front-camera');
+          } else {
+            video.classList.remove('front-camera');
+          }
+
+          showToast('✓ Camera đã bật', 1500, 'fa-camera');
+          console.log('✅ Camera fully active');
+        } catch (err) {
+          console.error('❌ Camera error:', err);
+          cameraActive = false;
+          captureBtn.disabled = true;
+          
+          let errorMsg = 'Không thể truy cập camera';
+          if (err.name === 'NotAllowedError') {
+            errorMsg = 'Bạn đã từ chối quyền camera. Vui lòng cấp lại quyền.';
+          } else if (err.name === 'NotFoundError') {
+            errorMsg = 'Không tìm thấy camera trên thiết bị.';
+          } else if (err.name === 'NotReadableError') {
+            errorMsg = 'Camera đang được dùng bởi ứng dụng khác.';
+          } else if (err.name === 'OverconstrainedError') {
+            errorMsg = 'Camera không hỗ trợ cấu hình yêu cầu.';
+          }
+          
+          showToast(errorMsg, 3000, 'fa-triangle-exclamation');
+          
+          // Hiển thị hướng dẫn
+          cameraPlaceholder.innerHTML = `
+            <div class="icon-wrap" style="background: rgba(244, 63, 94, 0.15); border-color: rgba(244, 63, 94, 0.3); color: #f43f5e;">
+              <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <span class="main-text" style="color: #f43f5e;">Lỗi Camera</span>
+            <span class="hint">${errorMsg}</span>
+            <span class="hint" style="color: #fbbf24; font-weight: 600; margin-top: 8px;">
+              💡 Lưu ý: Phải mở trang bằng HTTPS hoặc localhost
+            </span>
+            <button class="tap-btn" onclick="location.reload()">
+              <i class="fas fa-redo"></i> THỬ LẠI
+            </button>
+          `;
+        }
       }
 
-      function canvasToDataURL(canvas, quality = 0.95) {
-        return canvas.toDataURL('image/jpeg', quality);
+      function stopCamera() {
+        if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+        cameraActive = false;
+        captureBtn.disabled = true;
+        a4Frame.classList.remove('show');
+      }
+
+      // ============ SORT CORNERS ============
+      function sortCorners(pts) {
+        const sorted = [...pts];
+        const sum = sorted.map(p => p.x + p.y);
+        const diff = sorted.map(p => p.x - p.y);
+        const tl = sorted[sum.indexOf(Math.min(...sum))];
+        const br = sorted[sum.indexOf(Math.max(...sum))];
+        const tr = sorted[diff.indexOf(Math.max(...diff))];
+        const bl = sorted[diff.indexOf(Math.min(...diff))];
+        return [tl, tr, br, bl];
       }
 
       // ==================================================
-      //  CORE: SCAN NỘI DUNG VÀ ĐẶT LÊN NỀN A4 TRẮNG
-      //  Đây là thuật toán chính bạn cần
+      //  SCAN NỘI DUNG VÀ ĐẶT LÊN NỀN A4 TRẮNG
       // ==================================================
       async function scanToWhiteA4(srcCanvas) {
         if (!opencvReady) return srcCanvas;
@@ -695,22 +808,18 @@
           const src = cv.imread(srcCanvas);
           const W = src.cols, H = src.rows;
 
-          // Bước 1: Chuyển xám
           const gray = new cv.Mat();
           cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
 
-          // Bước 2: Tìm vùng tài liệu (giấy) - dùng adaptive threshold
-          // để tách vùng sáng (giấy) ra khỏi nền tối (bàn, sàn)
+          // Tách vùng giấy bằng adaptive threshold
           const docMask = new cv.Mat();
           cv.adaptiveThreshold(gray, docMask, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 51, -10);
           
-          // Morphology để làm sạch mask
           const kernel = cv.Mat.ones(15, 15, cv.CV_8U);
           cv.morphologyEx(docMask, docMask, cv.MORPH_CLOSE, kernel, new cv.Point(-1, -1), 3);
           cv.morphologyEx(docMask, docMask, cv.MORPH_OPEN, kernel, new cv.Point(-1, -1), 1);
           kernel.delete();
 
-          // Bước 3: Tìm contour lớn nhất = vùng giấy
           const contours = new cv.MatVector();
           const hierarchy = new cv.Mat();
           cv.findContours(docMask, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
@@ -725,7 +834,6 @@
             }
           }
 
-          // Nếu không tìm được contour → dùng toàn bộ ảnh
           let corners = [
             { x: 0, y: 0 },
             { x: W - 1, y: 0 },
@@ -752,7 +860,6 @@
 
           contours.delete(); hierarchy.delete(); docMask.delete();
 
-          // Bước 4: Warp vùng giấy về hình chữ nhật A4 chuẩn
           const [tl, tr, br, bl] = corners;
           const widthTop = Math.hypot(tr.x - tl.x, tr.y - tl.y);
           const widthBottom = Math.hypot(br.x - bl.x, br.y - bl.y);
@@ -762,26 +869,18 @@
           let warpedW = Math.round(Math.max(widthTop, widthBottom));
           let warpedH = Math.round(Math.max(heightLeft, heightRight));
 
-          // Chuẩn hóa theo A4 ratio
           const actualRatio = warpedH / warpedW;
           if (actualRatio < A4_RATIO) {
-            // Ảnh quá rộng → tăng chiều cao
             warpedH = Math.round(warpedW * A4_RATIO);
           } else {
-            // Ảnh quá cao → tăng chiều rộng
             warpedW = Math.round(warpedH / A4_RATIO);
           }
 
-          // Đảm bảo kích thước tối thiểu
           warpedW = Math.max(warpedW, 600);
           warpedH = Math.max(warpedH, 850);
 
-          const srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
-            tl.x, tl.y, tr.x, tr.y, br.x, br.y, bl.x, bl.y
-          ]);
-          const dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
-            0, 0, warpedW - 1, 0, warpedW - 1, warpedH - 1, 0, warpedH - 1
-          ]);
+          const srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [tl.x, tl.y, tr.x, tr.y, br.x, br.y, bl.x, bl.y]);
+          const dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [0, 0, warpedW - 1, 0, warpedW - 1, warpedH - 1, 0, warpedH - 1]);
           const M = cv.getPerspectiveTransform(srcTri, dstTri);
           const warped = new cv.Mat();
           cv.warpPerspective(src, warped, M, new cv.Size(warpedW, warpedH),
@@ -789,48 +888,26 @@
 
           srcTri.delete(); dstTri.delete(); M.delete();
 
-          // ==================================================
-          //  BƯỚC 5 QUAN TRỌNG NHẤT:
-          //  Tách nội dung (chữ/sáng) khỏi nền và đặt lên A4 trắng
-          // ==================================================
-          
-          // Chuyển warped sang xám
           const warpedGray = new cv.Mat();
           cv.cvtColor(warped, warpedGray, cv.COLOR_RGBA2GRAY);
 
-          // Dùng Otsu để tách nội dung sáng/tối
           const thresh = new cv.Mat();
           cv.threshold(warpedGray, thresh, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
 
-          // Kiểm tra xem Otsu có đảo ngược không (nếu nền tối → đảo)
-          // Đếm pixel trắng, nếu < 30% thì đảo
           const whitePixels = cv.countNonZero(thresh);
           const totalPixels = thresh.rows * thresh.cols;
           if (whitePixels < totalPixels * 0.3) {
             cv.bitwise_not(thresh, thresh);
           }
 
-          // Morphology nhẹ để loại noise
           const smallKernel = cv.Mat.ones(2, 2, cv.CV_8U);
           cv.morphologyEx(thresh, thresh, cv.MORPH_OPEN, smallKernel);
           smallKernel.delete();
 
-          // Tạo ảnh A4 trắng tinh (nền trắng hoàn toàn)
           const a4White = new cv.Mat(warpedH, warpedW, cv.CV_8UC4, new cv.Scalar(255, 255, 255, 255));
-
-          // Áp dụng mask: những vùng nào là nội dung (đen) thì giữ, còn lại trắng
-          // Dùng thresh làm mask: vùng trắng (255) = nền → giữ A4 trắng
-          //                       vùng đen (0) = chữ → copy pixel từ warped
-          
-          // Cách 1: Đơn giản - dùng bitwise
           const contentMask = new cv.Mat();
-          cv.bitwise_not(thresh, contentMask); // đảo: chữ = trắng (255), nền = đen (0)
-
-          // Tạo ảnh kết quả: bắt đầu với A4 trắng
+          cv.bitwise_not(thresh, contentMask);
           const result = a4White.clone();
-
-          // Copy những pixel thuộc contentMask từ warped gốc
-          // Dùng warped gốc (không phải xám) để giữ màu chữ
           warped.copyTo(result, contentMask);
 
           contentMask.delete();
@@ -841,28 +918,19 @@
           a4White.delete();
           src.delete();
 
-          // ==================================================
-          //  BƯỚC 6: Làm sạch và tăng độ tương phản chữ
-          // ==================================================
           const resultGray = new cv.Mat();
           cv.cvtColor(result, resultGray, cv.COLOR_RGBA2GRAY);
 
-          // CLAHE để làm rõ chữ
           const clahe = new cv.CLAHE(2.5, new cv.Size(8, 8));
-          const lChannel = new cv.Mat();
-          resultGray.copyTo(lChannel);
-          clahe.apply(lChannel, lChannel);
+          clahe.apply(resultGray, resultGray);
 
-          // Unsharp mask để làm nét
           const blurred = new cv.Mat();
-          cv.GaussianBlur(lChannel, blurred, new cv.Size(5, 5), 0);
+          cv.GaussianBlur(resultGray, blurred, new cv.Size(5, 5), 0);
           const sharpened = new cv.Mat();
-          cv.addWeighted(lChannel, 1.6, blurred, -0.6, 0, sharpened);
+          cv.addWeighted(resultGray, 1.6, blurred, -0.6, 0, sharpened);
 
-          // Chuyển về RGBA để giữ định dạng
           cv.cvtColor(sharpened, result, cv.COLOR_GRAY2RGBA);
 
-          // Set alpha = 255
           const alpha = new cv.Mat(result.rows, result.cols, cv.CV_8UC1, new cv.Scalar(255));
           const channels = new cv.MatVector();
           cv.split(result, channels);
@@ -870,9 +938,8 @@
           cv.merge(channels, result);
 
           alpha.delete(); channels.delete();
-          resultGray.delete(); lChannel.delete(); blurred.delete(); sharpened.delete(); clahe.delete();
+          resultGray.delete(); blurred.delete(); sharpened.delete(); clahe.delete();
 
-          // Export
           const out = document.createElement('canvas');
           out.width = result.cols;
           out.height = result.rows;
@@ -886,34 +953,15 @@
         }
       }
 
-      function sortCorners(pts) {
-        const sorted = [...pts];
-        const sum = sorted.map(p => p.x + p.y);
-        const diff = sorted.map(p => p.x - p.y);
-        const tl = sorted[sum.indexOf(Math.min(...sum))];
-        const br = sorted[sum.indexOf(Math.max(...sum))];
-        const tr = sorted[diff.indexOf(Math.max(...diff))];
-        const bl = sorted[diff.indexOf(Math.min(...diff))];
-        return [tl, tr, br, bl];
-      }
-
-      // ============ XỬ LÝ ẢNH THEO MODE ============
+      // ============ PROCESS BY MODE ============
       async function processByMode(srcCanvas, mode) {
         if (!opencvReady) return srcCanvas;
 
         try {
-          // Mode "original": trả về ảnh gốc
           if (mode === 'original') return srcCanvas;
+          if (mode === 'auto-white') return await scanToWhiteA4(srcCanvas);
 
-          // Mode "auto-white": scan nội dung lên nền A4 trắng
-          if (mode === 'auto-white') {
-            return await scanToWhiteA4(srcCanvas);
-          }
-
-          // Các mode khác: dùng scanToWhiteA4 làm base, rồi filter thêm
           let canvas = srcCanvas;
-          
-          // Nếu mode là bw/gray/magic/high-contrast → đều scan lên A4 trắng trước
           if (mode === 'bw' || mode === 'gray' || mode === 'magic' || mode === 'high-contrast') {
             canvas = await scanToWhiteA4(srcCanvas);
           }
@@ -923,7 +971,6 @@
           cv.cvtColor(mat, gray, cv.COLOR_RGBA2GRAY);
 
           if (mode === 'bw') {
-            // Đen trắng thuần - adaptive threshold
             const bw = new cv.Mat();
             cv.adaptiveThreshold(gray, bw, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 15, 8);
             cv.cvtColor(bw, bw, cv.COLOR_GRAY2RGBA);
@@ -943,7 +990,6 @@
           }
 
           if (mode === 'magic') {
-            // Magic color: tăng mạnh độ tương phản, làm trắng nền
             const lab = new cv.Mat();
             cv.cvtColor(mat, lab, cv.COLOR_RGBA2RGB);
             cv.cvtColor(lab, lab, cv.COLOR_RGB2Lab);
@@ -957,7 +1003,6 @@
             const result = new cv.Mat();
             cv.cvtColor(lab, result, cv.COLOR_Lab2RGB);
             cv.cvtColor(result, result, cv.COLOR_RGB2RGBA);
-
             const out = document.createElement('canvas');
             out.width = result.cols; out.height = result.rows;
             cv.imshow(out, result);
@@ -966,15 +1011,12 @@
           }
 
           if (mode === 'high-contrast') {
-            // Nét đậm: threshold + unsharp mạnh
             const thresh = new cv.Mat();
             cv.threshold(gray, thresh, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
-            
             const blurred = new cv.Mat();
             cv.GaussianBlur(thresh, blurred, new cv.Size(3, 3), 0);
             const sharp = new cv.Mat();
             cv.addWeighted(thresh, 2.0, blurred, -1.0, 0, sharp);
-
             cv.cvtColor(sharp, sharp, cv.COLOR_GRAY2RGBA);
             const out = document.createElement('canvas');
             out.width = sharp.cols; out.height = sharp.rows;
@@ -991,42 +1033,35 @@
         }
       }
 
-      // ============ CAMERA ============
-      async function startCamera(facingMode = 'environment') {
-        if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
-            audio: false
-          });
-          video.srcObject = stream;
-          await video.play();
-          cameraActive = true;
-          cameraPlaceholder.style.display = 'none';
-          video.style.display = 'block';
-          previewCanvas.style.display = 'none';
-          a4Frame.style.display = 'block';
-          currentFacingMode = facingMode;
-        } catch (err) {
-          showToast('Không thể truy cập camera', 2000, 'fa-triangle-exclamation');
-          cameraActive = false;
+      // ============ EVENT LISTENERS ============
+
+      // Nút bật camera riêng
+      startCameraBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await startCamera(currentFacingMode);
+      });
+
+      // Click vào placeholder cũng bật camera
+      cameraPlaceholder.addEventListener('click', async (e) => {
+        if (e.target.tagName !== 'BUTTON') {
+          await startCamera(currentFacingMode);
         }
-      }
+      });
 
-      function stopCamera() {
-        if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-        cameraActive = false;
-        a4Frame.style.display = 'none';
-      }
-
-      // ============ CAPTURE ============
+      // Nút chụp
       captureBtn.addEventListener('click', async () => {
-        if (!cameraActive) { await startCamera(currentFacingMode); return; }
+        if (!cameraActive) {
+          showToast('Camera chưa bật', 1500, 'fa-camera');
+          return;
+        }
         await captureAndProcess();
       });
 
       async function captureAndProcess() {
-        if (!video.videoWidth) return;
+        if (!video.videoWidth) {
+          showToast('Camera chưa sẵn sàng', 1500, 'fa-triangle-exclamation');
+          return;
+        }
 
         processingOverlay.classList.add('show');
         processingText.textContent = 'Đang chụp...';
@@ -1035,20 +1070,27 @@
         const srcCanvas = document.createElement('canvas');
         srcCanvas.width = video.videoWidth;
         srcCanvas.height = video.videoHeight;
-        srcCanvas.getContext('2d').drawImage(video, 0, 0);
+        const ctx = srcCanvas.getContext('2d');
 
-        // Hiệu ứng flash
+        // Nếu camera trước, lật lại cho đúng
+        if (currentFacingMode === 'user') {
+          ctx.translate(srcCanvas.width, 0);
+          ctx.scale(-1, 1);
+        }
+        ctx.drawImage(video, 0, 0);
+
+        // Flash effect
         previewCanvas.style.display = 'block';
         previewCanvas.width = video.videoWidth;
         previewCanvas.height = video.videoHeight;
-        previewCanvas.getContext('2d').drawImage(video, 0, 0);
-        video.style.display = 'none';
+        previewCanvas.getContext('2d').drawImage(srcCanvas, 0, 0);
+        video.style.visibility = 'hidden';
         setTimeout(() => {
           previewCanvas.style.display = 'none';
-          if (cameraActive) video.style.display = 'block';
+          if (cameraActive) video.style.visibility = 'visible';
         }, 150);
 
-        const originalDataURL = canvasToDataURL(srcCanvas, 0.95);
+        const originalDataURL = srcCanvas.toDataURL('image/jpeg', 0.95);
 
         try {
           processingText.textContent = 'Đang tách nền trắng A4...';
@@ -1081,7 +1123,12 @@
         }
       }
 
-      // ============ UPLOAD ============
+      // Helper: canvas to dataURL
+      function canvasToDataURL(canvas, quality = 0.95) {
+        return canvas.toDataURL('image/jpeg', quality);
+      }
+
+      // Upload
       uploadBtn.addEventListener('click', () => fileInput.click());
 
       fileInput.addEventListener('change', async (e) => {
@@ -1118,14 +1165,31 @@
         showToast(`✓ Đã thêm ${files.length} ảnh nền A4`, 1500, 'fa-check');
       });
 
-      // ============ SWITCH CAMERA ============
+      function dataURLToCanvas(dataURL) {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            const c = document.createElement('canvas');
+            c.width = img.width; c.height = img.height;
+            c.getContext('2d').drawImage(img, 0, 0);
+            resolve(c);
+          };
+          img.src = dataURL;
+        });
+      }
+
+      // Switch camera
       switchCameraBtn.addEventListener('click', async () => {
+        if (!cameraActive) {
+          showToast('Bật camera trước', 1500, 'fa-camera');
+          return;
+        }
         const newMode = currentFacingMode === 'environment' ? 'user' : 'environment';
         await startCamera(newMode);
         showToast(newMode === 'environment' ? 'Camera sau' : 'Camera trước', 1000, 'fa-camera');
       });
 
-      // ============ MODE SELECTOR ============
+      // Mode selector
       document.querySelectorAll('.mode-card').forEach(card => {
         card.addEventListener('click', () => {
           document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
@@ -1143,7 +1207,7 @@
         });
       });
 
-      // ============ GALLERY ============
+      // Gallery
       function updateGallery() {
         pagesGrid.innerHTML = '';
         if (scannedPages.length === 0) {
@@ -1183,7 +1247,7 @@
         pageCountSpan.textContent = `${scannedPages.length} trang`;
       }
 
-      // ============ MODAL PREVIEW ============
+      // Modal
       const modalOverlay = $('modalOverlay');
       const modalImage = $('modalImage');
 
@@ -1202,7 +1266,7 @@
       $('modalCancelBtn').addEventListener('click', closeModal);
       modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
 
-      // ============ PDF ============
+      // PDF
       async function generatePdf() {
         if (scannedPages.length === 0) {
           showToast('Chưa có trang nào', 1500, 'fa-circle-info');
@@ -1214,7 +1278,6 @@
           const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
           const pw = pdf.internal.pageSize.getWidth();
           const ph = pdf.internal.pageSize.getHeight();
-          const margin = 0;
 
           for (let i = 0; i < scannedPages.length; i++) {
             if (i > 0) pdf.addPage();
@@ -1267,18 +1330,16 @@
         }
       });
 
-      // ============ INIT ============
-      cameraPlaceholder.addEventListener('click', async () => {
-        await startCamera(currentFacingMode);
-      });
-
       $('settingsBtn').addEventListener('click', () => {
         showToast('Cài đặt đang phát triển', 1500, 'fa-gear');
       });
 
+      // ============ INIT ============
       waitForOpenCV().then(() => {
         if (opencvReady) {
-          console.log('✅ OpenCV ready - A4 White Scan Engine');
+          console.log('✅ OpenCV ready');
+        } else {
+          console.warn('⚠️ OpenCV not ready - chạy chế độ cơ bản');
         }
       });
 
@@ -1289,13 +1350,25 @@
       document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
           closeModal();
-          stopCamera();
-          cameraPlaceholder.style.display = 'flex';
-          video.style.display = 'none';
         }
       });
 
       updateGallery();
+
+      // Check protocol ngay khi load
+      if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1' && location.protocol !== 'file:') {
+        setTimeout(() => {
+          showToast('⚠️ Cần HTTPS để dùng camera', 4000, 'fa-triangle-exclamation');
+        }, 1000);
+      }
+
+      if (location.protocol === 'file:') {
+        setTimeout(() => {
+          showToast('⚠️ Không mở file:// — cần HTTPS', 5000, 'fa-triangle-exclamation');
+        }, 1000);
+      }
+
+      console.log('🚀 ScanPro initialized. Protocol:', location.protocol);
 
     })();
   </script>
