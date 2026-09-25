@@ -3,145 +3,318 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>ScanPro • PDF Scanner</title>
-  <!-- Font & Icons -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <!-- jsPDF for PDF generation -->
+  <title>ScanPro AI • Professional Scanner</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://docs.opencv.org/4.8.0/opencv.js" async></script>
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --primary-light: #818cf8;
+      --secondary: #8b5cf6;
+      --accent: #06b6d4;
+      --success: #10b981;
+      --danger: #f43f5e;
+      --warning: #f59e0b;
+      --dark: #0a0e1a;
+      --dark-2: #131828;
+      --gray-1: #f8fafc;
+      --gray-2: #f1f5f9;
+      --gray-3: #e2e8f0;
+      --gray-5: #64748b;
+      --gray-7: #334155;
+      --radius-lg: 28px;
+      --radius-md: 20px;
+      --radius-sm: 14px;
+      --radius-xs: 10px;
+      --shadow-sm: 0 2px 8px -2px rgba(15, 23, 42, 0.08);
+      --shadow-md: 0 8px 24px -8px rgba(15, 23, 42, 0.15);
+      --shadow-lg: 0 20px 40px -16px rgba(15, 23, 42, 0.22);
+      --shadow-glow: 0 12px 32px -8px rgba(99, 102, 241, 0.4);
+      --shadow-glow-success: 0 12px 32px -8px rgba(16, 185, 129, 0.4);
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
     }
 
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #f5f7fc;
+      background: 
+        radial-gradient(ellipse 80% 60% at 50% 0%, #1e1b4b 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 100% 100%, #312e81 0%, transparent 50%),
+        radial-gradient(ellipse 60% 50% at 0% 100%, #0e7490 0%, transparent 50%),
+        #0a0e1a;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
-      margin: 0;
       padding: 8px;
+      position: relative;
     }
 
-    /* Mobile container – xịn xò, giới hạn chiều rộng */
+    body::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    /* ============ PHONE FRAME ============ */
     .phone-frame {
       width: 100%;
-      max-width: 400px;
-      height: 780px;
-      max-height: 95vh;
-      background: #ffffff;
-      border-radius: 44px;
-      box-shadow: 
-        0 30px 60px -20px rgba(0, 20, 60, 0.35),
-        0 0 0 2px rgba(255, 255, 255, 0.6) inset,
-        0 0 0 1px rgba(0, 0, 0, 0.05);
+      max-width: 410px;
+      height: 860px;
+      max-height: 97vh;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      border-radius: 52px;
+      box-shadow:
+        0 60px 120px -40px rgba(0, 0, 0, 0.8),
+        0 0 0 2px rgba(255, 255, 255, 0.08) inset,
+        0 0 0 10px rgba(255, 255, 255, 0.02),
+        0 0 0 11px rgba(255, 255, 255, 0.05);
       overflow: hidden;
       display: flex;
       flex-direction: column;
       position: relative;
-      backdrop-filter: blur(10px);
+      z-index: 1;
     }
 
-    /* Status bar giả lập */
+    /* Dynamic Island */
+    .dynamic-island {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 110px;
+      height: 32px;
+      background: #000;
+      border-radius: 20px;
+      z-index: 100;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 10px;
+    }
+
+    .dynamic-island::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #1e3a5f, #0a0e1a);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.1), inset 0 0 4px rgba(96, 165, 250, 0.4);
+    }
+
+    /* ============ STATUS BAR ============ */
     .status-bar {
       display: flex;
       justify-content: space-between;
-      padding: 14px 24px 8px;
+      padding: 18px 32px 6px;
       font-size: 14px;
-      font-weight: 600;
-      color: #121826;
-      background: white;
-      letter-spacing: 0.2px;
+      font-weight: 700;
+      color: #0f172a;
+      background: transparent;
+      letter-spacing: -0.2px;
+      z-index: 5;
+      position: relative;
     }
 
-    .status-bar i {
-      font-size: 14px;
-      margin-left: 4px;
-      color: #121826;
+    .status-bar .time {
+      font-feature-settings: "tnum";
     }
 
-    /* Main scrollable */
+    .status-bar .icons {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+    }
+
+    .status-bar .icons i {
+      color: #0f172a;
+    }
+
+    /* ============ APP SCREEN ============ */
     .app-screen {
       flex: 1;
       overflow-y: auto;
-      padding: 0 18px 10px;
+      overflow-x: hidden;
+      padding: 0 18px 20px;
       display: flex;
       flex-direction: column;
       scrollbar-width: none;
       -ms-overflow-style: none;
+      scroll-behavior: smooth;
     }
 
-    .app-screen::-webkit-scrollbar {
-      display: none;
-    }
+    .app-screen::-webkit-scrollbar { display: none; }
 
-    /* Header */
+    /* ============ HEADER ============ */
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px 0 6px;
+      padding: 6px 2px 14px;
+      animation: slideDown 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .header h1 {
-      font-size: 26px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      background: linear-gradient(135deg, #0b1c3f, #1e3a8a);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    .header-actions i {
-      font-size: 20px;
-      color: #2c3e50;
-      background: #f0f4fe;
-      padding: 10px;
-      border-radius: 50%;
-      transition: all 0.2s;
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
-    /* Capture Card */
-    .capture-card {
-      background: linear-gradient(145deg, #ffffff, #f8faff);
-      border-radius: 36px;
-      padding: 18px;
-      margin: 12px 0 16px;
-      box-shadow: 0 12px 28px -8px rgba(0, 20, 50, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
-      border: 1px solid rgba(210, 222, 255, 0.6);
+    .logo-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 19px;
+      box-shadow: 0 8px 20px -4px rgba(99, 102, 241, 0.5), inset 0 1px 0 rgba(255,255,255,0.3);
       position: relative;
+      overflow: hidden;
+    }
+
+    .logo-mark::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.2) 100%);
+    }
+
+    .logo-mark i { position: relative; z-index: 1; }
+
+    .brand-text h1 {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #0f172a;
+      line-height: 1.1;
+    }
+
+    .brand-text p {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-top: 1px;
+    }
+
+    .header-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .header-btn:active {
+      transform: scale(0.92);
+      background: var(--gray-2);
+    }
+
+    /* ============ CAPTURE CARD ============ */
+    .capture-card {
+      background: linear-gradient(160deg, #ffffff 0%, #f1f5f9 100%);
+      border-radius: var(--radius-lg);
+      padding: 12px;
+      margin-bottom: 16px;
+      box-shadow: 
+        0 20px 40px -16px rgba(15, 23, 42, 0.18),
+        0 0 0 1px rgba(226, 232, 240, 0.8) inset;
+      border: 1px solid #e2e8f0;
+      position: relative;
+      animation: fadeUp 0.5s 0.1s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .camera-preview {
       width: 100%;
       aspect-ratio: 3 / 4;
-      background: #111827;
-      border-radius: 28px;
+      background: #0a0e1a;
+      border-radius: var(--radius-md);
       overflow: hidden;
       position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 24px 40px -20px rgba(0, 0, 0, 0.5);
     }
 
-    #videoPreview, #photoCanvas {
+    #videoPreview, #previewCanvas {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
-      background: #0b0f1a;
+      background: #0a0e1a;
     }
 
-    #photoCanvas {
+    #previewCanvas { display: none; }
+
+    #edgeCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 4;
       display: none;
     }
+
+    /* Grid overlay */
+    .grid-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      opacity: 0.35;
+      background-image: 
+        linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px);
+      background-size: 33.33% 33.33%;
+      display: none;
+    }
+
+    .grid-overlay.show { display: block; }
 
     .camera-placeholder {
       position: absolute;
@@ -150,127 +323,439 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      color: #a0b3d9;
-      font-size: 15px;
+      color: #cbd5e1;
+      font-size: 14px;
       font-weight: 500;
-      gap: 8px;
-      background: #111927;
+      gap: 12px;
+      background: linear-gradient(160deg, #1e293b, #0f172a);
       z-index: 2;
+      text-align: center;
+      padding: 24px;
     }
 
-    .camera-placeholder i {
-      font-size: 44px;
-      color: #4f6f9f;
-      margin-bottom: 6px;
-    }
-
-    .camera-preview video,
-    .camera-preview canvas {
-      position: relative;
-      z-index: 3;
-    }
-
-    .capture-controls {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-top: 20px;
-      gap: 18px;
-    }
-
-    .shutter-btn {
-      background: #ffffff;
-      border: none;
-      width: 72px;
-      height: 72px;
-      border-radius: 50%;
+    .camera-placeholder .icon-wrap {
+      width: 76px;
+      height: 76px;
+      border-radius: 24px;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 10px 25px -5px rgba(0, 40, 100, 0.25), 0 0 0 4px #ffffff, 0 0 0 6px #d0dcff;
-      transition: all 0.15s;
-      cursor: pointer;
-      color: #1e3a8a;
-      font-size: 28px;
+      font-size: 32px;
+      color: #818cf8;
+      margin-bottom: 4px;
+      backdrop-filter: blur(8px);
     }
 
-    .shutter-btn:active {
-      transform: scale(0.94);
-      background: #f0f5ff;
-      box-shadow: 0 6px 15px -3px rgba(0, 40, 100, 0.3), 0 0 0 4px #ffffff, 0 0 0 6px #a0b9ff;
-    }
-
-    .btn-secondary {
-      background: #ecf2fe;
-      border: none;
-      width: 54px;
-      height: 54px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #1e3a8a;
-      font-size: 22px;
-      box-shadow: 0 6px 14px rgba(0, 30, 70, 0.08);
-      transition: 0.2s;
-      cursor: pointer;
-    }
-
-    .btn-secondary:active {
-      background: #d3e0ff;
-      transform: scale(0.94);
-    }
-
-    /* Gallery (scanned pages) */
-    .gallery-title {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin: 6px 0 12px;
-    }
-
-    .gallery-title h3 {
-      font-size: 17px;
-      font-weight: 600;
-      color: #121826;
+    .camera-placeholder .main-text {
+      font-size: 15px;
+      font-weight: 700;
+      color: #e2e8f0;
       letter-spacing: -0.2px;
     }
 
-    .gallery-title span {
-      font-size: 14px;
-      color: #5f6c84;
-      background: #e6ecfd;
-      padding: 4px 12px;
-      border-radius: 30px;
+    .camera-placeholder .hint {
+      font-size: 11.5px;
+      color: #94a3b8;
       font-weight: 500;
+      max-width: 220px;
+      line-height: 1.5;
+    }
+
+    /* Scan guide */
+    .scan-guide {
+      position: absolute;
+      inset: 14px;
+      z-index: 3;
+      pointer-events: none;
+      display: none;
+    }
+
+    .scan-guide.active { display: block; }
+
+    .corner {
+      position: absolute;
+      width: 32px;
+      height: 32px;
+      border: 3px solid #6366f1;
+      filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.8));
+    }
+
+    .corner-tl { top: -2px; left: -2px; border-right: none; border-bottom: none; border-radius: 12px 0 0 0; }
+    .corner-tr { top: -2px; right: -2px; border-left: none; border-bottom: none; border-radius: 0 12px 0 0; }
+    .corner-bl { bottom: -2px; left: -2px; border-right: none; border-top: none; border-radius: 0 0 0 12px; }
+    .corner-br { bottom: -2px; right: -2px; border-left: none; border-top: none; border-radius: 0 0 12px 0; }
+
+    /* Auto badge */
+    .auto-scan-badge {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 6px 12px;
+      border-radius: 30px;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      z-index: 6;
+      box-shadow: 0 6px 16px -4px rgba(16, 185, 129, 0.6);
+      letter-spacing: 0.8px;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .auto-scan-badge.show { display: flex; }
+
+    .auto-scan-badge .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: white;
+      animation: pulse 1.2s infinite;
+      box-shadow: 0 0 8px white;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    /* Counter badge */
+    .page-counter-badge {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(12px);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 30px;
+      z-index: 6;
+      border: 1px solid rgba(255,255,255,0.15);
+      letter-spacing: 0.3px;
+    }
+
+    /* Processing overlay */
+    .processing-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 14, 26, 0.9);
+      backdrop-filter: blur(16px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      color: white;
+      gap: 18px;
+      border-radius: var(--radius-md);
+    }
+
+    .processing-overlay.show { display: flex; }
+
+    .spinner-wrap {
+      position: relative;
+      width: 60px;
+      height: 60px;
+    }
+
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 3px solid rgba(99, 102, 241, 0.15);
+      border-top-color: #6366f1;
+      border-right-color: #8b5cf6;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+
+    .spinner-inner {
+      position: absolute;
+      inset: 12px;
+      border: 2px solid rgba(6, 182, 212, 0.15);
+      border-bottom-color: #06b6d4;
+      border-radius: 50%;
+      animation: spin 1.4s linear infinite reverse;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .processing-overlay span {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      color: #e2e8f0;
+    }
+
+    /* ============ CAPTURE CONTROLS ============ */
+    .capture-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+      padding: 0 6px;
+    }
+
+    .ctrl-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+      font-size: 17px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+
+    .ctrl-btn:active {
+      transform: scale(0.9);
+      background: var(--gray-2);
+    }
+
+    .ctrl-btn.active {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      border-color: transparent;
+      box-shadow: var(--shadow-glow);
+    }
+
+    .shutter-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .shutter-ring {
+      position: absolute;
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4) border-box;
+      -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      animation: rotateRing 6s linear infinite;
+    }
+
+    @keyframes rotateRing {
+      to { transform: rotate(360deg); }
+    }
+
+    .shutter-btn {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #ffffff, #f1f5f9);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 
+        0 10px 24px -6px rgba(15, 23, 42, 0.25),
+        0 0 0 4px #ffffff,
+        0 0 0 5px #e2e8f0,
+        inset 0 1px 2px rgba(255,255,255,1);
+      transition: all 0.15s;
+      cursor: pointer;
+      color: #6366f1;
+      font-size: 26px;
+      position: relative;
+    }
+
+    .shutter-btn:active {
+      transform: scale(0.9);
+      box-shadow: 
+        0 6px 16px -4px rgba(15, 23, 42, 0.3),
+        0 0 0 4px #ffffff,
+        0 0 0 5px #818cf8;
+    }
+
+    .shutter-btn::after {
+      content: '';
+      position: absolute;
+      inset: 6px;
+      border-radius: 50%;
+      border: 2px solid #e2e8f0;
+      opacity: 0.6;
+    }
+
+    /* ============ SMART MODES ============ */
+    .section-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 4px;
+      margin: 4px 0 10px;
+    }
+
+    .section-label h3 {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .section-label h3 i {
+      font-size: 11px;
+      color: #6366f1;
+    }
+
+    .modes-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+      animation: fadeUp 0.5s 0.2s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+    }
+
+    .mode-card {
+      background: white;
+      border-radius: var(--radius-sm);
+      padding: 12px 6px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      border: 1.5px solid #e2e8f0;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .mode-card:active { transform: scale(0.95); }
+
+    .mode-card.active {
+      background: linear-gradient(150deg, #eef2ff, #faf5ff);
+      border-color: #a5b4fc;
+      box-shadow: 0 8px 20px -8px rgba(99, 102, 241, 0.4);
+    }
+
+    .mode-card.active::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6, #06b6d4);
+    }
+
+    .mode-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+      color: #6366f1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .mode-card.active .mode-icon {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      box-shadow: 0 6px 14px -4px rgba(99, 102, 241, 0.6);
+    }
+
+    .mode-name {
+      font-size: 10px;
+      font-weight: 700;
+      color: #475569;
+      text-align: center;
+      letter-spacing: -0.1px;
+      line-height: 1.2;
+    }
+
+    .mode-card.active .mode-name { color: #4338ca; }
+
+    /* ============ GALLERY ============ */
+    .gallery-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+
+    .gallery-header h3 {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .gallery-header h3 i { font-size: 11px; color: #6366f1; }
+
+    .page-count-badge {
+      font-size: 11px;
+      font-weight: 800;
+      color: #4338ca;
+      background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+      padding: 5px 12px;
+      border-radius: 30px;
+      letter-spacing: 0.3px;
+      border: 1px solid #c7d2fe;
     }
 
     .pages-grid {
       display: flex;
       gap: 12px;
       overflow-x: auto;
-      padding: 4px 2px 14px;
+      padding: 4px 4px 16px;
       scrollbar-width: none;
-      -ms-overflow-style: none;
-      min-height: 110px;
+      min-height: 130px;
+      scroll-snap-type: x mandatory;
     }
 
-    .pages-grid::-webkit-scrollbar {
-      display: none;
-    }
+    .pages-grid::-webkit-scrollbar { display: none; }
 
     .page-thumb {
-      flex: 0 0 80px;
-      height: 106px;
-      border-radius: 18px;
-      background: #eef2f8;
+      flex: 0 0 92px;
+      height: 122px;
+      border-radius: 16px;
+      background: #f1f5f9;
       border: 2px solid white;
-      box-shadow: 0 10px 18px -8px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 10px 22px -8px rgba(15, 23, 42, 0.25);
       overflow: hidden;
       position: relative;
-      transition: 0.2s;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
+      scroll-snap-align: start;
+      animation: popIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.85); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .page-thumb:active { transform: scale(0.94); }
 
     .page-thumb img {
       width: 100%;
@@ -279,228 +764,603 @@
       display: block;
     }
 
+    .page-thumb .thumb-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.5) 100%);
+      pointer-events: none;
+    }
+
     .page-thumb .remove-badge {
       position: absolute;
-      top: 4px;
-      right: 4px;
-      background: rgba(255, 255, 255, 0.9);
-      backdrop-filter: blur(4px);
+      top: 6px;
+      right: 6px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
       width: 24px;
       height: 24px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
-      color: #e11d48;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-      border: 1px solid rgba(255,255,255,0.6);
+      font-size: 10px;
+      color: #f43f5e;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      border: 1px solid rgba(255,255,255,0.8);
+      transition: transform 0.15s;
+    }
+
+    .page-thumb .remove-badge:active { transform: scale(0.85); }
+
+    .page-thumb .thumb-index {
+      position: absolute;
+      bottom: 6px;
+      left: 6px;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(8px);
+      color: #0f172a;
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 3px 7px;
+      border-radius: 8px;
+      letter-spacing: 0.2px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .page-thumb .thumb-edit {
+      position: absolute;
+      bottom: 6px;
+      right: 6px;
+      width: 22px;
+      height: 22px;
+      background: rgba(99, 102, 241, 0.95);
+      backdrop-filter: blur(8px);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 9px;
+      box-shadow: 0 4px 10px rgba(99, 102, 241, 0.5);
     }
 
     .empty-gallery {
-      color: #8f9eb5;
-      font-size: 14px;
+      color: #94a3b8;
+      font-size: 13px;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       width: 100%;
-      height: 100px;
-      background: #f4f8ff;
-      border-radius: 24px;
-      font-weight: 500;
-      border: 1px dashed #b8cbff;
+      height: 122px;
+      background: linear-gradient(160deg, #f8fafc, #f1f5f9);
+      border-radius: 20px;
+      font-weight: 600;
+      border: 2px dashed #cbd5e1;
+      gap: 10px;
     }
 
-    /* Action Buttons */
+    .empty-gallery i {
+      font-size: 28px;
+      color: #cbd5e1;
+    }
+
+    /* ============ ACTION BAR ============ */
     .action-bar {
       display: flex;
-      gap: 12px;
-      margin: 12px 0 10px;
+      gap: 10px;
+      margin-top: 4px;
+      animation: fadeUp 0.5s 0.3s cubic-bezier(0.4, 0, 0.2, 1) backwards;
     }
 
     .btn-primary {
-      flex: 1;
-      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      flex: 1.4;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
       border: none;
-      border-radius: 26px;
-      padding: 16px 10px;
+      border-radius: 20px;
+      padding: 17px 12px;
       color: white;
-      font-weight: 600;
-      font-size: 16px;
+      font-weight: 800;
+      font-size: 14.5px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      box-shadow: 0 15px 25px -8px #1e3a8a80, 0 0 0 1px rgba(255,255,255,0.1) inset;
-      transition: 0.2s;
+      box-shadow: 0 16px 32px -10px rgba(99, 102, 241, 0.6), inset 0 1px 0 rgba(255,255,255,0.25);
+      transition: all 0.2s;
       cursor: pointer;
+      letter-spacing: 0.2px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.15) 100%);
     }
 
     .btn-primary:active {
-      transform: scale(0.97);
-      box-shadow: 0 8px 18px -6px #1e3a8a;
+      transform: scale(0.96);
+      box-shadow: 0 8px 20px -8px rgba(99, 102, 241, 0.7);
     }
 
-    .btn-primary i {
-      font-size: 18px;
-    }
+    .btn-primary i { font-size: 16px; position: relative; }
+    .btn-primary span { position: relative; }
 
     .btn-outline {
+      flex: 1;
       background: white;
-      border: 1.5px solid #d0ddf5;
-      border-radius: 26px;
-      padding: 16px 18px;
-      color: #1e3a8a;
-      font-weight: 600;
-      font-size: 16px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 17px 12px;
+      color: #1e293b;
+      font-weight: 800;
+      font-size: 14.5px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      box-shadow: 0 6px 14px rgba(0, 30, 70, 0.06);
-      transition: 0.2s;
+      gap: 7px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s;
       cursor: pointer;
+      letter-spacing: 0.2px;
     }
 
     .btn-outline:active {
-      background: #f0f6ff;
-      transform: scale(0.97);
+      background: #f1f5f9;
+      transform: scale(0.96);
     }
 
-    /* Toast / message */
+    /* ============ TOAST ============ */
     .toast-message {
       position: fixed;
-      bottom: 30px;
+      bottom: 40px;
       left: 50%;
-      transform: translateX(-50%);
-      background: rgba(20, 30, 55, 0.9);
-      backdrop-filter: blur(12px);
+      transform: translateX(-50%) translateY(20px) scale(0.9);
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(20px);
       color: white;
-      font-weight: 500;
-      font-size: 14px;
-      padding: 12px 28px;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 12px 20px;
       border-radius: 60px;
-      box-shadow: 0 20px 35px -8px black;
-      z-index: 999;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+      z-index: 9999;
       opacity: 0;
-      transition: opacity 0.25s;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
       pointer-events: none;
       white-space: nowrap;
-      border: 1px solid rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.12);
+      display: flex;
+      align-items: center;
+      gap: 10px;
       letter-spacing: 0.2px;
+      max-width: 90vw;
     }
 
     .toast-message.show {
       opacity: 1;
+      transform: translateX(-50%) translateY(0) scale(1);
     }
 
-    /* hidden file input */
-    #fileInput {
+    .toast-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+
+    #fileInput { display: none; }
+
+    /* ============ MODAL ============ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 10, 25, 0.85);
+      backdrop-filter: blur(20px);
+      z-index: 1000;
       display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.25s;
     }
 
-    /* responsive */
-    @media (max-width: 420px) {
+    .modal-overlay.show { display: flex; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal-content {
+      background: linear-gradient(180deg, #ffffff, #f8fafc);
+      border-radius: 32px;
+      max-width: 370px;
+      width: 100%;
+      max-height: 92vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.7);
+      animation: modalIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.9) translateY(20px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 22px 16px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .modal-header h4 {
+      font-size: 16px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-header h4 i { color: #6366f1; font-size: 14px; }
+
+    .modal-header .close-btn {
+      background: #f1f5f9;
+      border: none;
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      color: #334155;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .modal-header .close-btn:active {
+      background: #e2e8f0;
+      transform: scale(0.92);
+    }
+
+    .modal-body {
+      padding: 18px 22px 22px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .modal-body img {
+      width: 100%;
+      border-radius: 18px;
+      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.2);
+      margin-bottom: 20px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .slider-group {
+      margin-bottom: 16px;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .slider-header label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      letter-spacing: 0.2px;
+    }
+
+    .slider-header label i { color: #6366f1; font-size: 11px; }
+
+    .slider-value {
+      font-size: 11px;
+      font-weight: 800;
+      color: #4338ca;
+      background: #eef2ff;
+      padding: 3px 9px;
+      border-radius: 8px;
+      min-width: 36px;
+      text-align: center;
+    }
+
+    input[type=range] {
+      width: 100%;
+      height: 6px;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: white;
+      border: 3px solid #6366f1;
+      box-shadow: 0 4px 10px -2px rgba(99, 102, 241, 0.5);
+      cursor: pointer;
+    }
+
+    input[type=range]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: white;
+      border: 3px solid #6366f1;
+      box-shadow: 0 4px 10px -2px rgba(99, 102, 241, 0.5);
+      cursor: pointer;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .modal-actions button {
+      flex: 1;
+      padding: 14px;
+      border-radius: 16px;
+      border: none;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: all 0.2s;
+      letter-spacing: 0.2px;
+    }
+
+    .modal-actions .reapply {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      box-shadow: 0 12px 24px -8px rgba(99, 102, 241, 0.5);
+    }
+
+    .modal-actions .reapply:active { transform: scale(0.96); }
+
+    .modal-actions .cancel {
+      background: #f1f5f9;
+      color: #334155;
+    }
+
+    .modal-actions .cancel:active {
+      background: #e2e8f0;
+      transform: scale(0.96);
+    }
+
+    /* ============ RESPONSIVE ============ */
+    @media (max-width: 430px) {
       .phone-frame {
-        height: 98vh;
-        border-radius: 36px;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
       }
-      .app-screen {
-        padding: 0 14px 8px;
-      }
-      .shutter-btn {
-        width: 66px;
-        height: 66px;
-        font-size: 26px;
-      }
+      body { padding: 0; }
+      .dynamic-island { display: none; }
+      .status-bar { padding: 14px 22px 4px; }
+      .app-screen { padding: 0 14px 20px; }
     }
 
-    /* fallback for iOS input */
-    .capture-controls .btn-secondary i {
-      pointer-events: none;
+    @media (max-height: 800px) {
+      .phone-frame { height: 96vh; }
+      .camera-preview { aspect-ratio: 4 / 4.5; }
     }
   </style>
 </head>
 <body>
   <div class="phone-frame">
-    <!-- Status bar -->
+    <div class="dynamic-island"></div>
+
     <div class="status-bar">
-      <span>9:41</span>
-      <span>
+      <span class="time">9:41</span>
+      <div class="icons">
         <i class="fas fa-signal"></i>
         <i class="fas fa-wifi"></i>
         <i class="fas fa-battery-full"></i>
-      </span>
+      </div>
     </div>
 
-    <!-- Main app scroll -->
     <div class="app-screen">
       <!-- Header -->
       <div class="header">
-        <h1>ScanPro</h1>
-        <div class="header-actions">
-          <i class="fas fa-sliders-h"></i>
+        <div class="logo-group">
+          <div class="logo-mark">
+            <i class="fas fa-bolt"></i>
+          </div>
+          <div class="brand-text">
+            <h1>ScanPro</h1>
+            <p>AI Smart Scanner</p>
+          </div>
         </div>
+        <button class="header-btn" id="settingsBtn">
+          <i class="fas fa-sliders"></i>
+        </button>
       </div>
 
-      <!-- Camera preview + capture -->
+      <!-- Camera Card -->
       <div class="capture-card">
         <div class="camera-preview" id="cameraPreview">
           <video id="videoPreview" autoplay playsinline muted></video>
-          <canvas id="photoCanvas"></canvas>
+          <canvas id="previewCanvas"></canvas>
+          <canvas id="edgeCanvas"></canvas>
+          <div class="grid-overlay" id="gridOverlay"></div>
+          <div class="scan-guide" id="scanGuide">
+            <div class="corner corner-tl"></div>
+            <div class="corner corner-tr"></div>
+            <div class="corner corner-bl"></div>
+            <div class="corner corner-br"></div>
+          </div>
+          <div class="auto-scan-badge" id="autoScanBadge">
+            <span class="dot"></span> AUTO SCAN
+          </div>
+          <div class="page-counter-badge" id="pageCounterBadge" style="display:none;">
+            <i class="fas fa-file-alt" style="font-size:9px;margin-right:3px;"></i><span id="counterText">0</span>
+          </div>
           <div class="camera-placeholder" id="cameraPlaceholder">
-            <i class="fas fa-camera-retro"></i>
-            <span>Nhấn để bật camera</span>
+            <div class="icon-wrap">
+              <i class="fas fa-camera"></i>
+            </div>
+            <span class="main-text">Nhấn để bật camera</span>
+            <span class="hint">Tự động phát hiện viền và làm phẳng tài liệu như máy scan chuyên nghiệp</span>
+          </div>
+          <div class="processing-overlay" id="processingOverlay">
+            <div class="spinner-wrap">
+              <div class="spinner"></div>
+              <div class="spinner-inner"></div>
+            </div>
+            <span id="processingText">Đang xử lý...</span>
           </div>
         </div>
 
         <div class="capture-controls">
-          <button class="btn-secondary" id="switchCameraBtn" title="Chuyển camera">
-            <i class="fas fa-sync-alt"></i>
+          <button class="ctrl-btn" id="switchCameraBtn" title="Chuyển camera">
+            <i class="fas fa-camera-rotate"></i>
           </button>
-          <button class="shutter-btn" id="captureBtn" title="Chụp ảnh">
-            <i class="fas fa-circle"></i>
-          </button>
-          <button class="btn-secondary" id="uploadBtn" title="Tải ảnh lên">
+          <div class="shutter-wrap">
+            <div class="shutter-ring"></div>
+            <button class="shutter-btn" id="captureBtn">
+              <i class="fas fa-circle"></i>
+            </button>
+          </div>
+          <button class="ctrl-btn" id="uploadBtn" title="Tải ảnh lên">
             <i class="fas fa-image"></i>
           </button>
         </div>
         <input type="file" id="fileInput" accept="image/*" multiple>
       </div>
 
-      <!-- Gallery: scanned pages -->
-      <div class="gallery-title">
-        <h3>Trang đã quét</h3>
-        <span id="pageCount">0 trang</span>
+      <!-- Smart Modes -->
+      <div class="section-label">
+        <h3><i class="fas fa-wand-magic-sparkles"></i> Smart Filters</h3>
+      </div>
+
+      <div class="modes-grid">
+        <div class="mode-card active" id="autoCropChip">
+          <div class="mode-icon"><i class="fas fa-crop-simple"></i></div>
+          <div class="mode-name">Cắt viền</div>
+        </div>
+        <div class="mode-card active" id="autoEnhanceChip">
+          <div class="mode-icon"><i class="fas fa-sparkles"></i></div>
+          <div class="mode-name">Làm nét</div>
+        </div>
+        <div class="mode-card" id="grayChip">
+          <div class="mode-icon"><i class="fas fa-circle-half-stroke"></i></div>
+          <div class="mode-name">Xám</div>
+        </div>
+        <div class="mode-card" id="bwChip">
+          <div class="mode-icon"><i class="fas fa-font"></i></div>
+          <div class="mode-name">B&W</div>
+        </div>
+      </div>
+
+      <!-- Gallery -->
+      <div class="gallery-header">
+        <h3><i class="fas fa-images"></i> Trang đã quét</h3>
+        <span class="page-count-badge" id="pageCount">0 trang</span>
       </div>
 
       <div class="pages-grid" id="pagesGrid">
         <div class="empty-gallery" id="emptyGallery">
-          <i class="fas fa-file-pdf" style="margin-right: 8px;"></i> Chưa có trang nào
+          <i class="fas fa-file-circle-plus"></i>
+          <span>Chưa có trang nào</span>
         </div>
       </div>
 
-      <!-- Action buttons -->
+      <!-- Actions -->
       <div class="action-bar">
         <button class="btn-primary" id="exportPdfBtn">
-          <i class="fas fa-file-pdf"></i> Xuất PDF
+          <i class="fas fa-file-pdf"></i>
+          <span>Xuất PDF</span>
         </button>
         <button class="btn-outline" id="sharePdfBtn">
-          <i class="fas fa-share-alt"></i> Chia sẻ
+          <i class="fas fa-share-nodes"></i>
+          <span>Chia sẻ</span>
         </button>
       </div>
-      <div style="height: 6px;"></div>
     </div>
   </div>
 
   <!-- Toast -->
-  <div class="toast-message" id="toast">Thông báo</div>
+  <div class="toast-message" id="toast">
+    <div class="toast-icon"><i class="fas fa-check"></i></div>
+    <span id="toastText">Thông báo</span>
+  </div>
+
+  <!-- Modal Preview -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4><i class="fas fa-wand-magic-sparkles"></i> Tinh chỉnh</h4>
+        <button class="close-btn" id="modalCloseBtn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <img id="modalImage" src="" alt="Preview">
+        
+        <div class="slider-group">
+          <div class="slider-header">
+            <label><i class="fas fa-sun"></i> Độ nét</label>
+            <span class="slider-value" id="sharpnessValue">45</span>
+          </div>
+          <input type="range" id="sharpnessSlider" min="0" max="100" value="45">
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-header">
+            <label><i class="fas fa-circle-half-stroke"></i> Tương phản</label>
+            <span class="slider-value" id="contrastValue">30</span>
+          </div>
+          <input type="range" id="contrastSlider" min="0" max="100" value="30">
+        </div>
+
+        <div class="modal-actions">
+          <button class="reapply" id="reapplyBtn">
+            <i class="fas fa-check"></i> Áp dụng
+          </button>
+          <button class="cancel" id="modalCancelBtn">
+            <i class="fas fa-xmark"></i> Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
     (function() {
-      // ---------- DOM elements ----------
+      // ============ DOM ============
       const video = document.getElementById('videoPreview');
-      const canvas = document.getElementById('photoCanvas');
+      const previewCanvas = document.getElementById('previewCanvas');
+      const edgeCanvas = document.getElementById('edgeCanvas');
       const cameraPlaceholder = document.getElementById('cameraPlaceholder');
       const captureBtn = document.getElementById('captureBtn');
       const switchCameraBtn = document.getElementById('switchCameraBtn');
@@ -512,343 +1372,631 @@
       const exportPdfBtn = document.getElementById('exportPdfBtn');
       const sharePdfBtn = document.getElementById('sharePdfBtn');
       const toastEl = document.getElementById('toast');
+      const toastText = document.getElementById('toastText');
+      const toastIcon = toastEl.querySelector('.toast-icon i');
+      const autoScanBadge = document.getElementById('autoScanBadge');
+      const scanGuide = document.getElementById('scanGuide');
+      const gridOverlay = document.getElementById('gridOverlay');
+      const processingOverlay = document.getElementById('processingOverlay');
+      const processingText = document.getElementById('processingText');
+      const pageCounterBadge = document.getElementById('pageCounterBadge');
+      const counterText = document.getElementById('counterText');
+      const settingsBtn = document.getElementById('settingsBtn');
 
-      // ---------- State ----------
+      const autoCropChip = document.getElementById('autoCropChip');
+      const autoEnhanceChip = document.getElementById('autoEnhanceChip');
+      const grayChip = document.getElementById('grayChip');
+      const bwChip = document.getElementById('bwChip');
+
+      const modalOverlay = document.getElementById('modalOverlay');
+      const modalImage = document.getElementById('modalImage');
+      const modalCloseBtn = document.getElementById('modalCloseBtn');
+      const modalCancelBtn = document.getElementById('modalCancelBtn');
+      const reapplyBtn = document.getElementById('reapplyBtn');
+      const sharpnessSlider = document.getElementById('sharpnessSlider');
+      const contrastSlider = document.getElementById('contrastSlider');
+      const sharpnessValue = document.getElementById('sharpnessValue');
+      const contrastValue = document.getElementById('contrastValue');
+
+      // ============ State ============
       let stream = null;
-      let currentFacingMode = 'environment'; // sau
-      let scannedPages = []; // mảng các dataURL (jpeg/png)
+      let currentFacingMode = 'environment';
+      let scannedPages = [];
       let cameraActive = false;
+      let opencvReady = false;
+      let autoCropEnabled = true;
+      let autoEnhanceEnabled = true;
+      let grayEnabled = false;
+      let bwEnabled = false;
+      let currentPreviewPageId = null;
 
-      // ---------- Toast helper ----------
-      function showToast(msg, duration = 2000) {
-        toastEl.textContent = msg;
+      // ============ Toast ============
+      function showToast(msg, duration = 1800, iconClass = 'fa-check') {
+        toastText.textContent = msg;
+        toastIcon.className = `fas ${iconClass}`;
         toastEl.classList.add('show');
         clearTimeout(window.toastTimeout);
-        window.toastTimeout = setTimeout(() => {
-          toastEl.classList.remove('show');
-        }, duration);
+        window.toastTimeout = setTimeout(() => toastEl.classList.remove('show'), duration);
       }
 
-      // ---------- Camera handling ----------
+      // ============ OpenCV ============
+      function waitForOpenCV() {
+        return new Promise((resolve) => {
+          if (window.cv && window.cv.Mat) { opencvReady = true; resolve(); return; }
+          const check = setInterval(() => {
+            if (window.cv && window.cv.Mat) {
+              opencvReady = true;
+              clearInterval(check);
+              resolve();
+            }
+          }, 200);
+          setTimeout(() => { clearInterval(check); resolve(); }, 8000);
+        });
+      }
+
+      // ============ Image Processing ============
+      function detectDocumentCorners(srcCanvas) {
+        if (!opencvReady) return null;
+        try {
+          const src = cv.imread(srcCanvas);
+          const gray = new cv.Mat();
+          const blurred = new cv.Mat();
+          const edges = new cv.Mat();
+          const contours = new cv.MatVector();
+          const hierarchy = new cv.Mat();
+
+          cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+          cv.GaussianBlur(gray, blurred, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
+          cv.Canny(blurred, edges, 60, 180);
+          cv.dilate(edges, edges, cv.Mat.ones(3, 3, cv.CV_8U), new cv.Point(-1, -1), 1);
+          cv.findContours(edges, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+          let maxArea = 0, bestCorners = null;
+          const imgArea = srcCanvas.width * srcCanvas.height;
+
+          for (let i = 0; i < contours.size(); i++) {
+            const cnt = contours.get(i);
+            const area = cv.contourArea(cnt);
+            if (area > maxArea && area > imgArea * 0.15) {
+              const peri = cv.arcLength(cnt, true);
+              const approx = new cv.Mat();
+              cv.approxPolyDP(cnt, approx, 0.02 * peri, true);
+              if (approx.rows === 4 && cv.isContourConvex(approx)) {
+                maxArea = area;
+                const pts = [];
+                for (let j = 0; j < 4; j++) {
+                  pts.push({ x: approx.data32S[j * 2], y: approx.data32S[j * 2 + 1] });
+                }
+                bestCorners = sortCorners(pts);
+              }
+              approx.delete();
+            }
+            cnt.delete();
+          }
+
+          src.delete(); gray.delete(); blurred.delete(); edges.delete();
+          contours.delete(); hierarchy.delete();
+          return bestCorners;
+        } catch (e) { return null; }
+      }
+
+      function sortCorners(pts) {
+        const sorted = [...pts];
+        const sum = sorted.map(p => p.x + p.y);
+        const diff = sorted.map(p => p.x - p.y);
+        const tl = sorted[sum.indexOf(Math.min(...sum))];
+        const br = sorted[sum.indexOf(Math.max(...sum))];
+        const tr = sorted[diff.indexOf(Math.max(...diff))];
+        const bl = sorted[diff.indexOf(Math.min(...diff))];
+        return [tl, tr, br, bl];
+      }
+
+      function warpPerspective(srcCanvas, corners) {
+        if (!opencvReady || !corners) return null;
+        try {
+          const src = cv.imread(srcCanvas);
+          const [tl, tr, br, bl] = corners;
+          const widthTop = Math.hypot(tr.x - tl.x, tr.y - tl.y);
+          const widthBottom = Math.hypot(br.x - bl.x, br.y - bl.y);
+          const heightLeft = Math.hypot(bl.x - tl.x, bl.y - tl.y);
+          const heightRight = Math.hypot(br.x - tr.x, br.y - tr.y);
+          const maxWidth = Math.max(widthTop, widthBottom);
+          const maxHeight = Math.max(heightLeft, heightRight);
+
+          const srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [tl.x, tl.y, tr.x, tr.y, br.x, br.y, bl.x, bl.y]);
+          const dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [0, 0, maxWidth - 1, 0, maxWidth - 1, maxHeight - 1, 0, maxHeight - 1]);
+          const M = cv.getPerspectiveTransform(srcTri, dstTri);
+          const dst = new cv.Mat();
+          const dsize = new cv.Size(Math.round(maxWidth), Math.round(maxHeight));
+          cv.warpPerspective(src, dst, M, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
+
+          const outCanvas = document.createElement('canvas');
+          outCanvas.width = dst.cols;
+          outCanvas.height = dst.rows;
+          cv.imshow(outCanvas, dst);
+
+          src.delete(); srcTri.delete(); dstTri.delete(); M.delete(); dst.delete();
+          return outCanvas;
+        } catch (e) { return null; }
+      }
+
+      function enhanceImage(srcCanvas, sharpness = 45, contrast = 30) {
+        if (!opencvReady) return srcCanvas;
+        try {
+          const src = cv.imread(srcCanvas);
+          let enhanced = new cv.Mat();
+
+          if (contrast > 0) {
+            const lab = new cv.Mat();
+            cv.cvtColor(src, lab, cv.COLOR_RGBA2RGB);
+            cv.cvtColor(lab, lab, cv.COLOR_RGB2Lab);
+            const channels = new cv.MatVector();
+            cv.split(lab, channels);
+            const clahe = new cv.CLAHE(2.0 + contrast / 40, new cv.Size(8, 8));
+            const l = channels.get(0);
+            clahe.apply(l, l);
+            channels.set(0, l);
+            cv.merge(channels, lab);
+            cv.cvtColor(lab, enhanced, cv.COLOR_Lab2RGB);
+            cv.cvtColor(enhanced, enhanced, cv.COLOR_RGB2RGBA);
+            lab.delete(); channels.delete(); l.delete();
+          } else {
+            src.copyTo(enhanced);
+          }
+
+          if (sharpness > 0) {
+            const blurred = new cv.Mat();
+            const sharp = new cv.Mat();
+            cv.GaussianBlur(enhanced, blurred, new cv.Size(5, 5), 0, 0);
+            const amount = sharpness / 100 * 1.5;
+            cv.addWeighted(enhanced, 1 + amount, blurred, -amount, 0, sharp);
+            enhanced.delete();
+            enhanced = sharp;
+            blurred.delete();
+          }
+
+          const out = document.createElement('canvas');
+          out.width = enhanced.cols;
+          out.height = enhanced.rows;
+          cv.imshow(out, enhanced);
+          src.delete(); enhanced.delete();
+          return out;
+        } catch (e) { return srcCanvas; }
+      }
+
+      function applyColorMode(srcCanvas, gray, bw) {
+        if (!opencvReady || (!gray && !bw)) return srcCanvas;
+        try {
+          const src = cv.imread(srcCanvas);
+          const grayMat = new cv.Mat();
+          cv.cvtColor(src, grayMat, cv.COLOR_RGBA2GRAY);
+          let result = new cv.Mat();
+          if (bw) {
+            cv.adaptiveThreshold(grayMat, result, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 15, 8);
+          } else {
+            grayMat.copyTo(result);
+          }
+          cv.cvtColor(result, result, cv.COLOR_GRAY2RGBA);
+          const out = document.createElement('canvas');
+          out.width = result.cols;
+          out.height = result.rows;
+          cv.imshow(out, result);
+          src.delete(); grayMat.delete(); result.delete();
+          return out;
+        } catch (e) { return srcCanvas; }
+      }
+
+      async function processImage(srcCanvas, options = {}) {
+        const {
+          doCrop = autoCropEnabled,
+          doEnhance = autoEnhanceEnabled,
+          doGray = grayEnabled,
+          doBW = bwEnabled,
+          sharpness = 45,
+          contrast = 30
+        } = options;
+
+        let currentCanvas = srcCanvas;
+        if (doCrop && opencvReady) {
+          const corners = detectDocumentCorners(currentCanvas);
+          if (corners) {
+            const warped = warpPerspective(currentCanvas, corners);
+            if (warped) currentCanvas = warped;
+          }
+        }
+        if (doEnhance && opencvReady) {
+          currentCanvas = enhanceImage(currentCanvas, sharpness, contrast);
+        }
+        if ((doGray || doBW) && opencvReady) {
+          currentCanvas = applyColorMode(currentCanvas, doGray, doBW);
+        }
+        return currentCanvas;
+      }
+
+      function canvasToDataURL(canvas, quality = 0.95) {
+        return canvas.toDataURL('image/jpeg', quality);
+      }
+
+      function dataURLToCanvas(dataURL) {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            const c = document.createElement('canvas');
+            c.width = img.width;
+            c.height = img.height;
+            c.getContext('2d').drawImage(img, 0, 0);
+            resolve(c);
+          };
+          img.src = dataURL;
+        });
+      }
+
+      // ============ Camera ============
       async function startCamera(facingMode = 'environment') {
-        // Dừng stream cũ nếu có
         if (stream) {
-          stream.getTracks().forEach(track => track.stop());
+          stream.getTracks().forEach(t => t.stop());
           stream = null;
         }
         try {
-          const constraints = {
-            video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
             audio: false
-          };
-          stream = await navigator.mediaDevices.getUserMedia(constraints);
+          });
           video.srcObject = stream;
           await video.play();
           cameraActive = true;
           cameraPlaceholder.style.display = 'none';
           video.style.display = 'block';
-          canvas.style.display = 'none';
+          previewCanvas.style.display = 'none';
+          gridOverlay.classList.add('show');
+          if (opencvReady) scanGuide.classList.add('active');
           currentFacingMode = facingMode;
         } catch (err) {
-          console.warn('Camera error:', err);
-          showToast('Không thể truy cập camera');
+          showToast('Không thể truy cập camera', 2000, 'fa-triangle-exclamation');
           cameraActive = false;
-          cameraPlaceholder.style.display = 'flex';
-          video.style.display = 'none';
-          canvas.style.display = 'none';
-          // Nếu có stream cũ, dừng lại
-          if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-            stream = null;
-          }
         }
       }
 
       function stopCamera() {
         if (stream) {
-          stream.getTracks().forEach(track => track.stop());
+          stream.getTracks().forEach(t => t.stop());
           stream = null;
         }
         cameraActive = false;
-        video.style.display = 'none';
-        canvas.style.display = 'none';
-        cameraPlaceholder.style.display = 'flex';
+        gridOverlay.classList.remove('show');
       }
 
-      // Khởi tạo camera ban đầu (chỉ khi người dùng bấm, tránh autoplay fail)
-      // Nhưng ta có thể thử yêu cầu nhẹ, nếu lỗi thì hiện placeholder.
-      // Nhưng vì mobile, tốt hơn để người dùng bấm capture lần đầu sẽ tự bật camera.
-      // Chúng ta sẽ bật camera lần đầu khi bấm nút chụp (nếu chưa bật)
-      
-      // Nút chụp: nếu camera chưa bật, bật camera trước, sau đó chụp.
+      // ============ Capture ============
       captureBtn.addEventListener('click', async () => {
         if (!cameraActive) {
           await startCamera(currentFacingMode);
-          // Đợi 1 chút cho video ổn định
-          setTimeout(() => {
-            if (cameraActive) capturePhoto();
-          }, 300);
-          return;
+          await new Promise(r => setTimeout(r, 600));
+          if (!cameraActive) return;
         }
-        capturePhoto();
+        await captureAndProcess();
       });
 
-      function capturePhoto() {
-        if (!video.videoWidth || !video.videoHeight) {
-          showToast('Camera chưa sẵn sàng');
+      async function captureAndProcess() {
+        if (!video.videoWidth) {
+          showToast('Camera chưa sẵn sàng', 1500, 'fa-triangle-exclamation');
           return;
         }
-        // Vẽ frame hiện tại vào canvas
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        // Lấy data URL (chất lượng 0.92)
-        const dataURL = canvas.toDataURL('image/jpeg', 0.92);
-        
-        // Thêm vào mảng
-        scannedPages.push(dataURL);
-        updateGalleryAndCount();
 
-        // Hiệu ứng nháy màn hình
-        canvas.style.display = 'block';
-        video.style.display = 'none';
-        setTimeout(() => {
-          if (cameraActive && stream) {
-            canvas.style.display = 'none';
-            video.style.display = 'block';
-          }
-        }, 150);
+        processingOverlay.classList.add('show');
+        processingText.textContent = 'Đang phát hiện tài liệu...';
 
-        showToast('Đã thêm trang', 1200);
+        const srcCanvas = document.createElement('canvas');
+        srcCanvas.width = video.videoWidth;
+        srcCanvas.height = video.videoHeight;
+        srcCanvas.getContext('2d').drawImage(video, 0, 0);
+        const originalDataURL = canvasToDataURL(srcCanvas, 0.95);
+
+        try {
+          await new Promise(r => setTimeout(r, 50));
+          processingText.textContent = autoCropEnabled ? 'Đang cắt viền...' : 'Đang xử lý...';
+          const processedCanvas = await processImage(srcCanvas);
+          const processedDataURL = canvasToDataURL(processedCanvas, 0.95);
+
+          scannedPages.push({
+            id: Date.now() + Math.random(),
+            original: originalDataURL,
+            processed: processedDataURL
+          });
+
+          updateGallery();
+          showToast('Đã thêm trang mới', 1200, 'fa-check');
+        } catch (e) {
+          scannedPages.push({
+            id: Date.now() + Math.random(),
+            original: originalDataURL,
+            processed: originalDataURL
+          });
+          updateGallery();
+          showToast('Đã thêm (cơ bản)', 1500);
+        } finally {
+          processingOverlay.classList.remove('show');
+        }
       }
 
-      // Chuyển camera trước/sau
+      // ============ Upload ============
+      uploadBtn.addEventListener('click', () => fileInput.click());
+
+      fileInput.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
+        if (!files.length) return;
+        fileInput.value = '';
+
+        processingOverlay.classList.add('show');
+        processingText.textContent = `Đang xử lý ${files.length} ảnh...`;
+
+        for (let i = 0; i < files.length; i++) {
+          try {
+            const dataURL = await new Promise((res, rej) => {
+              const r = new FileReader();
+              r.onload = ev => res(ev.target.result);
+              r.onerror = rej;
+              r.readAsDataURL(files[i]);
+            });
+            const srcCanvas = await dataURLToCanvas(dataURL);
+            const processedCanvas = await processImage(srcCanvas);
+            const processedDataURL = canvasToDataURL(processedCanvas, 0.95);
+            scannedPages.push({
+              id: Date.now() + Math.random() + i,
+              original: dataURL,
+              processed: processedDataURL
+            });
+          } catch (err) { console.warn(err); }
+        }
+        updateGallery();
+        processingOverlay.classList.remove('show');
+        showToast(`Đã thêm ${files.length} ảnh`, 1500, 'fa-check');
+      });
+
+      // ============ Switch camera ============
       switchCameraBtn.addEventListener('click', async () => {
         const newMode = currentFacingMode === 'environment' ? 'user' : 'environment';
-        if (cameraActive) {
-          await startCamera(newMode);
-        } else {
-          await startCamera(newMode);
-        }
-        showToast(newMode === 'environment' ? 'Camera sau' : 'Camera trước', 1000);
+        await startCamera(newMode);
+        showToast(newMode === 'environment' ? 'Camera sau' : 'Camera trước', 1000, 'fa-camera');
       });
 
-      // Upload ảnh từ thiết bị
-      uploadBtn.addEventListener('click', () => {
-        fileInput.click();
+      // ============ Modes ============
+      autoCropChip.addEventListener('click', () => {
+        autoCropEnabled = !autoCropEnabled;
+        autoCropChip.classList.toggle('active', autoCropEnabled);
+        showToast(autoCropEnabled ? 'Bật tự cắt viền' : 'Tắt tự cắt viền', 1200);
       });
 
-      fileInput.addEventListener('change', (e) => {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
-
-        let processed = 0;
-        Array.from(files).forEach(file => {
-          if (!file.type.startsWith('image/')) return;
-          const reader = new FileReader();
-          reader.onload = (ev) => {
-            scannedPages.push(ev.target.result);
-            processed++;
-            if (processed === files.length) {
-              updateGalleryAndCount();
-              showToast(`Đã thêm ${files.length} ảnh`, 1500);
-            }
-          };
-          reader.readAsDataURL(file);
-        });
-        fileInput.value = ''; // reset
+      autoEnhanceChip.addEventListener('click', () => {
+        autoEnhanceEnabled = !autoEnhanceEnabled;
+        autoEnhanceChip.classList.toggle('active', autoEnhanceEnabled);
+        showToast(autoEnhanceEnabled ? 'Bật làm nét' : 'Tắt làm nét', 1200);
       });
 
-      // Cập nhật gallery và số trang
-      function updateGalleryAndCount() {
-        // Xoá gallery cũ (giữ emptyGallery? ta sẽ render lại toàn bộ)
+      grayChip.addEventListener('click', () => {
+        grayEnabled = !grayEnabled;
+        grayChip.classList.toggle('active', grayEnabled);
+        if (grayEnabled) { bwEnabled = false; bwChip.classList.remove('active'); }
+        showToast(grayEnabled ? 'Chế độ xám' : 'Chế độ màu', 1200);
+      });
+
+      bwChip.addEventListener('click', () => {
+        bwEnabled = !bwEnabled;
+        bwChip.classList.toggle('active', bwEnabled);
+        if (bwEnabled) { grayEnabled = false; grayChip.classList.remove('active'); }
+        showToast(bwEnabled ? 'Chế độ đen trắng' : 'Chế độ màu', 1200);
+      });
+
+      // ============ Gallery ============
+      function updateGallery() {
         pagesGrid.innerHTML = '';
         if (scannedPages.length === 0) {
           pagesGrid.appendChild(emptyGallery);
+          pageCounterBadge.style.display = 'none';
         } else {
-          scannedPages.forEach((dataUrl, index) => {
-            const thumbDiv = document.createElement('div');
-            thumbDiv.className = 'page-thumb';
+          scannedPages.forEach((page, index) => {
+            const thumb = document.createElement('div');
+            thumb.className = 'page-thumb';
+
             const img = document.createElement('img');
-            img.src = dataUrl;
+            img.src = page.processed;
             img.alt = `Trang ${index + 1}`;
-            thumbDiv.appendChild(img);
-            
-            // Nút xoá
-            const removeBadge = document.createElement('div');
-            removeBadge.className = 'remove-badge';
-            removeBadge.innerHTML = '<i class="fas fa-times"></i>';
-            removeBadge.addEventListener('click', (e) => {
+            thumb.appendChild(img);
+
+            const overlay = document.createElement('div');
+            overlay.className = 'thumb-overlay';
+            thumb.appendChild(overlay);
+
+            const idx = document.createElement('div');
+            idx.className = 'thumb-index';
+            idx.textContent = `#${index + 1}`;
+            thumb.appendChild(idx);
+
+            const edit = document.createElement('div');
+            edit.className = 'thumb-edit';
+            edit.innerHTML = '<i class="fas fa-pen"></i>';
+            thumb.appendChild(edit);
+
+            const rm = document.createElement('div');
+            rm.className = 'remove-badge';
+            rm.innerHTML = '<i class="fas fa-xmark"></i>';
+            rm.addEventListener('click', (e) => {
               e.stopPropagation();
-              scannedPages.splice(index, 1);
-              updateGalleryAndCount();
-              showToast('Đã xoá trang', 1000);
+              scannedPages = scannedPages.filter(p => p.id !== page.id);
+              updateGallery();
+              showToast('Đã xoá trang', 1000, 'fa-trash');
             });
-            thumbDiv.appendChild(removeBadge);
-            
-            // Nhấn vào thumb có thể xem trước (nhưng không cần)
-            pagesGrid.appendChild(thumbDiv);
+            thumb.appendChild(rm);
+
+            thumb.addEventListener('click', () => openPreviewModal(page));
+            pagesGrid.appendChild(thumb);
           });
+          pageCounterBadge.style.display = 'block';
+          counterText.textContent = scannedPages.length;
         }
         pageCountSpan.textContent = `${scannedPages.length} trang`;
       }
 
-      // Khởi tạo emptyGallery
-      updateGalleryAndCount();
+      // ============ Modal ============
+      async function openPreviewModal(page) {
+        currentPreviewPageId = page.id;
+        modalImage.src = page.processed;
+        modalOverlay.classList.add('show');
+        sharpnessSlider.value = 45;
+        contrastSlider.value = 30;
+        sharpnessValue.textContent = '45';
+        contrastValue.textContent = '30';
+      }
 
-      // ---------- PDF Export ----------
+      function closeModal() {
+        modalOverlay.classList.remove('show');
+        currentPreviewPageId = null;
+      }
+
+      modalCloseBtn.addEventListener('click', closeModal);
+      modalCancelBtn.addEventListener('click', closeModal);
+      modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) closeModal();
+      });
+
+      sharpnessSlider.addEventListener('input', (e) => {
+        sharpnessValue.textContent = e.target.value;
+      });
+
+      contrastSlider.addEventListener('input', (e) => {
+        contrastValue.textContent = e.target.value;
+      });
+
+      reapplyBtn.addEventListener('click', async () => {
+        const page = scannedPages.find(p => p.id === currentPreviewPageId);
+        if (!page) return;
+
+        processingOverlay.classList.add('show');
+        processingText.textContent = 'Đang tinh chỉnh...';
+
+        const sharp = parseInt(sharpnessSlider.value);
+        const contrast = parseInt(contrastSlider.value);
+
+        const srcCanvas = await dataURLToCanvas(page.original);
+        const processedCanvas = await processImage(srcCanvas, {
+          doCrop: autoCropEnabled,
+          doEnhance: true,
+          doGray: grayEnabled,
+          doBW: bwEnabled,
+          sharpness: sharp,
+          contrast: contrast
+        });
+
+        page.processed = canvasToDataURL(processedCanvas, 0.95);
+        updateGallery();
+        modalImage.src = page.processed;
+        processingOverlay.classList.remove('show');
+        showToast('Đã áp dụng tinh chỉnh', 1500, 'fa-wand-magic-sparkles');
+      });
+
+      // ============ PDF ============
       async function generatePdf() {
         if (scannedPages.length === 0) {
-          showToast('Chưa có trang nào để xuất PDF');
+          showToast('Chưa có trang nào', 1500, 'fa-circle-info');
           return null;
         }
-
-        showToast('Đang tạo PDF...', 1200);
-
+        showToast('Đang tạo PDF...', 1500, 'fa-spinner');
         try {
           const { jsPDF } = window.jspdf;
-          // Tạo PDF khổ A4 dọc (tùy chỉnh)
-          const pdf = new jsPDF({
-            orientation: 'portrait',
-            unit: 'mm',
-            format: 'a4'
-          });
-
-          const pageWidth = pdf.internal.pageSize.getWidth();
-          const pageHeight = pdf.internal.pageSize.getHeight();
-          const margin = 10; // mm
-          const maxImgWidth = pageWidth - 2 * margin;
-          const maxImgHeight = pageHeight - 2 * margin;
+          const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+          const pw = pdf.internal.pageSize.getWidth();
+          const ph = pdf.internal.pageSize.getHeight();
+          const margin = 8;
+          const maxW = pw - 2 * margin;
+          const maxH = ph - 2 * margin;
 
           for (let i = 0; i < scannedPages.length; i++) {
             if (i > 0) pdf.addPage();
-
-            const imgData = scannedPages[i];
-            // Tạo Image để lấy kích thước
-            const img = new Image();
-            img.src = imgData;
-            await new Promise((resolve) => {
-              img.onload = resolve;
-              img.onerror = resolve;
+            const dataURL = scannedPages[i].processed;
+            const img = await new Promise((res) => {
+              const im = new Image();
+              im.onload = () => res(im);
+              im.onerror = () => res(null);
+              im.src = dataURL;
             });
-
-            const imgWidth = img.width || 800;
-            const imgHeight = img.height || 600;
-
-            // Tính tỉ lệ để fit trong khung A4
-            const ratio = Math.min(maxImgWidth / imgWidth, maxImgHeight / imgHeight);
-            const renderWidth = imgWidth * ratio;
-            const renderHeight = imgHeight * ratio;
-            const x = (pageWidth - renderWidth) / 2;
-            const y = (pageHeight - renderHeight) / 2;
-
-            pdf.addImage(imgData, 'JPEG', x, y, renderWidth, renderHeight);
+            if (!img) continue;
+            const r = Math.min(maxW / img.width, maxH / img.height);
+            const w = img.width * r, h = img.height * r;
+            pdf.addImage(dataURL, 'JPEG', (pw - w) / 2, (ph - h) / 2, w, h);
           }
-
-          return pdf.output('blob'); // Blob
-        } catch (err) {
-          console.error('PDF error:', err);
-          showToast('Lỗi tạo PDF');
+          return pdf.output('blob');
+        } catch (e) {
+          showToast('Lỗi tạo PDF', 1500, 'fa-triangle-exclamation');
           return null;
         }
       }
 
-      // Xuất PDF (tải về)
       exportPdfBtn.addEventListener('click', async () => {
-        const pdfBlob = await generatePdf();
-        if (!pdfBlob) return;
-
-        const url = URL.createObjectURL(pdfBlob);
+        const blob = await generatePdf();
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `ScanPro_${Date.now()}.pdf`;
-        document.body.appendChild(a);
         a.click();
-        document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        showToast('Đã tải PDF về máy', 2000);
+        showToast('Đã tải PDF', 1800, 'fa-download');
       });
 
-      // Chia sẻ PDF (sử dụng Web Share API)
       sharePdfBtn.addEventListener('click', async () => {
-        const pdfBlob = await generatePdf();
-        if (!pdfBlob) return;
-
-        const file = new File([pdfBlob], `ScanPro_${Date.now()}.pdf`, { type: 'application/pdf' });
-
-        // Kiểm tra Web Share API
+        const blob = await generatePdf();
+        if (!blob) return;
+        const file = new File([blob], `ScanPro_${Date.now()}.pdf`, { type: 'application/pdf' });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           try {
-            await navigator.share({
-              files: [file],
-              title: 'Tài liệu quét từ ScanPro',
-              text: 'Chia sẻ file PDF từ ứng dụng ScanPro'
-            });
-            showToast('Đã chia sẻ thành công', 1500);
-          } catch (err) {
-            if (err.name !== 'AbortError') {
-              showToast('Không thể chia sẻ');
-            }
-          }
-        } else if (navigator.share) {
-          // Fallback chia sẻ text + url (không file)
-          const url = URL.createObjectURL(pdfBlob);
-          try {
-            await navigator.share({
-              title: 'Tài liệu PDF',
-              text: 'Xem file PDF từ ScanPro',
-              url: url
-            });
-            // không thu hồi URL ngay do share đang mở
-          } catch (err) {
-            showToast('Không thể chia sẻ');
+            await navigator.share({ files: [file], title: 'Tài liệu ScanPro' });
+            showToast('Đã chia sẻ', 1500, 'fa-share-nodes');
+          } catch (e) {
+            if (e.name !== 'AbortError') showToast('Không thể chia sẻ', 1500, 'fa-circle-info');
           }
         } else {
-          // Tải xuống như phương án cuối
-          const url = URL.createObjectURL(pdfBlob);
+          const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
           a.download = `ScanPro_${Date.now()}.pdf`;
           a.click();
           URL.revokeObjectURL(url);
-          showToast('Thiết bị không hỗ trợ chia sẻ, đã tải về', 2000);
+          showToast('Đã tải về', 2000, 'fa-download');
         }
       });
 
-      // Dừng camera khi trang ẩn (tránh tiêu tốn pin)
+      // ============ Settings ============
+      settingsBtn.addEventListener('click', () => {
+        showToast('Cài đặt đang phát triển', 1500, 'fa-gear');
+      });
+
+      // ============ Init ============
+      cameraPlaceholder.addEventListener('click', async () => {
+        await startCamera(currentFacingMode);
+      });
+
+      waitForOpenCV().then(() => {
+        if (opencvReady) {
+          console.log('✅ OpenCV ready');
+          if (cameraActive) scanGuide.classList.add('active');
+          autoScanBadge.classList.add('show');
+          setTimeout(() => autoScanBadge.classList.remove('show'), 3000);
+        }
+      });
+
+      window.addEventListener('beforeunload', () => {
+        if (stream) stream.getTracks().forEach(t => t.stop());
+      });
+
       document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
+          closeModal();
           stopCamera();
-        } else {
-          // Không tự bật lại, người dùng sẽ bấm chụp
           cameraPlaceholder.style.display = 'flex';
           video.style.display = 'none';
-          canvas.style.display = 'none';
-          cameraActive = false;
+          scanGuide.classList.remove('active');
         }
       });
 
-      // Khởi tạo placeholder, camera sẽ bật khi bấm nút chụp lần đầu
-      // nhưng nếu người dùng muốn bật sớm, nhấn shutter sẽ kích hoạt.
-      // Thêm sự kiện click vào placeholder để bật camera nhanh
-      cameraPlaceholder.addEventListener('click', async () => {
-        if (!cameraActive) {
-          await startCamera(currentFacingMode);
-        }
-      });
-
-      // Dọn dẹp khi unload
-      window.addEventListener('beforeunload', () => {
-        if (stream) {
-          stream.getTracks().forEach(track => track.stop());
-        }
-      });
-
-      // Fix lỗi file input trên một số trình duyệt
-      window.addEventListener('load', () => {
-        // Không tự bật camera, để người dùng tương tác
-      });
     })();
   </script>
 </body>
