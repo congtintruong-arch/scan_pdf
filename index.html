@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>ScanPro AI • Professional Scanner</title>
+  <title>ScanPro AI • Smart Paper Detection</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -25,6 +25,7 @@
       --secondary: #8b5cf6;
       --accent: #06b6d4;
       --success: #10b981;
+      --success-dark: #059669;
       --danger: #f43f5e;
       --warning: #f59e0b;
       --dark: #0a0e1a;
@@ -37,12 +38,11 @@
       --radius-lg: 28px;
       --radius-md: 20px;
       --radius-sm: 14px;
-      --radius-xs: 10px;
       --shadow-sm: 0 2px 8px -2px rgba(15, 23, 42, 0.08);
       --shadow-md: 0 8px 24px -8px rgba(15, 23, 42, 0.15);
       --shadow-lg: 0 20px 40px -16px rgba(15, 23, 42, 0.22);
       --shadow-glow: 0 12px 32px -8px rgba(99, 102, 241, 0.4);
-      --shadow-glow-success: 0 12px 32px -8px rgba(16, 185, 129, 0.4);
+      --shadow-glow-success: 0 12px 32px -8px rgba(16, 185, 129, 0.5);
     }
 
     html, body {
@@ -95,7 +95,6 @@
       z-index: 1;
     }
 
-    /* Dynamic Island */
     .dynamic-island {
       position: absolute;
       top: 10px;
@@ -136,9 +135,7 @@
       position: relative;
     }
 
-    .status-bar .time {
-      font-feature-settings: "tnum";
-    }
+    .status-bar .time { font-feature-settings: "tnum"; }
 
     .status-bar .icons {
       display: flex;
@@ -147,9 +144,7 @@
       font-size: 12px;
     }
 
-    .status-bar .icons i {
-      color: #0f172a;
-    }
+    .status-bar .icons i { color: #0f172a; }
 
     /* ============ APP SCREEN ============ */
     .app-screen {
@@ -290,26 +285,26 @@
 
     #previewCanvas { display: none; }
 
-    #edgeCanvas {
+    /* ============ DETECTION OVERLAY ============ */
+    #detectionCanvas {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
       pointer-events: none;
-      z-index: 4;
+      z-index: 5;
       display: none;
     }
 
-    /* Grid overlay */
     .grid-overlay {
       position: absolute;
       inset: 0;
       z-index: 3;
       pointer-events: none;
-      opacity: 0.35;
+      opacity: 0.25;
       background-image: 
-        linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px);
+        linear-gradient(rgba(255,255,255,0.2) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.2) 1px, transparent 1px);
       background-size: 33.33% 33.33%;
       display: none;
     }
@@ -359,72 +354,119 @@
       font-size: 11.5px;
       color: #94a3b8;
       font-weight: 500;
-      max-width: 220px;
+      max-width: 240px;
       line-height: 1.5;
     }
 
-    /* Scan guide */
-    .scan-guide {
-      position: absolute;
-      inset: 14px;
-      z-index: 3;
-      pointer-events: none;
-      display: none;
-    }
-
-    .scan-guide.active { display: block; }
-
-    .corner {
-      position: absolute;
-      width: 32px;
-      height: 32px;
-      border: 3px solid #6366f1;
-      filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.8));
-    }
-
-    .corner-tl { top: -2px; left: -2px; border-right: none; border-bottom: none; border-radius: 12px 0 0 0; }
-    .corner-tr { top: -2px; right: -2px; border-left: none; border-bottom: none; border-radius: 0 12px 0 0; }
-    .corner-bl { bottom: -2px; left: -2px; border-right: none; border-top: none; border-radius: 0 0 0 12px; }
-    .corner-br { bottom: -2px; right: -2px; border-left: none; border-top: none; border-radius: 0 0 12px 0; }
-
-    /* Auto badge */
-    .auto-scan-badge {
+    /* ============ SMART STATUS BADGES ============ */
+    .status-badge {
       position: absolute;
       top: 14px;
       left: 14px;
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: white;
+      z-index: 6;
       font-size: 10px;
       font-weight: 800;
-      padding: 6px 12px;
+      padding: 7px 13px;
       border-radius: 30px;
       display: none;
       align-items: center;
-      gap: 6px;
-      z-index: 6;
-      box-shadow: 0 6px 16px -4px rgba(16, 185, 129, 0.6);
-      letter-spacing: 0.8px;
-      backdrop-filter: blur(8px);
+      gap: 7px;
+      letter-spacing: 0.7px;
+      backdrop-filter: blur(12px);
       border: 1px solid rgba(255,255,255,0.2);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      text-transform: uppercase;
+      box-shadow: 0 8px 20px -6px rgba(0,0,0,0.4);
     }
 
-    .auto-scan-badge.show { display: flex; }
+    .status-badge.show { display: flex; }
 
-    .auto-scan-badge .dot {
-      width: 6px;
-      height: 6px;
+    .status-badge .dot {
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
-      background: white;
+      background: currentColor;
       animation: pulse 1.2s infinite;
-      box-shadow: 0 0 8px white;
     }
 
     @keyframes pulse {
       0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.7); }
+      50% { opacity: 0.4; transform: scale(0.6); }
     }
 
-    /* Counter badge */
+    .status-badge.searching {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(217, 119, 6, 0.95));
+      color: white;
+    }
+
+    .status-badge.detected {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.95), rgba(139, 92, 246, 0.95));
+      color: white;
+      animation: bounceIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .status-badge.locked {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(5, 150, 105, 0.95));
+      color: white;
+      box-shadow: 0 8px 24px -6px rgba(16, 185, 129, 0.6);
+      animation: bounceIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes bounceIn {
+      0% { transform: scale(0.85); opacity: 0; }
+      60% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+
+    /* ============ STABILITY METER ============ */
+    .stability-meter {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 70%;
+      height: 6px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 10px;
+      overflow: hidden;
+      z-index: 6;
+      display: none;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .stability-meter.show { display: block; }
+
+    .stability-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #f59e0b, #10b981);
+      border-radius: 10px;
+      transition: width 0.15s linear;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.8);
+    }
+
+    /* ============ CORNER DETECTION MARKERS ============ */
+    .corner-marker {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border: 3px solid #6366f1;
+      z-index: 6;
+      display: none;
+      pointer-events: none;
+      filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.9));
+      transition: all 0.1s linear;
+    }
+
+    .corner-marker.show { display: block; }
+
+    .corner-marker.tl { border-right: none; border-bottom: none; border-radius: 8px 0 0 0; }
+    .corner-marker.tr { border-left: none; border-bottom: none; border-radius: 0 8px 0 0; }
+    .corner-marker.bl { border-right: none; border-top: none; border-radius: 0 0 0 8px; }
+    .corner-marker.br { border-left: none; border-top: none; border-radius: 0 0 8px 0; }
+
+    /* ============ PAGE COUNTER ============ */
     .page-counter-badge {
       position: absolute;
       top: 14px;
@@ -441,7 +483,7 @@
       letter-spacing: 0.3px;
     }
 
-    /* Processing overlay */
+    /* ============ PROCESSING OVERLAY ============ */
     .processing-overlay {
       position: absolute;
       inset: 0;
@@ -549,6 +591,12 @@
       -webkit-mask-composite: xor;
       mask-composite: exclude;
       animation: rotateRing 6s linear infinite;
+      opacity: 0.6;
+    }
+
+    .shutter-ring.auto-active {
+      animation: rotateRing 1.5s linear infinite;
+      opacity: 1;
     }
 
     @keyframes rotateRing {
@@ -593,7 +641,167 @@
       opacity: 0.6;
     }
 
-    /* ============ SMART MODES ============ */
+    .shutter-btn.locked {
+      color: #10b981;
+      box-shadow: 
+        0 10px 24px -6px rgba(16, 185, 129, 0.4),
+        0 0 0 4px #ffffff,
+        0 0 0 5px #34d399,
+        inset 0 1px 2px rgba(255,255,255,1);
+    }
+
+    /* ============ AUTO SCAN TOGGLE ============ */
+    .auto-toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: linear-gradient(160deg, #eef2ff, #e0e7ff);
+      border-radius: 14px;
+      margin-bottom: 14px;
+      border: 1px solid #c7d2fe;
+      animation: fadeUp 0.5s 0.15s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+    }
+
+    .auto-toggle-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .auto-toggle-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      box-shadow: 0 6px 14px -4px rgba(99, 102, 241, 0.5);
+    }
+
+    .auto-toggle-text .title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #3730a3;
+      letter-spacing: -0.1px;
+    }
+
+    .auto-toggle-text .sub {
+      font-size: 10px;
+      font-weight: 500;
+      color: #6366f1;
+      margin-top: 1px;
+    }
+
+    .toggle-switch {
+      width: 46px;
+      height: 26px;
+      border-radius: 20px;
+      background: #cbd5e1;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      flex-shrink: 0;
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: white;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .toggle-switch.on {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      box-shadow: 0 4px 12px -2px rgba(99, 102, 241, 0.6);
+    }
+
+    .toggle-switch.on::after {
+      left: 23px;
+    }
+
+    /* ============ SENSITIVITY ROW ============ */
+    .sensitivity-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      background: #f8fafc;
+      border-radius: 12px;
+      margin-bottom: 14px;
+      border: 1px solid #e2e8f0;
+      animation: fadeUp 0.5s 0.2s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+    }
+
+    .sensitivity-row label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      letter-spacing: 0.2px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .sensitivity-row label i {
+      color: #6366f1;
+      font-size: 10px;
+    }
+
+    .sensitivity-row input[type=range] {
+      flex: 1;
+      height: 4px;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #c7d2fe, #6366f1);
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    .sensitivity-row input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: white;
+      border: 2.5px solid #6366f1;
+      box-shadow: 0 3px 8px -2px rgba(99, 102, 241, 0.5);
+      cursor: pointer;
+    }
+
+    .sensitivity-row input[type=range]::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: white;
+      border: 2.5px solid #6366f1;
+      cursor: pointer;
+    }
+
+    .sensitivity-value {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #4338ca;
+      background: #eef2ff;
+      padding: 3px 8px;
+      border-radius: 7px;
+      min-width: 32px;
+      text-align: center;
+    }
+
+    /* ============ SECTION LABELS ============ */
     .section-label {
       display: flex;
       align-items: center;
@@ -613,17 +821,14 @@
       gap: 6px;
     }
 
-    .section-label h3 i {
-      font-size: 11px;
-      color: #6366f1;
-    }
+    .section-label h3 i { font-size: 11px; color: #6366f1; }
 
     .modes-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 8px;
       margin-bottom: 20px;
-      animation: fadeUp 0.5s 0.2s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+      animation: fadeUp 0.5s 0.25s cubic-bezier(0.4, 0, 0.2, 1) backwards;
     }
 
     .mode-card {
@@ -787,10 +992,7 @@
       color: #f43f5e;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
       border: 1px solid rgba(255,255,255,0.8);
-      transition: transform 0.15s;
     }
-
-    .page-thumb .remove-badge:active { transform: scale(0.85); }
 
     .page-thumb .thumb-index {
       position: absolute;
@@ -804,7 +1006,6 @@
       padding: 3px 7px;
       border-radius: 8px;
       letter-spacing: 0.2px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
     .page-thumb .thumb-edit {
@@ -1050,9 +1251,7 @@
       border: 1px solid #e2e8f0;
     }
 
-    .slider-group {
-      margin-bottom: 16px;
-    }
+    .slider-group { margin-bottom: 16px; }
 
     .slider-header {
       display: flex;
@@ -1084,7 +1283,7 @@
       text-align: center;
     }
 
-    input[type=range] {
+    input[type=range].modal-range {
       width: 100%;
       height: 6px;
       border-radius: 10px;
@@ -1095,21 +1294,11 @@
       cursor: pointer;
     }
 
-    input[type=range]::-webkit-slider-thumb {
+    input[type=range].modal-range::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
       width: 22px;
       height: 22px;
-      border-radius: 50%;
-      background: white;
-      border: 3px solid #6366f1;
-      box-shadow: 0 4px 10px -2px rgba(99, 102, 241, 0.5);
-      cursor: pointer;
-    }
-
-    input[type=range]::-moz-range-thumb {
-      width: 20px;
-      height: 20px;
       border-radius: 50%;
       background: white;
       border: 3px solid #6366f1;
@@ -1198,7 +1387,7 @@
           </div>
           <div class="brand-text">
             <h1>ScanPro</h1>
-            <p>AI Smart Scanner</p>
+            <p>AI Smart Detection</p>
           </div>
         </div>
         <button class="header-btn" id="settingsBtn">
@@ -1211,27 +1400,39 @@
         <div class="camera-preview" id="cameraPreview">
           <video id="videoPreview" autoplay playsinline muted></video>
           <canvas id="previewCanvas"></canvas>
-          <canvas id="edgeCanvas"></canvas>
+          <canvas id="detectionCanvas"></canvas>
           <div class="grid-overlay" id="gridOverlay"></div>
-          <div class="scan-guide" id="scanGuide">
-            <div class="corner corner-tl"></div>
-            <div class="corner corner-tr"></div>
-            <div class="corner corner-bl"></div>
-            <div class="corner corner-br"></div>
+          
+          <!-- Real-time detection corner markers -->
+          <div class="corner-marker tl" id="markerTL"></div>
+          <div class="corner-marker tr" id="markerTR"></div>
+          <div class="corner-marker bl" id="markerBL"></div>
+          <div class="corner-marker br" id="markerBR"></div>
+
+          <!-- Status badge -->
+          <div class="status-badge" id="statusBadge">
+            <span class="dot"></span>
+            <span id="statusText">SEARCHING</span>
           </div>
-          <div class="auto-scan-badge" id="autoScanBadge">
-            <span class="dot"></span> AUTO SCAN
-          </div>
+
+          <!-- Page counter -->
           <div class="page-counter-badge" id="pageCounterBadge" style="display:none;">
             <i class="fas fa-file-alt" style="font-size:9px;margin-right:3px;"></i><span id="counterText">0</span>
           </div>
+
+          <!-- Stability meter -->
+          <div class="stability-meter" id="stabilityMeter">
+            <div class="stability-fill" id="stabilityFill"></div>
+          </div>
+
           <div class="camera-placeholder" id="cameraPlaceholder">
             <div class="icon-wrap">
               <i class="fas fa-camera"></i>
             </div>
             <span class="main-text">Nhấn để bật camera</span>
-            <span class="hint">Tự động phát hiện viền và làm phẳng tài liệu như máy scan chuyên nghiệp</span>
+            <span class="hint">AI tự động nhận diện giấy tờ và chụp khi ổn định</span>
           </div>
+
           <div class="processing-overlay" id="processingOverlay">
             <div class="spinner-wrap">
               <div class="spinner"></div>
@@ -1246,7 +1447,7 @@
             <i class="fas fa-camera-rotate"></i>
           </button>
           <div class="shutter-wrap">
-            <div class="shutter-ring"></div>
+            <div class="shutter-ring" id="shutterRing"></div>
             <button class="shutter-btn" id="captureBtn">
               <i class="fas fa-circle"></i>
             </button>
@@ -1258,7 +1459,28 @@
         <input type="file" id="fileInput" accept="image/*" multiple>
       </div>
 
-      <!-- Smart Modes -->
+      <!-- Auto-scan toggle -->
+      <div class="auto-toggle-row">
+        <div class="auto-toggle-info">
+          <div class="auto-toggle-icon">
+            <i class="fas fa-wand-magic-sparkles"></i>
+          </div>
+          <div class="auto-toggle-text">
+            <div class="title">Tự động chụp</div>
+            <div class="sub">Chụp khi tài liệu ổn định</div>
+          </div>
+        </div>
+        <div class="toggle-switch on" id="autoToggle"></div>
+      </div>
+
+      <!-- Sensitivity slider -->
+      <div class="sensitivity-row" id="sensitivityRow">
+        <label><i class="fas fa-crosshairs"></i> Độ nhạy</label>
+        <input type="range" id="sensitivitySlider" min="1" max="100" value="65">
+        <span class="sensitivity-value" id="sensitivityValue">65</span>
+      </div>
+
+      <!-- Smart Filters -->
       <div class="section-label">
         <h3><i class="fas fa-wand-magic-sparkles"></i> Smart Filters</h3>
       </div>
@@ -1332,7 +1554,7 @@
             <label><i class="fas fa-sun"></i> Độ nét</label>
             <span class="slider-value" id="sharpnessValue">45</span>
           </div>
-          <input type="range" id="sharpnessSlider" min="0" max="100" value="45">
+          <input type="range" class="modal-range" id="sharpnessSlider" min="0" max="100" value="45">
         </div>
 
         <div class="slider-group">
@@ -1340,7 +1562,7 @@
             <label><i class="fas fa-circle-half-stroke"></i> Tương phản</label>
             <span class="slider-value" id="contrastValue">30</span>
           </div>
-          <input type="range" id="contrastSlider" min="0" max="100" value="30">
+          <input type="range" class="modal-range" id="contrastSlider" min="0" max="100" value="30">
         </div>
 
         <div class="modal-actions">
@@ -1360,7 +1582,7 @@
       // ============ DOM ============
       const video = document.getElementById('videoPreview');
       const previewCanvas = document.getElementById('previewCanvas');
-      const edgeCanvas = document.getElementById('edgeCanvas');
+      const detectionCanvas = document.getElementById('detectionCanvas');
       const cameraPlaceholder = document.getElementById('cameraPlaceholder');
       const captureBtn = document.getElementById('captureBtn');
       const switchCameraBtn = document.getElementById('switchCameraBtn');
@@ -1374,14 +1596,28 @@
       const toastEl = document.getElementById('toast');
       const toastText = document.getElementById('toastText');
       const toastIcon = toastEl.querySelector('.toast-icon i');
-      const autoScanBadge = document.getElementById('autoScanBadge');
-      const scanGuide = document.getElementById('scanGuide');
       const gridOverlay = document.getElementById('gridOverlay');
       const processingOverlay = document.getElementById('processingOverlay');
       const processingText = document.getElementById('processingText');
       const pageCounterBadge = document.getElementById('pageCounterBadge');
       const counterText = document.getElementById('counterText');
       const settingsBtn = document.getElementById('settingsBtn');
+
+      const statusBadge = document.getElementById('statusBadge');
+      const statusText = document.getElementById('statusText');
+      const stabilityMeter = document.getElementById('stabilityMeter');
+      const stabilityFill = document.getElementById('stabilityFill');
+      const shutterRing = document.getElementById('shutterRing');
+
+      const markerTL = document.getElementById('markerTL');
+      const markerTR = document.getElementById('markerTR');
+      const markerBL = document.getElementById('markerBL');
+      const markerBR = document.getElementById('markerBR');
+
+      const autoToggle = document.getElementById('autoToggle');
+      const sensitivitySlider = document.getElementById('sensitivitySlider');
+      const sensitivityValue = document.getElementById('sensitivityValue');
+      const sensitivityRow = document.getElementById('sensitivityRow');
 
       const autoCropChip = document.getElementById('autoCropChip');
       const autoEnhanceChip = document.getElementById('autoEnhanceChip');
@@ -1410,6 +1646,17 @@
       let bwEnabled = false;
       let currentPreviewPageId = null;
 
+      // === Smart detection state ===
+      let autoScanEnabled = true;
+      let sensitivity = 65;
+      let detectionLoopId = null;
+      let lastDetectedCorners = null;
+      let stabilityFrames = 0;
+      let lastCornerKey = '';
+      let lastCaptureTime = 0;
+      const MIN_CAPTURE_INTERVAL = 3500; // ms giữa các lần auto-chụp
+      const STABILITY_THRESHOLD = 15; // số frame ổn định để chụp
+
       // ============ Toast ============
       function showToast(msg, duration = 1800, iconClass = 'fa-check') {
         toastText.textContent = msg;
@@ -1434,7 +1681,214 @@
         });
       }
 
-      // ============ Image Processing ============
+      // ============ REAL-TIME DETECTION ============
+      // Phát hiện 4 góc giấy trong frame hiện tại (dùng video frame nhỏ để nhanh)
+      function detectDocumentLive() {
+        if (!opencvReady || !cameraActive) return null;
+        if (!video.videoWidth || !video.videoHeight) return null;
+
+        try {
+          // Downscale xuống 320px để detect nhanh
+          const scale = 320 / video.videoWidth;
+          const w = 320;
+          const h = Math.round(video.videoHeight * scale);
+
+          const tmpCanvas = document.createElement('canvas');
+          tmpCanvas.width = w;
+          tmpCanvas.height = h;
+          tmpCanvas.getContext('2d').drawImage(video, 0, 0, w, h);
+
+          const src = cv.imread(tmpCanvas);
+          const gray = new cv.Mat();
+          const blurred = new cv.Mat();
+          const edges = new cv.Mat();
+          const contours = new cv.MatVector();
+          const hierarchy = new cv.Mat();
+
+          cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+          cv.GaussianBlur(gray, blurred, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
+          cv.Canny(blurred, edges, 50, 150);
+          cv.dilate(edges, edges, cv.Mat.ones(3, 3, cv.CV_8U), new cv.Point(-1, -1), 1);
+          cv.findContours(edges, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+          let maxArea = 0;
+          let bestCorners = null;
+          const imgArea = w * h;
+
+          for (let i = 0; i < contours.size(); i++) {
+            const cnt = contours.get(i);
+            const area = cv.contourArea(cnt);
+            if (area > maxArea && area > imgArea * 0.12) {
+              const peri = cv.arcLength(cnt, true);
+              const approx = new cv.Mat();
+              cv.approxPolyDP(cnt, approx, 0.02 * peri, true);
+              if (approx.rows === 4 && cv.isContourConvex(approx)) {
+                maxArea = area;
+                const pts = [];
+                for (let j = 0; j < 4; j++) {
+                  pts.push({
+                    x: approx.data32S[j * 2] / scale,
+                    y: approx.data32S[j * 2 + 1] / scale
+                  });
+                }
+                bestCorners = sortCorners(pts);
+              }
+              approx.delete();
+            }
+            cnt.delete();
+          }
+
+          src.delete(); gray.delete(); blurred.delete(); edges.delete();
+          contours.delete(); hierarchy.delete();
+          return bestCorners;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function sortCorners(pts) {
+        const sorted = [...pts];
+        const sum = sorted.map(p => p.x + p.y);
+        const diff = sorted.map(p => p.x - p.y);
+        const tl = sorted[sum.indexOf(Math.min(...sum))];
+        const br = sorted[sum.indexOf(Math.max(...sum))];
+        const tr = sorted[diff.indexOf(Math.max(...diff))];
+        const bl = sorted[diff.indexOf(Math.min(...diff))];
+        return [tl, tr, br, bl];
+      }
+
+      // ============ STABILITY CHECK ============
+      function cornersKey(corners) {
+        if (!corners) return '';
+        return corners.map(c => `${Math.round(c.x / 8)},${Math.round(c.y / 8)}`).join('|');
+      }
+
+      // ============ DETECTION LOOP ============
+      function startDetectionLoop() {
+        stopDetectionLoop();
+        detectionLoopId = setInterval(() => {
+          if (!cameraActive) return;
+
+          const corners = detectDocumentLive();
+          lastDetectedCorners = corners;
+
+          if (corners) {
+            // Cập nhật vị trí markers
+            updateCornerMarkers(corners);
+
+            // Kiểm tra ổn định
+            const key = cornersKey(corners);
+            if (key === lastCornerKey) {
+              stabilityFrames++;
+            } else {
+              stabilityFrames = 0;
+              lastCornerKey = key;
+            }
+
+            // Cập nhật thanh stability
+            const stabilityPercent = Math.min(100, (stabilityFrames / STABILITY_THRESHOLD) * 100);
+            stabilityFill.style.width = stabilityPercent + '%';
+
+            // Cập nhật status badge
+            if (stabilityFrames >= STABILITY_THRESHOLD) {
+              setStatusBadge('locked', 'LOCKED');
+              shutterRing.classList.add('auto-active');
+              captureBtn.classList.add('locked');
+
+              // Auto capture!
+              if (autoScanEnabled && Date.now() - lastCaptureTime > MIN_CAPTURE_INTERVAL) {
+                lastCaptureTime = Date.now();
+                autoCapture();
+              }
+            } else {
+              setStatusBadge('detected', 'DETECTED');
+              shutterRing.classList.remove('auto-active');
+              captureBtn.classList.remove('locked');
+            }
+          } else {
+            // Không phát hiện - reset
+            stabilityFrames = 0;
+            lastCornerKey = '';
+            hideCornerMarkers();
+            setStatusBadge('searching', 'SEARCHING');
+            stabilityFill.style.width = '0%';
+            shutterRing.classList.remove('auto-active');
+            captureBtn.classList.remove('locked');
+          }
+        }, 120); // ~8fps detection
+      }
+
+      function stopDetectionLoop() {
+        if (detectionLoopId) {
+          clearInterval(detectionLoopId);
+          detectionLoopId = null;
+        }
+        stabilityFrames = 0;
+        lastCornerKey = '';
+        stabilityFill.style.width = '0%';
+        hideCornerMarkers();
+      }
+
+      function setStatusBadge(type, text) {
+        statusBadge.className = 'status-badge show ' + type;
+        statusText.textContent = text;
+      }
+
+      function updateCornerMarkers(corners) {
+        // Convert video coords -> preview element coords
+        const rect = video.getBoundingClientRect();
+        const parentRect = video.parentElement.getBoundingClientRect();
+        const offsetX = rect.left - parentRect.left;
+        const offsetY = rect.top - parentRect.top;
+
+        const vw = video.videoWidth;
+        const vh = video.videoHeight;
+        const displayW = rect.width;
+        const displayH = rect.height;
+
+        // Vì video object-fit: cover, cần tính tỉ lệ
+        const videoAspect = vw / vh;
+        const displayAspect = displayW / displayH;
+        let scaleX, scaleY, cropX = 0, cropY = 0;
+
+        if (videoAspect > displayAspect) {
+          // video rộng hơn -> crop 2 bên
+          scaleY = displayH / vh;
+          scaleX = scaleY;
+          cropX = (vw * scaleX - displayW) / 2;
+        } else {
+          scaleX = displayW / vw;
+          scaleY = scaleX;
+          cropY = (vh * scaleY - displayH) / 2;
+        }
+
+        const transform = (pt) => ({
+          x: offsetX + pt.x * scaleX - cropX,
+          y: offsetY + pt.y * scaleY - cropY
+        });
+
+        const [tl, tr, br, bl] = corners.map(transform);
+
+        setMarker(markerTL, tl.x - 4, tl.y - 4);
+        setMarker(markerTR, tr.x - 20, tr.y - 4);
+        setMarker(markerBL, bl.x - 4, bl.y - 20);
+        setMarker(markerBR, br.x - 20, br.y - 20);
+      }
+
+      function setMarker(el, x, y) {
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+        el.classList.add('show');
+      }
+
+      function hideCornerMarkers() {
+        markerTL.classList.remove('show');
+        markerTR.classList.remove('show');
+        markerBL.classList.remove('show');
+        markerBR.classList.remove('show');
+      }
+
+      // ============ IMAGE PROCESSING ============
       function detectDocumentCorners(srcCanvas) {
         if (!opencvReady) return null;
         try {
@@ -1478,17 +1932,6 @@
           contours.delete(); hierarchy.delete();
           return bestCorners;
         } catch (e) { return null; }
-      }
-
-      function sortCorners(pts) {
-        const sorted = [...pts];
-        const sum = sorted.map(p => p.x + p.y);
-        const diff = sorted.map(p => p.x - p.y);
-        const tl = sorted[sum.indexOf(Math.min(...sum))];
-        const br = sorted[sum.indexOf(Math.max(...sum))];
-        const tr = sorted[diff.indexOf(Math.max(...diff))];
-        const bl = sorted[diff.indexOf(Math.min(...diff))];
-        return [tl, tr, br, bl];
       }
 
       function warpPerspective(srcCanvas, corners) {
@@ -1649,8 +2092,18 @@
           video.style.display = 'block';
           previewCanvas.style.display = 'none';
           gridOverlay.classList.add('show');
-          if (opencvReady) scanGuide.classList.add('active');
           currentFacingMode = facingMode;
+
+          // Đợi OpenCV rồi bật detection
+          if (opencvReady) {
+            setStatusBadge('searching', 'SEARCHING');
+            startDetectionLoop();
+          } else {
+            waitForOpenCV().then(() => {
+              setStatusBadge('searching', 'SEARCHING');
+              startDetectionLoop();
+            });
+          }
         } catch (err) {
           showToast('Không thể truy cập camera', 2000, 'fa-triangle-exclamation');
           cameraActive = false;
@@ -1664,26 +2117,41 @@
         }
         cameraActive = false;
         gridOverlay.classList.remove('show');
+        stopDetectionLoop();
+        statusBadge.classList.remove('show');
+        stabilityMeter.classList.remove('show');
       }
 
-      // ============ Capture ============
+      // ============ CAPTURE ============
       captureBtn.addEventListener('click', async () => {
         if (!cameraActive) {
           await startCamera(currentFacingMode);
-          await new Promise(r => setTimeout(r, 600));
-          if (!cameraActive) return;
+          return;
         }
         await captureAndProcess();
       });
 
-      async function captureAndProcess() {
-        if (!video.videoWidth) {
-          showToast('Camera chưa sẵn sàng', 1500, 'fa-triangle-exclamation');
-          return;
-        }
+      async function autoCapture() {
+        if (processingOverlay.classList.contains('show')) return;
+        // Flash effect
+        previewCanvas.style.display = 'block';
+        previewCanvas.width = video.videoWidth;
+        previewCanvas.height = video.videoHeight;
+        previewCanvas.getContext('2d').drawImage(video, 0, 0);
+        video.style.display = 'none';
+        setTimeout(() => {
+          previewCanvas.style.display = 'none';
+          if (cameraActive) video.style.display = 'block';
+        }, 180);
+
+        await captureAndProcess(true);
+      }
+
+      async function captureAndProcess(isAuto = false) {
+        if (!video.videoWidth) return;
 
         processingOverlay.classList.add('show');
-        processingText.textContent = 'Đang phát hiện tài liệu...';
+        processingText.textContent = 'Đang xử lý tài liệu...';
 
         const srcCanvas = document.createElement('canvas');
         srcCanvas.width = video.videoWidth;
@@ -1693,7 +2161,7 @@
 
         try {
           await new Promise(r => setTimeout(r, 50));
-          processingText.textContent = autoCropEnabled ? 'Đang cắt viền...' : 'Đang xử lý...';
+          processingText.textContent = autoCropEnabled ? 'Đang cắt viền & làm phẳng...' : 'Đang xử lý...';
           const processedCanvas = await processImage(srcCanvas);
           const processedDataURL = canvasToDataURL(processedCanvas, 0.95);
 
@@ -1704,7 +2172,7 @@
           });
 
           updateGallery();
-          showToast('Đã thêm trang mới', 1200, 'fa-check');
+          showToast(isAuto ? '⚡ Auto chụp thành công' : 'Đã thêm trang mới', 1400, 'fa-check');
         } catch (e) {
           scannedPages.push({
             id: Date.now() + Math.random(),
@@ -1715,6 +2183,10 @@
           showToast('Đã thêm (cơ bản)', 1500);
         } finally {
           processingOverlay.classList.remove('show');
+          // Reset detection sau khi chụp để tránh chụp liên tục
+          stabilityFrames = 0;
+          lastCornerKey = '';
+          lastCaptureTime = Date.now();
         }
       }
 
@@ -1757,6 +2229,25 @@
         const newMode = currentFacingMode === 'environment' ? 'user' : 'environment';
         await startCamera(newMode);
         showToast(newMode === 'environment' ? 'Camera sau' : 'Camera trước', 1000, 'fa-camera');
+      });
+
+      // ============ Auto scan toggle ============
+      autoToggle.addEventListener('click', () => {
+        autoScanEnabled = !autoScanEnabled;
+        autoToggle.classList.toggle('on', autoScanEnabled);
+        sensitivityRow.style.display = autoScanEnabled ? 'flex' : 'none';
+        if (autoScanEnabled && cameraActive) {
+          setStatusBadge('searching', 'SEARCHING');
+          stabilityMeter.classList.add('show');
+        } else {
+          stabilityMeter.classList.remove('show');
+        }
+        showToast(autoScanEnabled ? '⚡ Bật tự động chụp' : 'Tắt tự động chụp', 1400, autoScanEnabled ? 'fa-bolt' : 'fa-pause');
+      });
+
+      sensitivitySlider.addEventListener('input', (e) => {
+        sensitivity = parseInt(e.target.value);
+        sensitivityValue.textContent = sensitivity;
       });
 
       // ============ Modes ============
@@ -1975,16 +2466,12 @@
       });
 
       waitForOpenCV().then(() => {
-        if (opencvReady) {
-          console.log('✅ OpenCV ready');
-          if (cameraActive) scanGuide.classList.add('active');
-          autoScanBadge.classList.add('show');
-          setTimeout(() => autoScanBadge.classList.remove('show'), 3000);
-        }
+        if (opencvReady) console.log('✅ OpenCV ready - Smart detection active');
       });
 
       window.addEventListener('beforeunload', () => {
         if (stream) stream.getTracks().forEach(t => t.stop());
+        stopDetectionLoop();
       });
 
       document.addEventListener('visibilitychange', () => {
@@ -1993,7 +2480,6 @@
           stopCamera();
           cameraPlaceholder.style.display = 'flex';
           video.style.display = 'none';
-          scanGuide.classList.remove('active');
         }
       });
 
